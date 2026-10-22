@@ -1,0 +1,2735 @@
+<title>BitReel</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Silkscreen&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<style>
+/* Layout: viewer (source or output) on the left, tabbed tool panel on the right, frame strip below; full-screen paint editor overlay. */
+:root{
+  --bg:#ECEDF1; --panel:#F8F8FA; --well:#DFE1E8; --ink:#1A1C23; --muted:#5C6170; --line:#CDD0D9;
+  --accent:#C9440E; --accent-ink:#FFFFFF; --accent-soft:#F6DCCF;
+  --ok:#2C7D47; --warn:#9A6512; --bad:#B3302A;
+  --chk1:#FFFFFF; --chk2:#E1E3E8; --dim:rgba(10,12,18,.58);
+  --f-display:"Silkscreen", "Courier New", monospace;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"IBM Plex Mono", ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#111217; --panel:#191B21; --well:#0B0C10; --ink:#E7E8ED; --muted:#959BAA; --line:#2B2E38;
+  --accent:#FF7A3D; --accent-ink:#1B0D05; --accent-soft:#3A2016;
+  --ok:#5BC27D; --warn:#E3AA4C; --bad:#F06A5A;
+  --chk1:#23252C; --chk2:#1B1D23; --dim:rgba(0,0,0,.62); color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#111217; --panel:#191B21; --well:#0B0C10; --ink:#E7E8ED; --muted:#959BAA; --line:#2B2E38;
+  --accent:#FF7A3D; --accent-ink:#1B0D05; --accent-soft:#3A2016;
+  --ok:#5BC27D; --warn:#E3AA4C; --bad:#F06A5A;
+  --chk1:#23252C; --chk2:#1B1D23; --dim:rgba(0,0,0,.62); color-scheme:dark;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:14px/1.45 var(--f-body);
+  padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px));padding-block:14px 28px}
+button,input,select,textarea{font:inherit;color:inherit}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:14px}
+.logo{font-family:var(--f-display);font-size:22px;letter-spacing:.04em;line-height:1;display:flex;align-items:center;gap:10px}
+.logo i{display:inline-grid;grid-template-columns:repeat(3,6px);gap:1px}
+.logo i b{width:6px;height:6px;background:var(--accent)}
+.logo i b:nth-child(2),.logo i b:nth-child(4),.logo i b:nth-child(9){background:var(--ink)}
+.logo i b:nth-child(5){background:transparent}
+.srcname{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40ch}
+#status{margin-left:auto;font-size:12.5px;color:var(--muted);min-width:0}
+#status.err{color:var(--bad)} #status.good{color:var(--ok)}
+
+.work{display:grid;gap:14px}
+.viewers{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px;align-items:start}
+@media (max-width:860px){ .viewers{grid-template-columns:minmax(0,1fr)} }
+.tabs{display:flex;overflow-x:auto;border-bottom:1px solid var(--line);scrollbar-width:none;padding:0 6px}
+.tabs button{appearance:none;border:0;background:none;padding:12px 12px 11px;cursor:pointer;font:500 13px/1 var(--f-body);color:var(--muted);border-bottom:2px solid transparent;margin-bottom:-1px;white-space:nowrap}
+.tabs button:hover{color:var(--ink)}
+.tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+.pane{display:grid;grid-template-columns:repeat(auto-fill,minmax(290px,1fr));gap:0;align-items:start}
+.group{display:grid;gap:10px;padding:14px 16px 16px;min-width:0;align-content:start;border-right:1px solid var(--line);align-self:stretch}
+.group:last-child{border-right:0}
+@media (max-width:640px){ .group{border-right:0;border-bottom:1px solid var(--line)} }
+.grid4{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.grid4 input{width:100%}
+.gridbox{display:grid;gap:10px}
+.loops{display:flex;flex-wrap:wrap;gap:6px}
+#outStage{position:relative}
+.outempty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:8px;padding:16px;text-align:center;background:var(--well);color:var(--muted);font-size:13px}
+.outempty b{color:var(--ink);font-size:14px}
+.loops button{appearance:none;border:1px solid var(--line);background:var(--bg);border-radius:999px;padding:4px 10px;font:12px/1.2 var(--f-mono);cursor:pointer;font-variant-numeric:tabular-nums;color:var(--ink)}
+.loops button[aria-pressed="true"]{border-color:var(--accent);background:var(--accent-soft)}
+.loops button:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.group h3{margin:0;font-size:12px;font-weight:600;letter-spacing:.02em;display:flex;align-items:center;gap:8px;justify-content:space-between}
+.vpane{display:grid;gap:12px}
+#srcStage{height:min(48vh,460px)}
+#outStage{height:min(48vh,460px)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:6px 12px;margin:0;font-size:12.5px}
+.keys dt{font-family:var(--f-mono);color:var(--ink)}
+.keys dd{margin:0;color:var(--muted)}
+.vlist{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.vitem{display:grid;grid-template-columns:72px minmax(0,1fr);gap:10px;align-items:center;padding:8px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
+.vitem img{width:72px;height:auto;image-rendering:pixelated;border-radius:2px;background:var(--chk1)}
+.vitem .vname{font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vitem .vmeta{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.vitem .row{margin-top:4px}
+.vempty{font-size:12.5px;color:var(--muted)}
+/* full-screen paint editor */
+.paintview{position:fixed;inset:0;z-index:50;background:var(--bg);display:grid;grid-template-rows:auto minmax(0,1fr) auto;
+  padding-top:env(safe-area-inset-top, 0px);padding-bottom:env(safe-area-inset-bottom, 0px)}
+.pvbar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:10px max(16px, env(safe-area-inset-right, 0px)) 10px max(16px, env(safe-area-inset-left, 0px));background:var(--panel);border-bottom:1px solid var(--line)}
+.pvfoot{border-bottom:0;border-top:1px solid var(--line);justify-content:space-between}
+.pvstage{position:relative;overflow:hidden;background:var(--well);touch-action:none}
+#pvCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#pvCanvas.hand{cursor:grab} #pvCanvas.panning{cursor:grabbing}
+.pvswatches{display:flex;flex-wrap:wrap;gap:3px;max-width:min(560px,100%);min-width:0}
+.pvswatches button{width:20px;height:20px;border:1px solid var(--line);border-radius:3px;padding:0;cursor:pointer}
+.pvswatches button.sel{outline:2px solid var(--ink);outline-offset:1px}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:6px;min-width:0}
+.ph{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid var(--line)}
+.ph h2{margin:0;font-family:var(--f-display);font-weight:400;font-size:13px;letter-spacing:.06em;text-transform:uppercase}
+.ph .meta{margin-left:auto;font-size:12px;color:var(--muted)}
+.pb{padding:12px;display:grid;gap:12px}
+
+
+.stage{position:relative;background:var(--well);border-radius:4px;overflow:hidden}
+#srcStage{touch-action:none}
+#srcCanvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:crosshair}
+#srcCanvas.locked{cursor:default}
+.drophint{position:absolute;left:10px;right:10px;bottom:10px;background:var(--panel);border:1px dashed var(--line);border-radius:4px;padding:8px 10px;font-size:12.5px;color:var(--muted);display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+#srcStage.drag{outline:2px solid var(--accent);outline-offset:-2px}
+#outStage{display:grid;place-items:center;overflow:auto;
+  background-color:var(--chk1);background-image:conic-gradient(var(--chk2) 25%,transparent 0 50%,var(--chk2) 0 75%,transparent 0);background-size:16px 16px}
+#outStage.bgdark{background:#000} #outStage.bglight{background:#fff}
+#outCanvas{image-rendering:pixelated;image-rendering:crisp-edges;display:block;margin:12px}
+.seamview{display:grid;grid-template-columns:1fr auto 1fr;gap:10px;align-items:center;padding:12px}
+.seamview figure{margin:0;display:grid;gap:4px;justify-items:center;min-width:0}
+.seamview canvas{image-rendering:pixelated;max-width:100%;background:var(--chk1)}
+.seamview figcaption{font-size:11.5px;color:var(--muted)}
+
+.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.row.sp{justify-content:space-between}
+.btn{appearance:none;border:1px solid var(--line);background:var(--panel);border-radius:4px;padding:6px 10px;cursor:pointer;line-height:1.2;white-space:nowrap}
+.btn:hover{border-color:var(--muted)}
+.btn:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,.sw:focus-visible,.thumb:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.btn.pri{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);font-weight:600}
+.btn.pri:hover{filter:brightness(1.06)}
+.btn.sm{padding:4px 8px;font-size:12.5px}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn.on{background:var(--accent-soft);border-color:var(--accent);color:var(--ink)}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{border:0;background:transparent;padding:5px 9px;cursor:pointer;font-size:12.5px}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+select,input[type=number],input[type=text],textarea{background:var(--bg);border:1px solid var(--line);border-radius:4px;padding:5px 7px;min-width:0}
+input[type=number]{width:74px;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+input[type=range]{accent-color:var(--accent);width:100%;min-width:0}
+label.lb{font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:500}
+.field{display:grid;gap:4px;min-width:0}
+.slider{display:grid;grid-template-columns:86px minmax(0,1fr) 46px;gap:8px;align-items:center}
+.slider output{font-family:var(--f-mono);font-size:12px;text-align:right;color:var(--muted);font-variant-numeric:tabular-nums}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.kv{font-family:var(--f-mono);font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums}
+
+/* timeline */
+.tl{position:relative;height:30px}
+.tl .track{position:absolute;left:0;right:0;top:12px;height:6px;background:var(--well);border-radius:3px}
+.tl .band{position:absolute;top:10px;height:10px;background:var(--accent);opacity:.35;border-radius:2px}
+.tl input{position:absolute;inset:0;margin:0;height:30px;background:transparent}
+.tl .mk{position:absolute;top:4px;width:2px;height:22px;background:var(--accent)}
+
+/* palette */
+.swatches{display:grid;grid-template-columns:repeat(auto-fill,minmax(26px,1fr));gap:4px}
+.sw{aspect-ratio:1;border:1px solid var(--line);border-radius:3px;cursor:pointer;position:relative;padding:0;max-width:100%}
+.sw.sel{outline:2px solid var(--ink);outline-offset:1px}
+.sw.tr::after{content:"";position:absolute;inset:2px;background:linear-gradient(135deg,transparent 45%,var(--bad) 45% 55%,transparent 55%)}
+.sweditor{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.sweditor input[type=color]{width:38px;height:30px;padding:0;border:1px solid var(--line);border-radius:4px;background:none}
+.sweditor input[type=text]{width:90px;font-family:var(--f-mono)}
+textarea{width:100%;font-family:var(--f-mono);font-size:12px;resize:vertical}
+
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:12px;padding:3px 8px;border-radius:999px;border:1px solid var(--line);white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.pill.ok{color:var(--ok);border-color:currentColor}.pill.ok::before{background:var(--ok)}
+.pill.warn{color:var(--warn);border-color:currentColor}.pill.warn::before{background:var(--warn)}
+.pill.bad{color:var(--bad);border-color:currentColor}.pill.bad::before{background:var(--bad)}
+
+/* strip */
+.strip{margin-top:14px}
+.thumbs{display:flex;gap:6px;overflow-x:auto;padding:12px;scroll-snap-type:x proximity}
+.thumb{flex:0 0 auto;display:grid;gap:3px;padding:4px;border:1px solid var(--line);border-radius:4px;background:var(--bg);cursor:pointer;scroll-snap-align:start;position:relative}
+.thumb canvas{height:54px;image-rendering:pixelated;display:block;background:var(--chk1)}
+.thumb span{font-family:var(--f-mono);font-size:10.5px;color:var(--muted);display:flex;justify-content:space-between;gap:6px;font-variant-numeric:tabular-nums}
+.thumb.off{opacity:.32}
+.thumb.off::after{content:"";position:absolute;left:4px;right:4px;top:30px;height:2px;background:var(--bad);transform:rotate(-8deg)}
+.thumb.cur{border-color:var(--accent);box-shadow:inset 0 0 0 1px var(--accent)}
+.progress{height:3px;background:var(--well);border-radius:2px;overflow:hidden}
+.progress b{display:block;height:100%;width:0;background:var(--accent);transition:width .1s}
+.note{font-size:12.5px;color:var(--muted);margin:0}
+.chip{display:inline-block;width:24px;height:24px;border-radius:3px;border:1px solid var(--line);flex:0 0 auto;
+  background-color:var(--chk1);background-image:conic-gradient(var(--chk2) 25%,transparent 0 50%,var(--chk2) 0 75%,transparent 0);background-size:8px 8px}
+#srcCanvas.picking{cursor:copy}
+#outCanvas.painting{cursor:crosshair;touch-action:none}
+.paintbar{display:grid;gap:8px;padding:10px;border:1px solid var(--accent);border-radius:4px;background:var(--accent-soft)}
+.paintbar .seg{background:var(--panel)}
+.chk{font-size:12.5px;gap:6px}
+.chk input{accent-color:var(--accent)}
+.thumb.ed b::after{content:" ●";color:var(--accent)}
+details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
+@media (prefers-reduced-motion: reduce){ .progress b{transition:none} }
+</style>
+
+<header class="top">
+  <div class="logo" aria-label="BitReel"><i aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i>BitReel</div>
+  <div class="srcname" id="srcName">Sample loop (procedural, 24 frames)</div>
+  <div id="status" role="status" aria-live="polite">Drop a video to start, or play with the sample loop.</div>
+</header>
+
+<main class="work">
+  <div class="viewers">
+    <section class="panel viewer" aria-labelledby="hSrc">
+      <div class="ph"><h2 id="hSrc">Source</h2><span class="meta mono" id="srcMeta">320 × 180 sample</span></div>
+      <div class="pb">
+        <div class="stage" id="srcStage">
+          <canvas id="srcCanvas" class="locked" aria-label="Source frame with crop rectangle"></canvas>
+          <div class="drophint" id="dropHint">
+            <span id="dropText">Drop a video here, or</span>
+            <label class="btn sm pri" for="fileIn">Choose video</label>
+            <input type="file" id="fileIn" accept="video/*,.mp4,.mov,.webm,.m4v,.mkv" hidden>
+          </div>
+        </div>
+        <div class="field">
+          <div class="row sp"><span class="lb">Trim</span><span class="kv" id="tRead">load a video to trim</span></div>
+          <div class="tl" id="tl"><div class="track"></div><div class="band" id="tBand"></div><input type="range" id="scrub" min="0" max="1" step="0.001" value="0" disabled aria-label="Playhead"></div>
+          <div class="row sp">
+            <div class="row">
+              <button class="btn sm pri" id="srcPlay" disabled aria-pressed="false" title="Play between in and out, looping (P)" style="min-width:62px">▶︎ Play</button>
+              <button class="btn sm" id="setIn" disabled>Set in</button>
+              <input type="number" id="tIn" step="0.01" min="0" value="0" disabled aria-label="In point, seconds">
+              <span class="kv">→</span>
+              <input type="number" id="tOut" step="0.01" min="0" value="0" disabled aria-label="Out point, seconds">
+              <button class="btn sm" id="setOut" disabled>Set out</button>
+            </div>
+            <div class="row">
+              <button class="btn sm" id="findLoop" title="Keep the in point and move the out point to the frame that best matches it">Find loop point</button>
+              <button class="btn sm pri" id="loopDetect" title="Search for the best loop and set both in and out">Loop detect</button>
+            </div>
+          </div>
+          <div class="loops" id="loopList" hidden></div>
+        </div>
+      </div>
+    </section>
+    <section class="panel viewer" aria-labelledby="hOut">
+      <div class="ph"><h2 id="hOut">Output</h2><span class="meta mono" id="outMeta"></span></div>
+      <div class="pb">
+        <div class="stage" id="outStage"><canvas id="outCanvas" aria-label="Pixel art output preview"></canvas>
+          <div class="outempty" id="outEmpty" hidden><b>No frames yet</b><span>Set the crop and trim on the source, then use Extract frames in the Source tab.</span><button class="btn sm pri" id="goExtract">Go to Source tab</button></div>
+        </div>
+        <div class="seamview" id="seamView" hidden>
+          <figure><canvas id="seamA"></canvas><figcaption id="seamACap">Last frame</figcaption></figure>
+          <span class="kv">→</span>
+          <figure><canvas id="seamB"></canvas><figcaption id="seamBCap">First frame</figcaption></figure>
+        </div>
+        <div class="row sp">
+          <div class="row">
+            <button class="btn sm" id="stepB" aria-label="Previous frame">◀︎</button>
+            <button class="btn sm pri" id="playBtn" style="min-width:64px">Pause</button>
+            <button class="btn sm" id="stepF" aria-label="Next frame">▶︎</button>
+            <span class="kv" id="frameRead">1 / 24</span>
+          </div>
+          <div class="row">
+            <div class="seg" role="group" aria-label="Playback mode">
+              <button data-mode="loop" aria-pressed="true">Loop</button>
+              <button data-mode="pingpong" aria-pressed="false">Ping-pong</button>
+              <button data-mode="seam" aria-pressed="false">Seam</button>
+            </div>
+            <label class="lb" for="pFps">FPS</label>
+            <input type="number" id="pFps" min="1" max="60" value="12">
+          </div>
+        </div>
+        <div class="row sp">
+          <span class="pill" id="seamPill">Seam: —</span>
+          <div class="row">
+            <button class="btn sm" id="onionBtn" aria-pressed="false">Onion</button>
+            <select id="zoom" aria-label="Zoom"><option value="fit">Fit</option><option>1</option><option>2</option><option>3</option><option>4</option><option>6</option><option>8</option></select>
+            <select id="bg" aria-label="Background"><option value="chk">Checker</option><option value="dark">Black</option><option value="light">White</option></select>
+          </div>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <section class="panel tools" aria-label="Tools">
+    <nav class="tabs" role="tablist" aria-label="Tools">
+      <button role="tab" data-tab="source" aria-selected="false">Source</button>
+      <button role="tab" data-tab="pixels" aria-selected="true">Pixels</button>
+      <button role="tab" data-tab="palette" aria-selected="false">Palette</button>
+      <button role="tab" data-tab="paint" aria-selected="false">Paint</button>
+      <button role="tab" data-tab="export" aria-selected="false">Export</button>
+      <button role="tab" data-tab="versions" aria-selected="false">Versions</button>
+    </nav>
+
+    <!-- SOURCE TAB -->
+    <div class="pane" role="tabpanel" data-pane="source" hidden>
+      <div class="group">
+        <h3>Crop</h3>
+        <div class="row sp">
+          <div class="row">
+            <select id="aspect" aria-label="Crop aspect">
+              <option value="free">Free</option><option value="1">1:1</option><option value="1.3333">4:3</option>
+              <option value="1.7778">16:9</option><option value="0.5625">9:16</option><option value="2">2:1</option>
+            </select>
+            <button class="btn sm" id="cropReset">Full frame</button>
+          </div>
+          <span class="kv" id="cropRead">no video</span>
+        </div>
+        <p class="note">Drag on the source picture to draw the crop. Drag a corner to resize, inside to move.</p>
+      </div>
+      <div class="group">
+        <h3>Key out a color</h3>
+        <div class="row sp">
+          <div class="row">
+            <button class="btn sm" id="keyPick" aria-pressed="false">Pick color</button>
+            <span class="chip" id="keyChip" title="No key color yet"></span>
+            <button class="btn sm" id="keyOn" aria-pressed="false" disabled>Off</button>
+          </div>
+          <span class="kv" id="keyRead">no key color</span>
+        </div>
+        <div class="slider"><label class="lb" for="kTol">Tolerance</label><input type="range" id="kTol" min="1" max="100" value="22"><output id="kTolv">22</output></div>
+        <div class="slider"><label class="lb" for="kChoke">Choke</label><input type="range" id="kChoke" min="0" max="3" value="0"><output id="kChokev">0 px</output></div>
+      </div>
+      <div class="group">
+        <h3>Palette from source</h3>
+        <div class="row">
+          <input type="number" id="spN" min="2" max="64" value="16" aria-label="Number of colors">
+          <span class="kv">colors from</span>
+          <select id="spScope" aria-label="Sample palette from"><option value="frame">this frame</option><option value="clip" selected>in to out</option></select>
+          <button class="btn sm" id="spBtn">Extract</button>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Loop detect</h3>
+        <div class="row">
+          <label class="lb" for="ldMin">Length</label>
+          <input type="number" id="ldMin" min="0.2" max="30" step="0.1" value="0.8" aria-label="Shortest loop, seconds">
+          <span class="kv">to</span>
+          <input type="number" id="ldMax" min="0.5" max="40" step="0.1" value="6" aria-label="Longest loop, seconds">
+          <span class="kv">s</span>
+        </div>
+        <div class="row">
+          <label class="lb" for="ldScope">Search</label>
+          <select id="ldScope"><option value="all" selected>whole video</option><option value="range">between in and out</option></select>
+        </div>
+        <p class="note">Loop detect compares every start and end pair in that range, ignores stretches with no movement, and sets in and out to the cleanest wrap. Pick another candidate under the trim bar.</p>
+      </div>
+      <div class="group">
+        <h3>Conversion</h3>
+        <div class="seg" role="group" aria-label="Conversion mode">
+          <button data-conv="downscale" aria-pressed="true">Downscale</button>
+          <button data-conv="grid" aria-pressed="false">Grid snap</button>
+        </div>
+        <p class="note" id="convNote">Downscale averages the footage into blocks. Use it for live action and renders.</p>
+        <div class="gridbox" id="gridBox" hidden>
+          <div class="row">
+            <button class="btn sm" id="gDetect">Detect grid</button>
+            <select id="gScope" aria-label="Detect from"><option value="frame">this frame</option><option value="clip" selected>in to out</option></select>
+            <button class="btn sm on" id="gShow" aria-pressed="true">Show grid</button>
+          </div>
+          <div class="grid4">
+            <div class="field"><label class="lb" for="gW">Cell W</label><input type="number" id="gW" min="1.5" max="128" step="0.01" value="8"></div>
+            <div class="field"><label class="lb" for="gH">Cell H</label><input type="number" id="gH" min="1.5" max="128" step="0.01" value="8"></div>
+            <div class="field"><label class="lb" for="gX">Offset X</label><input type="number" id="gX" min="0" max="128" step="0.1" value="0"></div>
+            <div class="field"><label class="lb" for="gY">Offset Y</label><input type="number" id="gY" min="0" max="128" step="0.1" value="0"></div>
+          </div>
+          <div class="row sp">
+            <div class="row">
+              <label class="row chk" for="gSq"><input type="checkbox" id="gSq" checked> Square cells</label>
+              <label class="row chk" for="gTrack" title="Re-align the grid on every frame and snap each line to the nearest real edge"><input type="checkbox" id="gTrack" checked> Track per frame</label>
+            </div>
+            <span class="kv" id="gRead">grid not set</span>
+          </div>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Frames</h3>
+        <div class="row sp">
+          <div class="row">
+            <label class="lb" for="sFps">Sample</label>
+            <select id="sFps"><option>6</option><option>8</option><option>10</option><option selected>12</option><option>15</option><option>24</option><option>25</option><option>30</option><option>48</option><option>50</option><option>60</option></select>
+            <span class="kv">fps</span>
+          </div>
+          <span class="kv" id="estRead">—</span>
+        </div>
+        <button class="btn pri" id="extract" disabled>Extract frames</button>
+        <div class="progress" aria-hidden="true"><b id="prog"></b></div>
+      </div>
+    </div>
+
+    <!-- PIXELS TAB -->
+    <div class="pane" role="tabpanel" data-pane="pixels">
+      <div class="group">
+        <h3>Size and tone <span class="kv" id="pixMeta"></span></h3>
+        <label class="row chk" for="oNative" id="nativeRow" hidden><input type="checkbox" id="oNative" checked> <span id="nativeLabel">Native grid resolution</span></label>
+        <div class="slider"><label class="lb" for="oW">Width</label><input type="range" id="oW" min="16" max="320" step="16" value="128"><output id="oWv">128</output></div>
+        <div class="slider"><label class="lb" for="aBri">Brightness</label><input type="range" id="aBri" min="-100" max="100" value="0"><output id="aBriv">0</output></div>
+        <div class="slider"><label class="lb" for="aCon">Contrast</label><input type="range" id="aCon" min="-100" max="100" value="10"><output id="aConv">10</output></div>
+        <div class="slider"><label class="lb" for="aSat">Saturation</label><input type="range" id="aSat" min="-100" max="100" value="10"><output id="aSatv">10</output></div>
+        <div class="slider"><label class="lb" for="aGam">Gamma</label><input type="range" id="aGam" min="50" max="200" value="100"><output id="aGamv">1.00</output></div>
+      </div>
+      <div class="group">
+        <h3>Dither</h3>
+        <div class="grid2">
+          <select id="dith" aria-label="Dither">
+            <option value="none">None</option><option value="bayer2">Bayer 2×2</option><option value="bayer4" selected>Bayer 4×4</option><option value="bayer8">Bayer 8×8</option>
+            <option value="fs">Floyd-Steinberg</option><option value="atk">Atkinson</option>
+          </select>
+          <input type="range" id="dAmt" min="0" max="100" value="45" aria-label="Dither strength">
+        </div>
+        <p class="note" id="dithNote">Bayer patterns stay put between frames. Error diffusion looks finer on stills but shimmers in motion.</p>
+      </div>
+      <div class="group">
+        <h3>Flicker <span class="pill" id="flickPill" title="Share of pixels that change color from one frame to the next, before and after reduction">—</span></h3>
+        <div class="slider"><label class="lb" for="fStab">Stability</label><input type="range" id="fStab" min="0" max="100" value="35"><output id="fStabv">35</output></div>
+        <div class="slider"><label class="lb" for="fSmooth">Smoothing</label><input type="range" id="fSmooth" min="0" max="100" value="0"><output id="fSmoothv">0</output></div>
+        <label class="row chk" for="fPops"><input type="checkbox" id="fPops" checked> Remove one-frame pops</label>
+        <p class="note">Stability keeps a pixel's color while it still matches closely. Smoothing blends neighboring frames before conversion. Both treat the selected frames as a loop.</p>
+      </div>
+    </div>
+
+    <!-- PALETTE TAB -->
+    <div class="pane" role="tabpanel" data-pane="palette" hidden>
+      <div class="group">
+        <h3>Colors <span class="kv" id="palMeta"></span></h3>
+        <select id="preset" aria-label="Palette preset"></select>
+        <div class="swatches" id="swatches" role="listbox" aria-label="Palette colors"></div>
+        <div class="sweditor">
+          <input type="color" id="swColor" aria-label="Edit selected color">
+          <input type="text" id="swHex" aria-label="Selected color hex" spellcheck="false">
+          <button class="btn sm" id="swTrans" aria-pressed="false" title="Exported as transparent pixels">Transparent</button>
+          <button class="btn sm" id="swDel">Remove</button>
+          <button class="btn sm" id="swAdd">Add</button>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Rebuild</h3>
+        <div class="row">
+          <input type="number" id="exN" min="2" max="64" value="16" aria-label="Number of colors">
+          <button class="btn sm" id="exBtn">From extracted frames</button>
+          <button class="btn sm" id="sortBtn">Sort by light</button>
+        </div>
+        <p class="note">To sample the video directly, use Palette from source in the Source tab.</p>
+      </div>
+      <div class="group">
+        <h3>Hex list</h3>
+        <textarea id="hexArea" rows="4" spellcheck="false" aria-label="Palette as hex list"></textarea>
+        <div class="row"><button class="btn sm" id="hexApply">Apply list</button><button class="btn sm" id="hexCopy">Copy</button></div>
+      </div>
+    </div>
+
+    <!-- PAINT TAB -->
+    <div class="pane" role="tabpanel" data-pane="paint" hidden>
+      <div class="group">
+        <h3>Frame editor</h3>
+        <p class="note">Opens the frame on screen in a full-screen editor. Edits survive palette, dither and flicker changes, and are kept per output size.</p>
+        <button class="btn pri" id="paintBtn">Open paint editor</button>
+        <p class="kv" id="paintSummary">No painted frames.</p>
+      </div>
+      <div class="group">
+        <h3>Keys</h3>
+        <dl class="keys">
+          <dt>B E R G I H</dt><dd>Pencil, eraser, restore, fill, pick, hand</dd>
+          <dt>+ − 0</dt><dd>Zoom in, out, fit</dd>
+          <dt>Wheel</dt><dd>Zoom at the cursor</dd>
+          <dt>Space drag</dt><dd>Pan (also middle button)</dd>
+          <dt>P</dt><dd>Play and stop the animation</dd>
+          <dt>← →</dt><dd>Previous and next frame</dd>
+          <dt>⌘/Ctrl Z</dt><dd>Undo, with Shift to redo</dd>
+          <dt>Esc</dt><dd>Close the editor</dd>
+        </dl>
+      </div>
+    </div>
+
+    <!-- EXPORT TAB -->
+    <div class="pane" role="tabpanel" data-pane="export" hidden>
+      <div class="group">
+        <h3>Settings <span class="kv" id="expMeta"></span></h3>
+        <div class="grid2">
+          <div class="field"><label class="lb" for="eName">Name</label><input type="text" id="eName" value="sample_loop" spellcheck="false"></div>
+          <div class="field"><label class="lb" for="eScale">Scale</label>
+            <select id="eScale"><option>1</option><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
+          <div class="field"><label class="lb" for="ePPU">Pixels / unit</label><input type="number" id="ePPU" min="1" max="1024" value="16"></div>
+          <div class="field"><label class="lb" for="ePivot">Pivot</label>
+            <select id="ePivot"><option value="0.5,0">Bottom center</option><option value="0.5,0.5">Center</option><option value="0,0">Bottom left</option></select></div>
+          <div class="field"><label class="lb" for="eCols">Sheet columns</label><input type="number" id="eCols" min="0" max="64" value="0" title="0 = automatic"></div>
+          <div class="field"><label class="lb" for="ePad">Padding</label><select id="ePad"><option>0</option><option>1</option><option>2</option></select></div>
+        </div>
+      </div>
+      <div class="group">
+        <h3>Unity</h3>
+        <button class="btn pri" id="xUnity">Unity package (.zip)</button>
+        <p class="note" id="expNote">Sprite sheet at 1:1, JSON manifest, single frames, the palette and an editor importer that slices the sheet and builds a looping animation clip.</p>
+      </div>
+      <div class="group">
+        <h3>Files <span class="kv">at the chosen scale</span></h3>
+        <div class="grid2">
+          <button class="btn" id="xSheet">Sprite sheet .png</button>
+          <button class="btn" id="xFrames">PNG frames .zip</button>
+          <button class="btn" id="xGif">Animated .gif</button>
+          <button class="btn" id="xVid">Video</button>
+        </div>
+        <div class="row"><label class="lb" for="eLoops">Video loops</label><select id="eLoops"><option>1</option><option selected>4</option><option>8</option><option>16</option></select><span class="kv" id="vidFmt"></span></div>
+      </div>
+    </div>
+
+    <!-- VERSIONS TAB -->
+    <div class="pane" role="tabpanel" data-pane="versions" hidden>
+      <div class="group">
+        <h3>Save this state</h3>
+        <div class="row">
+          <input type="text" id="vName" placeholder="Version name" spellcheck="false" style="flex:1">
+          <button class="btn pri" id="vSave">Save version</button>
+        </div>
+        <p class="note" id="vWhere">Checking storage…</p>
+      </div>
+      <div class="group">
+        <h3>Saved versions <span class="kv" id="vCount"></span></h3>
+        <ul class="vlist" id="vList"></ul>
+      </div>
+      <div class="group">
+        <h3>Project file</h3>
+        <div class="row">
+          <button class="btn sm" id="pDown">Download project (.zip)</button>
+          <label class="btn sm" for="pOpen">Open project</label>
+          <input type="file" id="pOpen" accept=".zip,application/zip" hidden>
+        </div>
+        <p class="note">A version holds the extracted frames, crop and trim, key, pixel and flicker settings, palette, frame selection and painted edits. The source video itself isn't stored: load it again to re-crop or re-extract.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<section class="panel strip" aria-labelledby="hStrip">
+  <div class="ph">
+    <h2 id="hStrip">Frames</h2>
+    <div class="row" style="margin-left:12px">
+      <button class="btn sm" data-sel="all">All</button>
+      <button class="btn sm" data-sel="none">None</button>
+      <button class="btn sm" data-sel="invert">Invert</button>
+      <button class="btn sm" data-sel="2">Every 2nd</button>
+      <button class="btn sm" data-sel="3">Every 3rd</button>
+    </div>
+    <span class="meta mono" id="stripMeta"></span>
+  </div>
+  <div class="thumbs" id="thumbs"></div>
+  <p class="note" style="padding:0 12px 12px">Click a frame to include or exclude it. Shift-click for a range. Double-click to paint it. Arrow keys step, space plays.</p>
+</section>
+
+<!-- FULL-SCREEN PAINT EDITOR -->
+<div class="paintview" id="paintView" hidden role="dialog" aria-modal="true" aria-label="Paint editor">
+  <div class="pvbar">
+    <div class="seg" role="group" aria-label="Paint tool">
+      <button data-tool="pencil" aria-pressed="true" title="Pencil (B)">Pencil</button>
+      <button data-tool="eraser" aria-pressed="false" title="Paint transparent (E)">Eraser</button>
+      <button data-tool="restore" aria-pressed="false" title="Back to the converted pixel (R)">Restore</button>
+      <button data-tool="fill" aria-pressed="false" title="Fill an area (G)">Fill</button>
+      <button data-tool="picker" aria-pressed="false" title="Pick a color from the frame (I)">Pick</button>
+      <button data-tool="hand" aria-pressed="false" title="Pan (H, or hold Space)">Hand</button>
+    </div>
+    <div class="row">
+      <span class="chip" id="paintChip" title="Current color"></span>
+      <select id="pSize" aria-label="Brush size"><option value="1">1 px</option><option value="2">2 px</option><option value="3">3 px</option><option value="4">4 px</option><option value="6">6 px</option></select>
+      <label class="row chk" for="pAll"><input type="checkbox" id="pAll"> All selected frames</label>
+    </div>
+    <div class="row">
+      <button class="btn sm" id="undoBtn" disabled>Undo</button>
+      <button class="btn sm" id="redoBtn" disabled>Redo</button>
+      <button class="btn sm" id="clearEd">Clear edits</button>
+    </div>
+    <div class="row" style="margin-left:auto">
+      <button class="btn sm" id="pvClose">Done</button>
+    </div>
+  </div>
+  <div class="pvstage" id="pvStage"><canvas id="pvCanvas" aria-label="Frame being painted"></canvas></div>
+  <div class="pvbar pvfoot">
+    <div class="row">
+      <button class="btn sm pri" id="pvPlay" aria-pressed="false" title="Play the animation (P)" style="min-width:62px">▶︎ Play</button>
+      <button class="btn sm" id="pvPrev" aria-label="Previous frame">◀︎</button>
+      <span class="kv" id="pvFrame">#000</span>
+      <button class="btn sm" id="pvNext" aria-label="Next frame">▶︎</button>
+      <button class="btn sm" id="pvOnion" aria-pressed="false">Onion</button>
+      <button class="btn sm on" id="pvGrid" aria-pressed="true">Grid</button>
+    </div>
+    <div class="pvswatches" id="pvSwatches" aria-label="Palette"></div>
+    <div class="row">
+      <button class="btn sm" id="pvOut" aria-label="Zoom out">−</button>
+      <span class="kv" id="pvZoom" style="min-width:44px;text-align:center">×8</span>
+      <button class="btn sm" id="pvIn" aria-label="Zoom in">+</button>
+      <button class="btn sm" id="pvFit">Fit</button>
+      <span class="kv" id="pvCell"></span>
+    </div>
+  </div>
+</div>
+
+<script type="text/plain" id="csImporter">// PixelSheetImporter.cs  (BitReel)
+// Install ONCE at Assets/Editor/PixelSheetImporter.cs
+// Needs the 2D Sprite package (com.unity.2d.sprite), included in 2D project templates.
+//
+// Any file named *.pixelsheet.json that lands in Assets/ is imported automatically:
+//   - the sibling sprite sheet PNG is set to Sprite (Multiple), Point filter, no compression, no mipmaps
+//   - it is sliced into one sprite per frame using the manifest rects and pivot
+//   - a looping AnimationClip (SpriteRenderer.m_Sprite) is created or updated next to it
+//   - an AnimatorController is created once if the manifest asks for it
+// Re-run manually: Tools > BitReel > Import Selected Sheet
+// From code (e.g. Unity MCP execute_code): PixelSheetImporter.Import("Assets/.../name.pixelsheet.json");
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using UnityEditor;
+using UnityEditor.Animations;
+using UnityEditor.U2D.Sprites;
+using UnityEngine;
+
+public class PixelSheetImporter : AssetPostprocessor
+{
+    [System.Serializable] public class FrameData { public int index; public int x; public int y; public int w; public int h; public float time; }
+    [System.Serializable] public class SheetData
+    {
+        public string name; public string image;
+        public int sheetWidth; public int sheetHeight; public int frameWidth; public int frameHeight;
+        public int frameCount; public float fps; public string loopMode;
+        public int pixelsPerUnit; public float pivotX; public float pivotY;
+        public bool createAnimator; public FrameData[] frames;
+    }
+
+    static readonly HashSet<string> busy = new HashSet<string>();
+
+    static void OnPostprocessAllAssets(string[] imported, string[] deleted, string[] moved, string[] movedFrom)
+    {
+        foreach (var p in imported)
+        {
+            var path = p;
+            if (path.EndsWith(".pixelsheet.json")) EditorApplication.delayCall += () => Import(path);
+        }
+    }
+
+    [MenuItem("Tools/BitReel/Import Selected Sheet")]
+    static void ImportSelected()
+    {
+        foreach (var o in Selection.objects)
+        {
+            var p = AssetDatabase.GetAssetPath(o);
+            if (p.EndsWith(".pixelsheet.json")) Import(p);
+        }
+    }
+
+    public static AnimationClip Import(string jsonPath)
+    {
+        if (!busy.Add(jsonPath)) return null;
+        try
+        {
+            var data = JsonUtility.FromJson<SheetData>(File.ReadAllText(jsonPath));
+            var dir = Path.GetDirectoryName(jsonPath).Replace('\\', '/');
+            var pngPath = dir + "/" + data.image;
+            var ti = AssetImporter.GetAtPath(pngPath) as TextureImporter;
+            if (ti == null) { Debug.LogError("[BitReel] Sprite sheet not found: " + pngPath); return null; }
+
+            ti.textureType = TextureImporterType.Sprite;
+            ti.spriteImportMode = SpriteImportMode.Multiple;
+            ti.spritePixelsPerUnit = data.pixelsPerUnit > 0 ? data.pixelsPerUnit : 16;
+            ti.filterMode = FilterMode.Point;
+            ti.textureCompression = TextureImporterCompression.Uncompressed;
+            ti.mipmapEnabled = false;
+            ti.alphaIsTransparency = true;
+            ti.npotScale = TextureImporterNPOTScale.None;
+            ti.wrapMode = TextureWrapMode.Clamp;
+            int need = Mathf.Max(data.sheetWidth, data.sheetHeight), size = 32;
+            while (size < need && size < 16384) size *= 2;
+            if (ti.maxTextureSize < size) ti.maxTextureSize = size;
+            ti.SaveAndReimport();
+
+            var factory = new SpriteDataProviderFactories();
+            factory.Init();
+            var dp = factory.GetSpriteEditorDataProviderFromObject(ti);
+            dp.InitSpriteEditorDataProvider();
+            var existing = new Dictionary<string, GUID>();
+            foreach (var r in dp.GetSpriteRects()) existing[r.name] = r.spriteID;
+
+            var pivot = new Vector2(data.pivotX, data.pivotY);
+            var rects = new List<SpriteRect>();
+            foreach (var f in data.frames)
+            {
+                var n = data.name + "_" + f.index.ToString("D3");
+                GUID id;
+                if (!existing.TryGetValue(n, out id)) id = GUID.Generate();
+                rects.Add(new SpriteRect
+                {
+                    name = n,
+                    rect = new Rect(f.x, data.sheetHeight - f.y - f.h, f.w, f.h),
+                    alignment = SpriteAlignment.Custom,
+                    pivot = pivot,
+                    spriteID = id
+                });
+            }
+            dp.SetSpriteRects(rects.ToArray());
+            var names = dp.GetDataProvider<ISpriteNameFileIdDataProvider>();
+            if (names != null) names.SetNameFileIdPairs(rects.Select(r => new SpriteNameFileIdPair(r.name, r.spriteID)).ToList());
+            dp.Apply();
+            ti.SaveAndReimport();
+
+            var sprites = new Dictionary<string, Sprite>();
+            foreach (var s in AssetDatabase.LoadAllAssetsAtPath(pngPath).OfType<Sprite>()) sprites[s.name] = s;
+
+            var order = data.frames.Select(f => data.name + "_" + f.index.ToString("D3")).ToList();
+            if (data.loopMode == "pingpong" && order.Count > 2)
+            {
+                var back = new List<string>();
+                for (int i = order.Count - 2; i >= 1; i--) back.Add(order[i]);
+                order.AddRange(back);
+            }
+
+            float fps = data.fps > 0 ? data.fps : 12f;
+            var keys = new ObjectReferenceKeyframe[order.Count + 1];
+            for (int i = 0; i < order.Count; i++)
+            {
+                Sprite sp;
+                sprites.TryGetValue(order[i], out sp);
+                keys[i] = new ObjectReferenceKeyframe { time = i / fps, value = sp };
+            }
+            keys[order.Count] = new ObjectReferenceKeyframe { time = order.Count / fps, value = keys[order.Count - 1].value };
+
+            var clipPath = dir + "/" + data.name + ".anim";
+            var clip = AssetDatabase.LoadAssetAtPath<AnimationClip>(clipPath);
+            bool isNew = clip == null;
+            if (isNew) clip = new AnimationClip();
+            clip.frameRate = fps;
+            var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
+            AnimationUtility.SetObjectReferenceCurve(clip, binding, keys);
+            var settings = AnimationUtility.GetAnimationClipSettings(clip);
+            settings.loopTime = true;
+            AnimationUtility.SetAnimationClipSettings(clip, settings);
+            if (isNew) AssetDatabase.CreateAsset(clip, clipPath); else EditorUtility.SetDirty(clip);
+
+            var ctrlPath = dir + "/" + data.name + ".controller";
+            if (data.createAnimator && AssetDatabase.LoadAssetAtPath<AnimatorController>(ctrlPath) == null)
+                AnimatorController.CreateAnimatorControllerAtPathWithClip(ctrlPath, clip);
+
+            AssetDatabase.SaveAssets();
+            Debug.Log("[BitReel] Imported " + data.name + ": " + rects.Count + " sprites at " + fps + " fps -> " + clipPath);
+            return clip;
+        }
+        finally { busy.Remove(jsonPath); }
+    }
+}
+</script>
+
+<script>
+(() => {
+"use strict";
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const MAX_FRAMES = 480, WORK_MAX = 400, TRANSP = 255, MAX_PAL = 255;
+
+/* ---------- palettes ---------- */
+const PRESETS = {
+  "PICO-8": "000000 1d2b53 7e2553 008751 ab5236 5f574f c2c3c7 fff1e8 ff004d ffa300 ffec27 00e436 29adff 83769c ff77a8 ffccaa",
+  "Sweetie 16": "1a1c2c 5d275d b13e53 ef7d57 ffcd75 a7f070 38b764 257179 29366f 3b5dc9 41a6f6 73eff7 f4f4f4 94b0c2 566c86 333c57",
+  "Game Boy": "0f380f 306230 8bac0f 9bbc0f",
+  "C64": "000000 ffffff 68372b 70a4b2 6f3d86 588d43 352879 b8c76f 6f4f25 433900 9a6759 444444 6c6c6c 9ad284 6c5eb5 959595",
+  "CGA 4": "000000 55ffff ff55ff ffffff",
+  "Grayscale 8": "000000 242424 494949 6d6d6d 929292 b6b6b6 dbdbdb ffffff",
+  "1-bit": "000000 ffffff"
+};
+const hex2rgb = h => { h = h.replace("#", ""); if (h.length === 3) h = h.split("").map(c => c + c).join(""); const n = parseInt(h, 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; };
+const rgb2hex = c => "#" + c.map(v => v.toString(16).padStart(2, "0")).join("");
+const parseHexList = t => (t.match(/#?[0-9a-fA-F]{6}\b/g) || []).map(hex2rgb);
+
+/* ---------- state ---------- */
+const S = {
+  src: null,            // {w,h,dur,name}
+  crop: { x: 0, y: 0, w: 0, h: 0 }, aspect: "free",
+  tIn: 0, tOut: 0, sampleFps: 12,
+  frames: [], workW: 0, workH: 0, sourceName: "",
+  out: { native: true, w: 128, bri: 0, con: 10, sat: 10, gam: 1, dith: "bayer4", amt: 0.45, stab: 35, smooth: 0, pops: true },
+  pal: parseHexList(PRESETS["PICO-8"]), presetName: "PICO-8", trans: -1, selSw: 0,
+  prep: [], base: [], idx: [], outW: 0, outH: 0,
+  key: { on: false, rgb: null, tol: 22, choke: 0 },
+  conv: "downscale", grid: { w: 8, h: 8, x: 0, y: 0, sq: true, show: true, set: false, conf: 0, track: true }, native: false,
+  edits: {}, undo: [], redo: [], curFi: 0,
+  paint: { on: false, tool: "pencil", size: 1, all: false },
+  play: { fps: 12, mode: "loop", playing: true, pos: 0, zoom: "fit", onion: false, bg: "chk" },
+  exp: { name: "sample_loop", scale: 4, ppu: 16, pivot: "0.5,0", cols: 0, pad: 0, loops: 4 },
+  lastClick: -1
+};
+
+/* persistence (per viewer) */
+const LS = "bitreel:v1", LS_OLD = "pixelbench:v1";
+function savePrefs() {
+  try { localStorage.setItem(LS, JSON.stringify({ out: S.out, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
+    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode, zoom: S.play.zoom, bg: S.play.bg }, exp: { ...S.exp, name: undefined }, key: { tol: S.key.tol, choke: S.key.choke }, conv: S.conv, grid: { sq: S.grid.sq, track: S.grid.track, show: S.grid.show } })); } catch (e) {}
+}
+function loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(LS) || localStorage.getItem(LS_OLD) || "null"); if (!p) return;
+    Object.assign(S.out, p.out || {});
+    if (Array.isArray(p.pal) && p.pal.length >= 2) { S.pal = p.pal.map(hex2rgb); S.presetName = p.presetName || "Custom"; S.trans = Number.isInteger(p.trans) && p.trans < S.pal.length ? p.trans : -1; }
+    if (p.play) Object.assign(S.play, p.play);
+    if (p.exp) { const { name, ...rest } = p.exp; Object.assign(S.exp, rest); }
+    if (p.key) { S.key.tol = clamp(+p.key.tol || 22, 1, 100); S.key.choke = clamp(+p.key.choke || 0, 0, 3); }
+    if (p.conv === "grid" || p.conv === "downscale") S.conv = p.conv;
+    if (p.grid) { S.grid.sq = !!p.grid.sq; S.grid.track = p.grid.track !== false; S.grid.show = p.grid.show !== false; }
+    if (S.pal.length > MAX_PAL) S.pal = S.pal.slice(0, MAX_PAL);
+  } catch (e) {}
+}
+
+/* status line */
+let statusTimer;
+function status(msg, kind) {
+  const el = $("#status"); el.textContent = msg; el.className = kind || "";
+  clearTimeout(statusTimer);
+}
+
+/* ---------- color math ---------- */
+const lin = v => { v /= 255; return v <= 0.04045 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); };
+const LIN = new Float32Array(256); for (let i = 0; i < 256; i++) LIN[i] = lin(i);
+function oklab(r, g, b) {
+  const R = LIN[r], G = LIN[g], B = LIN[b];
+  const l = Math.cbrt(0.4122214708 * R + 0.5363325363 * G + 0.0514459929 * B);
+  const m = Math.cbrt(0.2119034982 * R + 0.6806995451 * G + 0.1073969566 * B);
+  const s = Math.cbrt(0.0883024619 * R + 0.2817188376 * G + 0.6299787005 * B);
+  return [0.2104542553 * l + 0.7936177850 * m - 0.0040720468 * s,
+          1.9779984951 * l - 2.4285922050 * m + 0.4505937099 * s,
+          0.0259040371 * l + 0.7827717662 * m - 0.8086757660 * s];
+}
+let palLab = [], qCache = null, palMap = new Map();
+function rebuildQuant() {
+  palLab = S.pal.map(c => oklab(c[0], c[1], c[2])); qCache = new Int16Array(1 << 18).fill(-1);
+  palMap = new Map(); S.pal.forEach((c, i) => { const k = c[0] << 16 | c[1] << 8 | c[2]; if (!palMap.has(k)) palMap.set(k, i); });
+}
+/* chroma key: source pixels close to the key color become transparent */
+let keyLab = null, keyCache = null;
+function rebuildKey() {
+  keyCache = null;
+  if (!S.key.on || !S.key.rgb) return;
+  keyLab = oklab(S.key.rgb[0], S.key.rgb[1], S.key.rgb[2]); keyCache = new Uint8Array(1 << 18);
+}
+function isKeyed(r, g, b) {
+  const k = (r >> 2) << 12 | (g >> 2) << 6 | (b >> 2);
+  let v = keyCache[k];
+  if (!v) {
+    const L = oklab((r & ~3) + 2, (g & ~3) + 2, (b & ~3) + 2), d0 = L[0] - keyLab[0], d1 = L[1] - keyLab[1], d2 = L[2] - keyLab[2];
+    const t = S.key.tol / 100 * 0.34;
+    v = d0 * d0 + d1 * d1 + d2 * d2 <= t * t ? 2 : 1; keyCache[k] = v;
+  }
+  return v === 2;
+}
+let keyLvCache = null, keyLvSig = "";
+function rebuildKeyLevels() {
+  const sig = S.key.rgb.join(",") + "/" + S.key.tol; if (sig === keyLvSig && keyLvCache) return;
+  keyLvSig = sig; keyLvCache = new Uint8Array(1 << 18); keyLab = oklab(S.key.rgb[0], S.key.rgb[1], S.key.rgb[2]);
+}
+function keyLevel(r, g, b) {
+  const k = (r >> 2) << 12 | (g >> 2) << 6 | (b >> 2); let v = keyLvCache[k];
+  if (!v) {
+    const L = oklab((r & ~3) + 2, (g & ~3) + 2, (b & ~3) + 2), d0 = L[0] - keyLab[0], d1 = L[1] - keyLab[1], d2 = L[2] - keyLab[2];
+    const t = S.key.tol / 100 * 0.34, d = Math.sqrt(d0 * d0 + d1 * d1 + d2 * d2);
+    // fringe: close to the key, or the key's hue at any brightness (key blended with an outline or shadow)
+    const kc = Math.hypot(keyLab[1], keyLab[2]), pc = Math.hypot(L[1], L[2]);
+    let hueClose = false;
+    if (kc > 0.08 && pc > kc * 0.35) { const dh = Math.abs(Math.atan2(L[2], L[1]) - Math.atan2(keyLab[2], keyLab[1])); hueClose = Math.min(dh, 2 * Math.PI - dh) < 0.38; }
+    v = d <= t ? 3 : (d <= t * 2.2 || hueClose) ? 2 : 1; keyLvCache[k] = v;
+  }
+  return v - 1; // 2 keyed, 1 fringe, 0 clean
+}
+/* painted edits: -1 none, -2 transparent, otherwise 0xRRGGBB (re-matched to the palette on every change) */
+const dimKey = () => S.outW + "x" + S.outH;
+function editsFor(fi, create) {
+  const k = dimKey(); let set = S.edits[k];
+  if (!set) { if (!create) return null; set = S.edits[k] = {}; }
+  if (!set[fi] && create) set[fi] = new Int32Array(S.outW * S.outH).fill(-1);
+  return set[fi] || null;
+}
+function editIndex(v) {
+  if (v === -2) return TRANSP;
+  const i = palMap.get(v); return i !== undefined ? i : nearest(v >> 16 & 255, v >> 8 & 255, v & 255);
+}
+function applyEdits(fi) {
+  const base = S.base[fi], ed = editsFor(fi, false);
+  if (!ed) { S.idx[fi] = base; return; }
+  const o = base.slice(); for (let i = 0; i < o.length; i++) if (ed[i] !== -1) o[i] = editIndex(ed[i]);
+  S.idx[fi] = o;
+}
+function hasEdits(fi) { const ed = editsFor(fi, false); if (!ed) return false; for (let i = 0; i < ed.length; i++) if (ed[i] !== -1) return true; return false; }
+function nearest(r, g, b) {
+  r = r < 0 ? 0 : r > 255 ? 255 : r | 0; g = g < 0 ? 0 : g > 255 ? 255 : g | 0; b = b < 0 ? 0 : b > 255 ? 255 : b | 0;
+  const key = (r >> 2) << 12 | (g >> 2) << 6 | (b >> 2);
+  let v = qCache[key]; if (v >= 0) return v;
+  const L = oklab((r & ~3) + 2, (g & ~3) + 2, (b & ~3) + 2);
+  let best = 0, bd = Infinity;
+  for (let i = 0; i < palLab.length; i++) {
+    const p = palLab[i], dl = L[0] - p[0], da = L[1] - p[1], db = L[2] - p[2];
+    const d = dl * dl + da * da + db * db; if (d < bd) { bd = d; best = i; }
+  }
+  qCache[key] = best; return best;
+}
+
+/* bayer */
+function bayer(n) {
+  let m = [[0]];
+  while (m.length < n) {
+    const k = m.length, nm = [];
+    for (let y = 0; y < k * 2; y++) { nm[y] = []; for (let x = 0; x < k * 2; x++) { const b = m[y % k][x % k] * 4; nm[y][x] = b + [[0, 2], [3, 1]][y >= k ? 1 : 0][x >= k ? 1 : 0]; } }
+    m = nm;
+  }
+  const N = n * n; return m.map(r => r.map(v => (v + 0.5) / N - 0.5));
+}
+const BAYER = { bayer2: bayer(2), bayer4: bayer(4), bayer8: bayer(8) };
+
+/* ---------- processing ---------- */
+const maxOutW = () => Math.max(16, Math.floor((S.workW || 16) / 16) * 16);
+const snap16 = v => clamp(Math.round(v / 16) * 16, 16, maxOutW());
+function outDims() {
+  if (S.native && S.out.native) return [S.workW, S.workH];
+  const w = snap16(S.out.w);
+  const h = Math.max(1, Math.round(w * S.workH / S.workW));
+  return [w, h];
+}
+function prepFrame(src, sw, sh, dw, dh) {
+  const out = new Float32Array(dw * dh * 3), mask = new Uint8Array(dw * dh), kc = !!keyCache;
+  const sx = sw / dw, sy = sh / dh, o = S.out;
+  const cf = (259 * (o.con * 2.55 + 255)) / (255 * (259 - o.con * 2.55));
+  const bri = o.bri * 1.28, sat = 1 + o.sat / 100, ig = 1 / o.gam;
+  for (let oy = 0; oy < dh; oy++) {
+    const y0 = Math.floor(oy * sy), y1 = Math.max(y0 + 1, Math.min(sh, Math.floor((oy + 1) * sy)));
+    for (let ox = 0; ox < dw; ox++) {
+      const x0 = Math.floor(ox * sx), x1 = Math.max(x0 + 1, Math.min(sw, Math.floor((ox + 1) * sx)));
+      let r = 0, g = 0, b = 0, n = 0, kn = 0;
+      for (let y = y0; y < y1; y++) {
+        let i = (y * sw + x0) * 4;
+        for (let x = x0; x < x1; x++, i += 4) {
+          if (kc && isKeyed(src[i], src[i + 1], src[i + 2])) { kn++; continue; } // keyed pixels don't tint the average (no fringe)
+          r += src[i]; g += src[i + 1]; b += src[i + 2]; n++;
+        }
+      }
+      if (kc && kn > n) mask[oy * dw + ox] = 1;
+      if (!n) { out[(oy * dw + ox) * 3] = out[(oy * dw + ox) * 3 + 1] = out[(oy * dw + ox) * 3 + 2] = 0; continue; }
+      r /= n; g /= n; b /= n;
+      r += bri; g += bri; b += bri;
+      r = cf * (r - 128) + 128; g = cf * (g - 128) + 128; b = cf * (b - 128) + 128;
+      const l = 0.299 * r + 0.587 * g + 0.114 * b;
+      r = l + (r - l) * sat; g = l + (g - l) * sat; b = l + (b - l) * sat;
+      if (ig !== 1) { r = 255 * Math.pow(clamp(r, 0, 255) / 255, ig); g = 255 * Math.pow(clamp(g, 0, 255) / 255, ig); b = 255 * Math.pow(clamp(b, 0, 255) / 255, ig); }
+      const j = (oy * dw + ox) * 3; out[j] = r; out[j + 1] = g; out[j + 2] = b;
+    }
+  }
+  // choke: grow the transparent area to eat edge pixels
+  for (let c = 0; c < S.key.choke && kc; c++) {
+    const m0 = mask.slice();
+    for (let y = 0; y < dh; y++) for (let x = 0; x < dw; x++) {
+      const i = y * dw + x; if (m0[i]) continue;
+      if ((x > 0 && m0[i - 1]) || (x < dw - 1 && m0[i + 1]) || (y > 0 && m0[i - dw]) || (y < dh - 1 && m0[i + dw])) mask[i] = 1;
+    }
+  }
+  return { px: out, mask };
+}
+function quantFrame(f, w, h) {
+  const p = f.px, mk = f.mask, idx = new Uint8Array(w * h), mode = S.out.dith, amt = S.out.amt;
+  if (mode === "none" || amt === 0) {
+    for (let i = 0, j = 0; i < idx.length; i++, j += 3) idx[i] = mk[i] ? TRANSP : nearest(p[j], p[j + 1], p[j + 2]);
+  } else if (BAYER[mode]) {
+    const M = BAYER[mode], n = M.length, spread = amt * 110;
+    for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
+      const t = M[y % n][x % n] * spread, j = (y * w + x) * 3;
+      idx[y * w + x] = mk[y * w + x] ? TRANSP : nearest(p[j] + t, p[j + 1] + t, p[j + 2] + t);
+    }
+  } else {
+    const buf = Float32Array.from(p), pal = S.pal, atk = mode === "atk";
+    const push = (x, y, er, eg, eb, f) => { if (x < 0 || x >= w || y >= h) return; const j = (y * w + x) * 3; buf[j] += er * f; buf[j + 1] += eg * f; buf[j + 2] += eb * f; };
+    for (let y = 0; y < h; y++) {
+      const ltr = (y & 1) === 0, d = ltr ? 1 : -1;
+      for (let k = 0; k < w; k++) {
+        const x = ltr ? k : w - 1 - k, j = (y * w + x) * 3;
+        if (mk[y * w + x]) { idx[y * w + x] = TRANSP; continue; }
+        const r = buf[j], g = buf[j + 1], b = buf[j + 2];
+        const q = nearest(r, g, b); idx[y * w + x] = q;
+        const c = pal[q], er = (clamp(r, -64, 320) - c[0]) * amt, eg = (clamp(g, -64, 320) - c[1]) * amt, eb = (clamp(b, -64, 320) - c[2]) * amt;
+        if (atk) { const f = 1 / 8; push(x + d, y, er, eg, eb, f); push(x + 2 * d, y, er, eg, eb, f); push(x - d, y + 1, er, eg, eb, f); push(x, y + 1, er, eg, eb, f); push(x + d, y + 1, er, eg, eb, f); push(x, y + 2, er, eg, eb, f); }
+        else { push(x + d, y, er, eg, eb, 7 / 16); push(x - d, y + 1, er, eg, eb, 3 / 16); push(x, y + 1, er, eg, eb, 5 / 16); push(x + d, y + 1, er, eg, eb, 1 / 16); }
+      }
+    }
+  }
+  return idx;
+}
+
+/* ---------- flicker reduction (runs over the selected frames as a loop) ---------- */
+function loopSeq() { const s = selected(); return s.length ? s : S.frames.map((_, i) => i); }
+function smoothPrep() {
+  const wgt = S.out.smooth / 100 * 0.5, seq = loopSeq();
+  if (!wgt || seq.length < 3) return S.prep;
+  const out = S.prep.slice(), n = seq.length;
+  for (let k = 0; k < n; k++) {
+    const a = S.prep[seq[(k - 1 + n) % n]].px, c = S.prep[seq[k]].px, b = S.prep[seq[(k + 1) % n]].px;
+    const px = new Float32Array(c.length);
+    for (let j = 0; j < c.length; j++) px[j] = c[j] * (1 - wgt) + (a[j] + b[j]) * wgt / 2;
+    out[seq[k]] = { px, mask: S.prep[seq[k]].mask };
+  }
+  return out;
+}
+function changeRate(frames) {
+  const seq = loopSeq(); if (seq.length < 2) return 0;
+  let s = 0; for (let k = 0; k < seq.length; k++) s += diff(frames[seq[k]], frames[seq[(k + 1) % seq.length]]);
+  return s / seq.length;
+}
+// Flicker reduction, motion-aware: a pixel only keeps its previous color when the footage under it barely
+// changed (quantization noise), never when something actually moved there, so running characters don't smear.
+function deflicker(raw, src) {
+  const seq = loopSeq(), n = seq.length, thr = S.out.stab / 100 * 0.07, w = S.outW;
+  if (n < 2 || (!thr && !S.out.pops)) return raw;
+  const out = raw.slice();
+  const labAt = (fi, i) => { const px = src[fi].px, j = i * 3; return oklab(clamp(px[j], 0, 255) | 0, clamp(px[j + 1], 0, 255) | 0, clamp(px[j + 2], 0, 255) | 0); };
+  const dl = (A, B) => { const a = A[0] - B[0], b = A[1] - B[1], c = A[2] - B[2]; return Math.sqrt(a * a + b * b + c * c); };
+  const still = Math.max(0.025, thr * 0.9); // source change below this counts as noise, above it as motion
+  if (thr) {
+    const M = BAYER[S.out.dith], spread = S.out.amt * 110, bn = M ? M.length : 0;
+    const d2 = (L, q) => dl(L, palLab[q]);
+    const step = (prev, prevFi, fi) => {
+      const cur = raw[fi], res = cur.slice(), px = src[fi].px, mk = src[fi].mask, mkp = src[prevFi].mask;
+      for (let i = 0; i < cur.length; i++) {
+        const c = cur[i], p = prev[i];
+        if (c === p || c === TRANSP || p === TRANSP || mk[i] || mkp[i]) continue;
+        if (dl(labAt(fi, i), labAt(prevFi, i)) > still) continue; // real motion: let it change
+        const t = M ? M[((i / w) | 0) % bn][(i % w) % bn] * spread : 0, j = i * 3;
+        const L = oklab(clamp(px[j] + t, 0, 255) | 0, clamp(px[j + 1] + t, 0, 255) | 0, clamp(px[j + 2] + t, 0, 255) | 0);
+        if (d2(L, p) <= d2(L, c) + thr) res[i] = p;
+      }
+      return res;
+    };
+    // two passes so the first frame is stabilized against the end of the loop
+    let prev = raw[seq[n - 1]], prevFi = seq[n - 1];
+    for (let pass = 0; pass < 2; pass++) for (let k = 0; k < n; k++) { const r = step(prev, prevFi, seq[k]); out[seq[k]] = r; prev = r; prevFi = seq[k]; }
+  }
+  if (S.out.pops && n >= 3) {
+    const snap = seq.map(fi => out[fi]);
+    for (let k = 0; k < n; k++) {
+      const fa = seq[(k - 1 + n) % n], fc = seq[k], fb = seq[(k + 1) % n];
+      const a = snap[(k - 1 + n) % n], c = snap[k], b = snap[(k + 1) % n]; let r = null;
+      for (let i = 0; i < c.length; i++) {
+        if (a[i] !== b[i] || c[i] === a[i] || c[i] === TRANSP || a[i] === TRANSP) continue;
+        const Lc = labAt(fc, i); if (dl(Lc, labAt(fa, i)) > still || dl(Lc, labAt(fb, i)) > still) continue; // something really flashed there
+        if (!r) r = c.slice(); r[i] = a[i];
+      }
+      if (r) out[seq[k]] = r;
+    }
+  }
+  return out;
+}
+
+let prepDirty = true, procTimer = 0;
+function schedule(prep) { if (prep) prepDirty = true; clearTimeout(procTimer); procTimer = setTimeout(runProcess, 50); }
+function runProcess() {
+  if (!S.frames.length) return;
+  const [w, h] = outDims();
+  if (prepDirty || w !== S.outW || h !== S.outH) {
+    if (w !== S.outW || h !== S.outH) {
+      const hadEdits = S.edits[dimKey()] && Object.keys(S.edits[dimKey()]).length;
+      S.undo = []; S.redo = []; updateUndo();
+      if (hadEdits) status("Painted edits stay with " + S.outW + " × " + S.outH + ". Go back to that width to see them.");
+    }
+    S.outW = w; S.outH = h;
+    rebuildKey();
+    S.prep = S.frames.map(f => prepFrame(f.data, S.workW, S.workH, w, h));
+    prepDirty = false;
+  }
+  rebuildQuant();
+  const src = smoothPrep();
+  const raw = src.map(p => quantFrame(p, w, h));
+  S.flickRaw = changeRate(raw);
+  S.base = deflicker(raw, src);
+  S.idx = []; S.base.forEach((_, i) => applyEdits(i));
+  afterProcess();
+}
+
+/* ---------- rendering ---------- */
+function rgbaOf(idx, w, h, scale) {
+  scale = scale || 1;
+  const W = w * scale, H = h * scale, data = new Uint8ClampedArray(W * H * 4), pal = S.pal, tr = S.trans;
+  for (let y = 0; y < H; y++) {
+    const sy = (y / scale | 0) * w;
+    for (let x = 0; x < W; x++) {
+      const q = idx[sy + (x / scale | 0)], c = pal[q] || [255, 0, 255], o = (y * W + x) * 4;
+      data[o] = c[0]; data[o + 1] = c[1]; data[o + 2] = c[2]; data[o + 3] = q === tr || q === TRANSP ? 0 : 255;
+    }
+  }
+  return new ImageData(data, W, H);
+}
+const outCv = $("#outCanvas"), outCtx = outCv.getContext("2d");
+const onionCv = document.createElement("canvas");
+
+function selected() { const a = []; S.frames.forEach((f, i) => { if (f.on) a.push(i); }); return a; }
+function sequence() {
+  const sel = selected();
+  if (S.play.mode === "pingpong" && sel.length > 2) return sel.concat(sel.slice(1, -1).reverse());
+  if (S.play.mode === "seam" && sel.length > 1) { const k = Math.min(3, Math.floor(sel.length / 2)) || 1; return sel.slice(-k).concat(sel.slice(0, k)); }
+  return sel;
+}
+function fitZoom() {
+  const st = $("#outStage"), r = st.getBoundingClientRect();
+  if (S.play.zoom !== "fit") return +S.play.zoom;
+  const avail = Math.max(60, r.width - 24), availH = Math.max(120, r.height - 24);
+  return Math.max(1, Math.floor(Math.min(avail / S.outW, availH / S.outH)));
+}
+function sizeOut() {
+  if (!S.outW) return;
+  outCv.width = S.outW; outCv.height = S.outH;
+  const z = fitZoom(); outCv.style.width = S.outW * z + "px"; outCv.style.height = S.outH * z + "px";
+  $("#outMeta").textContent = (S.native ? "grid snap · " : "downscale · ") + S.outW + " × " + S.outH + " · ×" + z;
+}
+function clearOutput() {
+  if (typeof setPaint === "function" && pv.open) setPaint(false);
+  S.frames = []; S.prep = []; S.base = []; S.idx = []; S.flickRaw = 0;
+  S.edits = {}; S.undo = []; S.redo = []; S.native = false; S.play.pos = 0; S.curFi = 0; S.lastClick = -1;
+  S.outW = 0; S.outH = 0; S.workW = 0; S.workH = 0; prepDirty = true;
+  loopCands = []; const ll = $("#loopList"); ll.textContent = ""; ll.hidden = true;
+  thumbsEl.textContent = ""; $("#stripMeta").textContent = "no frames";
+  outCv.width = 1; outCv.height = 1; outCtx.clearRect(0, 0, 1, 1);
+  $("#outMeta").textContent = ""; $("#pixMeta").textContent = ""; $("#frameRead").textContent = "0 / 0";
+  $("#seamPill").className = "pill"; $("#seamPill").textContent = "Seam: no frames"; $("#seamView").hidden = true;
+  $("#flickPill").className = "pill"; $("#flickPill").textContent = "no frames";
+  $("#nativeRow").hidden = true; $("#oW").disabled = false;
+  updateUndo(); updateExpMeta(); updateEmpty();
+}
+function updateEmpty() { $("#outEmpty").hidden = S.frames.length > 0; }
+$("#goExtract").addEventListener("click", () => setTab("source"));
+function renderOut() {
+  const seq = sequence();
+  if (!seq.length || !S.idx.length) { outCtx.clearRect(0, 0, outCv.width, outCv.height); $("#frameRead").textContent = "0 / 0"; return; }
+  S.play.pos = ((S.play.pos % seq.length) + seq.length) % seq.length;
+  const fi = seq[S.play.pos]; S.curFi = fi;
+  outCtx.putImageData(rgbaOf(S.idx[fi], S.outW, S.outH), 0, 0);
+  if (S.play.onion && seq.length > 1) {
+    const prev = seq[(S.play.pos - 1 + seq.length) % seq.length];
+    onionCv.width = S.outW; onionCv.height = S.outH;
+    onionCv.getContext("2d").putImageData(rgbaOf(S.idx[prev], S.outW, S.outH), 0, 0);
+    outCtx.globalAlpha = 0.38; outCtx.drawImage(onionCv, 0, 0); outCtx.globalAlpha = 1;
+  }
+  const sel = selected(), posInSel = sel.indexOf(fi);
+  $("#frameRead").textContent = (posInSel + 1) + " / " + sel.length + "  ·  #" + String(fi).padStart(3, "0");
+  $$(".thumb.cur").forEach(t => t.classList.remove("cur"));
+  const th = thumbsEl.children[fi]; if (th) th.classList.add("cur");
+}
+let lastT = 0, acc = 0;
+function tick(t) {
+  const dt = Math.min(250, t - (lastT || t)); lastT = t;
+  if (S.play.playing && S.idx.length) {
+    acc += dt; const per = 1000 / clamp(S.play.fps, 1, 60);
+    if (acc >= per) { const steps = Math.floor(acc / per); acc -= steps * per; S.play.pos += steps; renderOut(); }
+  }
+  requestAnimationFrame(tick);
+}
+
+/* thumbnails */
+const thumbsEl = $("#thumbs");
+function buildThumbs() {
+  thumbsEl.textContent = "";
+  S.frames.forEach((f, i) => {
+    const b = document.createElement("button"); b.className = "thumb" + (f.on ? "" : " off"); b.type = "button";
+    b.setAttribute("aria-pressed", f.on ? "true" : "false"); b.setAttribute("aria-label", "Frame " + i + (f.on ? ", included" : ", excluded"));
+    const c = document.createElement("canvas"); const sp = document.createElement("span");
+    sp.innerHTML = "<b>" + String(i).padStart(3, "0") + "</b><i>" + f.t.toFixed(2) + "s</i>"; sp.querySelector("b").style.fontWeight = "500"; sp.querySelector("i").style.fontStyle = "normal";
+    b.append(c, sp); b.dataset.i = i; thumbsEl.append(b);
+  });
+}
+function paintThumb(i) {
+  const b = thumbsEl.children[i]; if (!b || !S.idx[i]) return;
+  const c = b.querySelector("canvas");
+  c.width = S.outW; c.height = S.outH; c.style.width = Math.round(54 * S.outW / S.outH) + "px";
+  c.getContext("2d").putImageData(rgbaOf(S.idx[i], S.outW, S.outH), 0, 0);
+  b.classList.toggle("off", !S.frames[i].on); b.setAttribute("aria-pressed", S.frames[i].on ? "true" : "false");
+  b.classList.toggle("ed", hasEdits(i));
+}
+function paintThumbs() {
+  for (let i = 0; i < thumbsEl.children.length; i++) paintThumb(i);
+  const ne = S.frames.reduce((a, f, i) => a + (hasEdits(i) ? 1 : 0), 0);
+  $("#stripMeta").textContent = selected().length + " of " + S.frames.length + " in loop" + (ne ? " · " + ne + " painted" : "");
+}
+thumbsEl.addEventListener("click", e => {
+  const b = e.target.closest(".thumb"); if (!b) return;
+  const i = +b.dataset.i, v = !S.frames[i].on;
+  if (e.shiftKey && S.lastClick >= 0) { const a = Math.min(i, S.lastClick), z = Math.max(i, S.lastClick); for (let k = a; k <= z; k++) S.frames[k].on = v; }
+  else S.frames[i].on = v;
+  S.lastClick = i; afterSelection();
+});
+$$("[data-sel]").forEach(b => b.addEventListener("click", () => {
+  const m = b.dataset.sel;
+  S.frames.forEach((f, i) => { f.on = m === "all" ? true : m === "none" ? false : m === "invert" ? !f.on : i % (+m) === 0; });
+  afterSelection();
+}));
+function afterSelection() {
+  if (S.out.stab || S.out.pops || S.out.smooth) schedule(false); // flicker passes depend on the loop order
+  paintThumbs(); updateSeam(); renderOut(); updateExpMeta(); updateFlick();
+}
+function updateFlick() {
+  const pill = $("#flickPill"); if (!pill) return;
+  if (!S.idx.length || loopSeq().length < 2) { pill.textContent = "needs 2+ frames"; pill.className = "pill"; return; }
+  const now = changeRate(S.idx), raw = S.flickRaw || now, pct = v => (v * 100).toFixed(1) + "%";
+  const on = S.out.stab || S.out.pops || S.out.smooth;
+  pill.textContent = on ? pct(raw) + " → " + pct(now) + " change/frame" : pct(now) + " change/frame";
+  pill.className = "pill" + (on && now < raw * 0.9 ? " ok" : "");
+}
+
+/* seam analysis */
+function diff(a, b) { let n = 0; for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) n++; return n / a.length; }
+function updateSeam() {
+  const sel = selected(), pill = $("#seamPill");
+  pill.className = "pill";
+  if (sel.length < 2 || !S.idx.length) { pill.textContent = "Seam: needs 2+ frames"; return; }
+  const steps = []; for (let k = 1; k < sel.length; k++) steps.push(diff(S.idx[sel[k - 1]], S.idx[sel[k]]));
+  steps.sort((a, b) => a - b);
+  const typ = steps[Math.floor(steps.length / 2)], seam = diff(S.idx[sel[sel.length - 1]], S.idx[sel[0]]);
+  const ratio = seam / Math.max(typ, 0.002);
+  const pct = v => (v * 100).toFixed(1) + "%";
+  if (S.play.mode === "pingpong") { pill.textContent = "Ping-pong has no seam"; pill.classList.add("ok"); }
+  else {
+    pill.textContent = (ratio <= 1.5 ? "Clean loop" : ratio <= 3 ? "Visible seam" : "Seam jump") + " · " + pct(seam) + " vs " + pct(typ) + " typical";
+    pill.classList.add(ratio <= 1.5 ? "ok" : ratio <= 3 ? "warn" : "bad");
+  }
+  const sv = $("#seamView"); sv.hidden = S.play.mode !== "seam";
+  if (!sv.hidden) {
+    const a = sel[sel.length - 1], b = sel[0], z = Math.max(1, Math.floor(Math.min(160 / S.outW, 120 / S.outH)));
+    [["#seamA", a], ["#seamB", b]].forEach(([id, fi]) => { const c = $(id); c.width = S.outW; c.height = S.outH; c.style.width = S.outW * z + "px"; c.getContext("2d").putImageData(rgbaOf(S.idx[fi], S.outW, S.outH), 0, 0); });
+    $("#seamACap").textContent = "Last · #" + String(a).padStart(3, "0"); $("#seamBCap").textContent = "First · #" + String(b).padStart(3, "0");
+  }
+}
+/* Find loop point. With a video: scan the source between in and out on the sampling grid and move the out point to
+   the frame most like the in frame (that frame is excluded, so the clip wraps onto the start). Sample: trim frames. */
+let loopSearch = null;
+async function findLoopInVideo() {
+  if (loopSearch) { loopSearch.cancel = true; return; }
+  if (extracting) return;
+  const fps = S.sampleFps, c = S.crop, minK = Math.max(4, Math.round(fps * 0.4));
+  const maxK = Math.min(MAX_FRAMES, Math.floor((S.tOut - S.tIn) * fps + 1e-6));
+  if (maxK <= minK) { status("Set the out point further from the in point (at least " + (minK / fps).toFixed(2) + " s) so there is room to search.", "err"); return; }
+  const k = Math.min(1, 72 / Math.max(c.w, c.h)), W = Math.max(8, Math.round(c.w * k)), H = Math.max(8, Math.round(c.h * k));
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingQuality = "high";
+  const grab = async t => { await seek(t); ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, W, H); return ctx.getImageData(0, 0, W, H).data; };
+  const score = (a, b) => { let s = 0; for (let i = 0; i < a.length; i += 4) s += Math.abs(a[i] - b[i]) + Math.abs(a[i + 1] - b[i + 1]) + Math.abs(a[i + 2] - b[i + 2]); return s / (a.length / 4 * 765); };
+  const btn = $("#findLoop"), label = btn.textContent; loopSearch = { cancel: false };
+  btn.textContent = "Stop search"; $("#extract").disabled = true;
+  try {
+    const ref = await grab(S.tIn), ref2 = await grab(S.tIn + 1 / fps);
+    let best = -1, bd = Infinity, prev = null;
+    for (let kk = minK; kk <= maxK; kk++) {
+      if (loopSearch.cancel) { status("Loop search stopped. Out point unchanged."); return; }
+      const t = S.tIn + kk / fps, f = await grab(t);
+      // match the in frame, and make the step into the loop look like the first real step
+      let d = score(f, ref);
+      if (prev) d += 0.35 * Math.abs(score(prev, f) - score(ref, ref2));
+      prev = f;
+      if (d < bd) { bd = d; best = kk; }
+      $("#prog").style.width = ((kk - minK + 1) / (maxK - minK + 1) * 100) + "%";
+      if (kk % 6 === 0) status("Searching for a loop point… " + (t - S.tIn).toFixed(2) + " s");
+    }
+    if (best < 0) return;
+    S.tOut = S.tIn + best / fps; syncTrim(); await scrubTo(S.tOut);
+    status("Out point set to " + S.tOut.toFixed(2) + " s: a " + best + "-frame loop, " + Math.max(0, 100 - bd * 100).toFixed(1) + "% match with the start. Extract frames to apply.", "good");
+  } finally {
+    loopSearch = null; btn.textContent = label; $("#extract").disabled = false;
+    setTimeout(() => $("#prog").style.width = "0", 600);
+  }
+}
+$("#findLoop").addEventListener("click", () => { if (S.src) findLoopInVideo(); else findLoopInFrames(); });
+/* Loop detect: search every start/end pair for the cleanest wrap and set in and out */
+let loopCands = [];
+async function loopDetect() {
+  if (!S.src) { status("Load a video first. Loop detect works on the source footage.", "err"); return; }
+  if (loopSearch) { loopSearch.cancel = true; return; }
+  if (extracting) return;
+  const scope = $("#ldScope").value, lo = scope === "range" ? S.tIn : 0, hi = scope === "range" ? S.tOut : S.src.dur;
+  let minL = clamp(+$("#ldMin").value || 0.8, 0.2, 30), maxL = clamp(+$("#ldMax").value || 6, minL + 0.1, 40);
+  maxL = Math.min(maxL, MAX_FRAMES / S.sampleFps, hi - lo);
+  if (hi - lo < minL + 0.1) { status("The search range is shorter than the shortest loop. Widen it or lower the length.", "err"); return; }
+  const fps = S.sampleFps, span = hi - lo, r = Math.max(2, Math.min(fps, Math.floor(720 / span))), N = Math.floor(span * r) + 1;
+  const c = S.crop, FW = 24, FH = Math.max(6, Math.round(24 * c.h / c.w));
+  const cv = document.createElement("canvas"); cv.width = FW; cv.height = FH;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingQuality = "high";
+  const btn = $("#loopDetect"), label = btn.textContent, here = video.currentTime; loopSearch = { cancel: false };
+  btn.textContent = "Stop"; $("#extract").disabled = true; $("#findLoop").disabled = true;
+  try {
+    const feats = [];
+    for (let k = 0; k < N; k++) {
+      if (loopSearch.cancel) { status("Loop detect stopped. In and out unchanged."); return; }
+      await seek(lo + k / r);
+      ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, FW, FH);
+      const d = ctx.getImageData(0, 0, FW, FH).data, f = new Float32Array(FW * FH * 3);
+      for (let i = 0, j = 0; i < d.length; i += 4) { f[j++] = d[i]; f[j++] = d[i + 1]; f[j++] = d[i + 2]; }
+      feats.push(f);
+      $("#prog").style.width = ((k + 1) / N * 100) + "%";
+      if (k % 10 === 0) status("Scanning for loops… " + (k / r).toFixed(1) + " of " + span.toFixed(1) + " s");
+    }
+    const dist = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / (a.length * 255); };
+    const pre = new Float64Array(N); for (let k = 1; k < N; k++) pre[k] = pre[k - 1] + dist(feats[k - 1], feats[k]);
+    const minK = Math.max(2, Math.round(minL * r)), maxK = Math.min(N - 1, Math.floor(maxL * r + 1e-6));
+    const all = [];
+    for (let i = 0; i < N; i++) for (let L = minK; L <= maxK; L++) {
+      const j = i + L; if (j >= N) break;
+      const motion = (pre[j] - pre[i]) / L;
+      if (motion < 0.003) continue; // nothing moves: loops trivially, not useful
+      const seam = dist(feats[i], feats[j]);
+      all.push({ i, j, seam, motion, score: seam / motion - L * 0.0005 });
+    }
+    if (!all.length) { status("No moving stretch long enough to loop. Lower the shortest length or widen the search.", "err"); return; }
+    all.sort((a, b) => a.score - b.score);
+    // keep distinct candidates (start or end at least 0.3 s apart from a better one)
+    const sep = Math.max(1, Math.round(0.3 * r)); loopCands = [];
+    for (const cnd of all) {
+      if (loopCands.every(o => Math.abs(o.i - cnd.i) > sep || Math.abs(o.j - cnd.j) > sep)) loopCands.push(cnd);
+      if (loopCands.length >= 5) break;
+    }
+    // snap to the extraction grid and refine the end at full sampling rate around the coarse match
+    for (const cnd of loopCands) {
+      cnd.tIn = lo + cnd.i / r;
+      let kk = Math.round((cnd.j - cnd.i) / r * fps);
+      if (r < fps) {
+        await seek(cnd.tIn); ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, FW, FH);
+        const ref = ctx.getImageData(0, 0, FW, FH).data; let best = kk, bd = Infinity;
+        const w = Math.ceil(fps / r);
+        for (let q = kk - w; q <= kk + w; q++) {
+          if (q < 2) continue;
+          await seek(cnd.tIn + q / fps); ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, FW, FH);
+          const d = ctx.getImageData(0, 0, FW, FH).data; let s = 0; for (let i = 0; i < d.length; i += 4) s += Math.abs(d[i] - ref[i]) + Math.abs(d[i + 1] - ref[i + 1]) + Math.abs(d[i + 2] - ref[i + 2]);
+          if (s < bd) { bd = s; best = q; }
+        }
+        kk = best;
+      }
+      cnd.frames = kk; cnd.tOut = cnd.tIn + kk / fps; cnd.match = Math.max(0, 100 - cnd.seam * 100);
+    }
+    renderLoopCands(0); applyLoopCand(0);
+    const b0 = loopCands[0];
+    status("Best loop: " + b0.tIn.toFixed(2) + " → " + b0.tOut.toFixed(2) + " s, " + b0.frames + " frames, " + b0.match.toFixed(1) + "% match. In and out are set; extract to apply.", "good");
+  } catch (e) { status("Loop detect failed: " + (e && e.message || e), "err"); }
+  finally {
+    loopSearch = null; btn.textContent = label; $("#extract").disabled = false; $("#findLoop").disabled = false;
+    setTimeout(() => $("#prog").style.width = "0", 600);
+    if (!loopCands.length) scrubTo(here);
+  }
+}
+function renderLoopCands(sel) {
+  const box = $("#loopList"); box.textContent = ""; box.hidden = !loopCands.length;
+  loopCands.forEach((cnd, k) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.textContent = (k + 1) + ". " + cnd.tIn.toFixed(2) + "–" + cnd.tOut.toFixed(2) + " s · " + cnd.frames + " fr · " + cnd.match.toFixed(0) + "%";
+    b.title = "Set in and out to this loop";
+    b.setAttribute("aria-pressed", k === sel ? "true" : "false");
+    b.addEventListener("click", () => { applyLoopCand(k); renderLoopCands(k); status("In and out set to loop " + (k + 1) + ". Extract to apply."); });
+    box.append(b);
+  });
+}
+function applyLoopCand(k) { const cnd = loopCands[k]; if (!cnd) return; S.tIn = cnd.tIn; S.tOut = cnd.tOut; syncTrim(); scrubTo(S.tIn); }
+$("#loopDetect").addEventListener("click", loopDetect);
+/* source loop playback: real time between in and out */
+let srcPlaying = false, srcWrapping = false;
+function setSrcPlayUI() { const b = $("#srcPlay"); b.textContent = srcPlaying ? "■ Stop" : "▶︎ Play"; b.setAttribute("aria-pressed", srcPlaying ? "true" : "false"); }
+function stopSource() { if (!srcPlaying) return; srcPlaying = false; try { video.pause(); } catch (e) {} setSrcPlayUI(); drawSource(); syncTrim(); }
+async function startSource() {
+  if (!S.src || extracting || loopSearch) return;
+  if (S.tOut - S.tIn < 0.05) { status("Set an out point after the in point first.", "err"); return; }
+  if (video.currentTime < S.tIn || video.currentTime >= S.tOut - 0.02) await seek(S.tIn);
+  srcPlaying = true; setSrcPlayUI();
+  try { await video.play(); } catch (e) { srcPlaying = false; setSrcPlayUI(); status("This browser wouldn't play the video: " + (e && e.message || e), "err"); return; }
+  requestAnimationFrame(srcTick);
+}
+async function srcTick() {
+  if (!srcPlaying) return;
+  if (!srcWrapping && (video.currentTime >= S.tOut || video.ended)) {
+    srcWrapping = true; video.pause(); await seek(S.tIn); srcWrapping = false;
+    if (!srcPlaying) return;
+    try { await video.play(); } catch (e) {}
+  }
+  if (!srcWrapping) { drawSource(); $("#scrub").value = video.currentTime; $("#tRead").textContent = video.currentTime.toFixed(2) + " s · clip " + (S.tOut - S.tIn).toFixed(2) + " s"; }
+  requestAnimationFrame(srcTick);
+}
+$("#srcPlay").addEventListener("click", () => srcPlaying ? stopSource() : startSource());
+document.addEventListener("keydown", e => {
+  if (pv.open || e.target.closest("input,textarea,select") || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key.toLowerCase() === "p" && S.src) { e.preventDefault(); srcPlaying ? stopSource() : startSource(); }
+});
+["#scrub", "#extract", "#loopDetect", "#findLoop", "#gDetect", "#spBtn", "#setIn", "#setOut"].forEach(s => $(s).addEventListener("pointerdown", () => { if (s === "#setIn" || s === "#setOut") return; stopSource(); }, true));
+
+
+function findLoopInFrames() {
+  const sel = selected(); if (sel.length < 6) { status("Select at least 6 frames to search for a loop point."); return; }
+  let best = -1, bd = Infinity;
+  for (let j = Math.max(3, Math.floor(sel.length / 3)); j < sel.length; j++) { const d = diff(S.idx[sel[j]], S.idx[sel[0]]); if (d < bd) { bd = d; best = j; } }
+  if (best < 0) return;
+  if (best === sel.length - 1 && bd > 0) { // last frame is closest: it already wraps well, keep it unless identical
+    status("The current end already sits closest to the first frame. No change."); return;
+  }
+  for (let k = best; k < sel.length; k++) S.frames[sel[k]].on = false;
+  status("Loop point: kept frames up to #" + String(sel[best - 1]).padStart(3, "0") + ". Frame #" + String(sel[best]).padStart(3, "0") + " matched the first at " + (100 - bd * 100).toFixed(1) + "%.", "good");
+  afterSelection();
+}
+
+function afterProcess() {
+  updateEmpty(); sizeOut(); paintThumbs(); updateSeam(); renderOut(); updateExpMeta(); updateFlick();
+  $("#pixMeta").textContent = S.outW + " × " + S.outH;
+}
+
+/* ---------- source: video ---------- */
+const video = document.createElement("video");
+video.muted = true; video.playsInline = true; video.preload = "auto";
+let videoURL = null;
+const srcCv = $("#srcCanvas"), srcCtx = srcCv.getContext("2d");
+let view = { s: 1, ox: 0, oy: 0 }, sampleThumb = null;
+
+function loadFile(file) {
+  if (!file) return;
+  if (!/^video\//.test(file.type) && !/\.(mp4|mov|webm|m4v|mkv|ogv)$/i.test(file.name)) { status("That file isn't a video. Use MP4, MOV or WebM.", "err"); return; }
+  if (videoURL) URL.revokeObjectURL(videoURL);
+  videoURL = URL.createObjectURL(file);
+  status("Loading " + file.name + "…");
+  video.onloadedmetadata = async () => {
+    clearOutput();
+    S.src = { w: video.videoWidth, h: video.videoHeight, dur: video.duration, name: file.name };
+    S.crop = { x: 0, y: 0, w: S.src.w, h: S.src.h }; S.aspect = "free"; $("#aspect").value = "free";
+    S.tIn = 0; S.tOut = Math.min(S.src.dur, 4);
+    $("#srcName").textContent = file.name; $("#srcMeta").textContent = S.src.w + " × " + S.src.h + " · " + S.src.dur.toFixed(2) + " s";
+    $("#eName").value = S.exp.name = file.name.replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "_").toLowerCase().slice(0, 40) || "clip";
+    ["#scrub", "#setIn", "#setOut", "#tIn", "#tOut", "#extract", "#srcPlay"].forEach(s => $(s).disabled = false);
+    $("#scrub").max = S.src.dur; $("#tIn").max = $("#tOut").max = S.src.dur.toFixed(2);
+    srcCv.classList.remove("locked"); $("#dropHint").hidden = true;
+    await seek(0); syncTrim(); drawSource();
+    status("Checking for a pixel grid…"); autoGrid();
+  };
+  video.onerror = () => status("This browser can't decode that file. Try MP4 (H.264) or WebM.", "err");
+  video.src = videoURL;
+}
+function seek(t) {
+  if (srcPlaying && !srcWrapping) stopSource();
+  return new Promise(res => {
+    let done = false; const fin = () => { if (done) return; done = true; video.removeEventListener("seeked", fin); res(); };
+    video.addEventListener("seeked", fin); setTimeout(fin, 2000);
+    video.currentTime = clamp(t, 0, Math.max(0, video.duration - 0.001));
+  });
+}
+function accentColor() { return getComputedStyle(document.documentElement).getPropertyValue("--accent").trim() || "#c9440e"; }
+function drawSource() {
+  const st = $("#srcStage"), r = st.getBoundingClientRect(), dpr = window.devicePixelRatio || 1;
+  const tw = Math.round(r.width * dpr), th = Math.round(r.height * dpr);
+  if (srcCv.width !== tw || srcCv.height !== th) { srcCv.width = tw; srcCv.height = th; }
+  const ctx = srcCtx; ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, r.width, r.height);
+  if (!S.src) {
+    if (sampleThumb) { const s = Math.min(r.width / sampleThumb.width, r.height / sampleThumb.height); const w = sampleThumb.width * s, h = sampleThumb.height * s; view = { s, ox: (r.width - w) / 2, oy: (r.height - h) / 2 }; ctx.drawImage(sampleThumb, view.ox, view.oy, w, h); }
+    return;
+  }
+  const s = Math.min(r.width / S.src.w, r.height / S.src.h), ox = (r.width - S.src.w * s) / 2, oy = (r.height - S.src.h * s) / 2;
+  view = { s, ox, oy };
+  ctx.imageSmoothingQuality = "high"; ctx.drawImage(video, ox, oy, S.src.w * s, S.src.h * s);
+  const c = S.crop, cx = ox + c.x * s, cy = oy + c.y * s, cw = c.w * s, ch = c.h * s;
+  ctx.fillStyle = "rgba(0,0,0,.55)"; ctx.beginPath(); ctx.rect(ox, oy, S.src.w * s, S.src.h * s); ctx.rect(cx, cy, cw, ch); ctx.fill("evenodd");
+  ctx.strokeStyle = "rgba(255,255,255,.28)"; ctx.lineWidth = 1; ctx.beginPath();
+  for (let k = 1; k < 3; k++) { ctx.moveTo(cx + cw * k / 3, cy); ctx.lineTo(cx + cw * k / 3, cy + ch); ctx.moveTo(cx, cy + ch * k / 3); ctx.lineTo(cx + cw, cy + ch * k / 3); }
+  ctx.stroke();
+  if (S.conv === "grid" && S.grid.show && S.grid.set && S.grid.w * s >= 2.5) {
+    const g = S.grid; ctx.save(); ctx.beginPath(); ctx.rect(cx, cy, cw, ch); ctx.clip();
+    ctx.lineWidth = 1; ctx.beginPath();
+    for (let x = c.x + g.x; x <= c.x + c.w; x += g.w) { const X = Math.round(ox + x * s) + 0.5; ctx.moveTo(X, cy); ctx.lineTo(X, cy + ch); }
+    for (let y = c.y + g.y; y <= c.y + c.h; y += g.h) { const Y = Math.round(oy + y * s) + 0.5; ctx.moveTo(cx, Y); ctx.lineTo(cx + cw, Y); }
+    ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.stroke(); ctx.translate(1, 1); ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.stroke(); ctx.restore();
+  }
+  const ac = accentColor(); ctx.strokeStyle = ac; ctx.lineWidth = 2; ctx.strokeRect(cx, cy, cw, ch);
+  ctx.fillStyle = ac; for (const [hx, hy] of [[cx, cy], [cx + cw, cy], [cx, cy + ch], [cx + cw, cy + ch]]) ctx.fillRect(hx - 5, hy - 5, 10, 10);
+  $("#cropRead").textContent = c.w + " × " + c.h + " @ " + c.x + "," + c.y;
+}
+new ResizeObserver(() => { drawSource(); sizeOut(); }).observe($("#srcStage"));
+new ResizeObserver(() => sizeOut()).observe($("#outStage"));
+
+/* crop interaction */
+let drag = null;
+const toSrc = e => { const r = srcCv.getBoundingClientRect(); return { x: (e.clientX - r.left - view.ox) / view.s, y: (e.clientY - r.top - view.oy) / view.s, px: e.clientX - r.left, py: e.clientY - r.top }; };
+function aspectVal() { return S.aspect === "free" ? 0 : +S.aspect; }
+function rectFrom(anchor, p) {
+  const W = S.src.w, H = S.src.h, ar = aspectVal();
+  const px = clamp(p.x, 0, W), py = clamp(p.y, 0, H);
+  let w = Math.abs(px - anchor.x), h = Math.abs(py - anchor.y);
+  if (ar) { w = Math.min(w, h * ar); h = w / ar; }
+  w = Math.max(8, w); h = Math.max(8, h);
+  let x = px < anchor.x ? anchor.x - w : anchor.x, y = py < anchor.y ? anchor.y - h : anchor.y;
+  x = clamp(x, 0, W - w); y = clamp(y, 0, H - h);
+  return { x: Math.round(x), y: Math.round(y), w: Math.round(Math.min(w, W)), h: Math.round(Math.min(h, H)) };
+}
+srcCv.addEventListener("pointerdown", e => {
+  if (picking) { pickKey(e); return; }
+  if (!S.src) return;
+  const p = toSrc(e), c = S.crop, s = view.s;
+  const corners = [[c.x, c.y], [c.x + c.w, c.y], [c.x, c.y + c.h], [c.x + c.w, c.y + c.h]];
+  let corner = -1; corners.forEach(([x, y], i) => { if (Math.abs((x - p.x) * s) < 12 && Math.abs((y - p.y) * s) < 12) corner = i; });
+  srcCv.setPointerCapture(e.pointerId);
+  if (corner >= 0) { const opp = corners[3 - corner]; drag = { mode: "resize", anchor: { x: opp[0], y: opp[1] } }; }
+  else if (p.x > c.x && p.x < c.x + c.w && p.y > c.y && p.y < c.y + c.h) drag = { mode: "move", start: p, c0: { ...c } };
+  else drag = { mode: "resize", anchor: { x: clamp(p.x, 0, S.src.w), y: clamp(p.y, 0, S.src.h) } };
+});
+srcCv.addEventListener("pointermove", e => {
+  if (!drag) return;
+  const p = toSrc(e);
+  if (drag.mode === "move") { const c = drag.c0; S.crop = { ...c, x: Math.round(clamp(c.x + p.x - drag.start.x, 0, S.src.w - c.w)), y: Math.round(clamp(c.y + p.y - drag.start.y, 0, S.src.h - c.h)) }; }
+  else S.crop = rectFrom(drag.anchor, p);
+  drawSource(); updateEst();
+});
+const endDrag = () => { drag = null; };
+srcCv.addEventListener("pointerup", endDrag); srcCv.addEventListener("pointercancel", endDrag);
+$("#aspect").addEventListener("change", e => {
+  S.aspect = e.target.value; if (!S.src) return;
+  const ar = aspectVal(); if (!ar) return;
+  const c = S.crop, cx = c.x + c.w / 2, cy = c.y + c.h / 2;
+  let w = Math.min(c.w, c.h * ar), h = w / ar;
+  S.crop = { x: Math.round(clamp(cx - w / 2, 0, S.src.w - w)), y: Math.round(clamp(cy - h / 2, 0, S.src.h - h)), w: Math.round(w), h: Math.round(h) };
+  drawSource(); updateEst();
+});
+$("#cropReset").addEventListener("click", () => { if (!S.src) return; S.aspect = "free"; $("#aspect").value = "free"; S.crop = { x: 0, y: 0, w: S.src.w, h: S.src.h }; drawSource(); updateEst(); });
+
+/* trim */
+function syncTrim() {
+  if (!S.src) return;
+  const d = S.src.dur || 1;
+  $("#tIn").value = S.tIn.toFixed(2); $("#tOut").value = S.tOut.toFixed(2);
+  const band = $("#tBand"); band.style.left = (S.tIn / d * 100) + "%"; band.style.width = (Math.max(0, S.tOut - S.tIn) / d * 100) + "%";
+  $("#tRead").textContent = video.currentTime.toFixed(2) + " s · clip " + (S.tOut - S.tIn).toFixed(2) + " s";
+  updateEst();
+}
+function updateEst() {
+  if (!S.src) { $("#estRead").textContent = "load a video"; return; }
+  const n = Math.max(1, Math.floor((S.tOut - S.tIn) * S.sampleFps + 1e-6));
+  if (S.conv === "grid") { const [gc, gr] = gridDims(); $("#estRead").textContent = Math.min(n, MAX_FRAMES) + " frames" + (n > MAX_FRAMES ? " (capped)" : "") + (S.grid.set ? " · " + gc + " × " + gr + " native" : " · grid not set"); syncGridUI(); return; }
+  const k = Math.min(1, WORK_MAX / Math.max(S.crop.w, S.crop.h));
+  $("#estRead").textContent = Math.min(n, MAX_FRAMES) + " frames" + (n > MAX_FRAMES ? " (capped)" : "") + " · max " + Math.round(S.crop.w * k) + " px wide";
+}
+let seeking = false, pendingSeek = null;
+async function scrubTo(t) {
+  if (seeking) { pendingSeek = t; return; }
+  seeking = true; await seek(t); drawSource(); syncTrim(); seeking = false;
+  if (pendingSeek !== null) { const n = pendingSeek; pendingSeek = null; scrubTo(n); }
+}
+$("#scrub").addEventListener("input", e => scrubTo(+e.target.value));
+$("#setIn").addEventListener("click", () => { S.tIn = Math.min(video.currentTime, S.tOut - 0.05); syncTrim(); });
+$("#setOut").addEventListener("click", () => { S.tOut = Math.max(video.currentTime, S.tIn + 0.05); syncTrim(); });
+$("#tIn").addEventListener("change", e => { S.tIn = clamp(+e.target.value || 0, 0, S.tOut - 0.05); syncTrim(); scrubTo(S.tIn); });
+$("#tOut").addEventListener("change", e => { S.tOut = clamp(+e.target.value || 0, S.tIn + 0.05, S.src.dur); syncTrim(); scrubTo(S.tOut); });
+$("#sFps").addEventListener("change", e => { S.sampleFps = +e.target.value; updateEst(); });
+
+/* extraction */
+let extracting = false;
+$("#extract").addEventListener("click", async () => {
+  if (!S.src || extracting) return;
+  extracting = true; $("#extract").disabled = true;
+  const fps = S.sampleFps, n = Math.min(MAX_FRAMES, Math.max(1, Math.floor((S.tOut - S.tIn) * fps + 1e-6)));
+  const c = S.crop, grid = S.conv === "grid";
+  if (grid) {
+    if (!S.grid.set) { status("Detect the grid or enter a cell size first.", "err"); extracting = false; $("#extract").disabled = false; return; }
+    const [gc, gr] = gridDims();
+    if (gc < 4 || gr < 4 || gc > 640 || gr > 640) { status("That grid gives " + gc + " × " + gr + " pixels. Check the cell size.", "err"); extracting = false; $("#extract").disabled = false; return; }
+  }
+  const k = Math.min(1, WORK_MAX / Math.max(c.w, c.h));
+  const [W, H] = grid ? gridDims() : [Math.max(8, Math.round(c.w * k)), Math.max(8, Math.round(c.h * k))];
+  const cv = document.createElement("canvas"); cv.width = grid ? c.w : W; cv.height = grid ? c.h : H;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingQuality = "high";
+  const frames = [];
+  try {
+    for (let i = 0; i < n; i++) {
+      const t = S.tIn + i / fps; await seek(t);
+      if (grid) {
+        ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, c.w, c.h);
+        const out = new Uint8ClampedArray(W * H * 4); snapFrame(ctx.getImageData(0, 0, c.w, c.h).data, c.w, c.h, W, H, S.grid, out);
+        frames.push({ data: out, t: t, on: true });
+      } else {
+        ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, W, H);
+        frames.push({ data: ctx.getImageData(0, 0, W, H).data, t: t, on: true });
+      }
+      $("#prog").style.width = ((i + 1) / n * 100) + "%";
+      if (i % 4 === 0) status("Extracting frame " + (i + 1) + " of " + n + "…");
+    }
+  } catch (err) {
+    status("Couldn't read frames from this video: " + (err && err.message || err), "err");
+    extracting = false; $("#extract").disabled = false; return;
+  }
+  S.frames = frames; S.workW = W; S.workH = H; S.play.pos = 0; S.lastClick = -1;
+  S.edits = {}; S.undo = []; S.redo = []; updateUndo();
+  S.play.fps = fps; $("#pFps").value = fps;
+  S.native = grid; S.out.native = true;
+  if (grid && S.out.dith !== "none") { S.out.dith = "none"; $("#dith").value = "none"; }
+  configWidth();
+  buildThumbs(); prepDirty = true; runProcess();
+  extracting = false; $("#extract").disabled = false;
+  setTimeout(() => $("#prog").style.width = "0", 600);
+  status(n + " frames extracted" + (grid ? " at the native " + W + " × " + H + " grid (dither set to None)" : "") + ". Tune pixels and palette, then check the loop.", "good");
+  scrubTo(S.tIn);
+});
+function configWidth() {
+  const r = $("#oW"); r.max = maxOutW();
+  S.out.w = snap16(S.out.w);
+  r.value = S.out.w; $("#oWv").textContent = S.out.w;
+  $("#nativeRow").hidden = !S.native; $("#oNative").checked = S.out.native;
+  $("#nativeLabel").textContent = "Native grid resolution (" + S.workW + " × " + S.workH + ")";
+  r.disabled = S.native && S.out.native;
+}
+$("#oNative").addEventListener("change", e => { S.out.native = e.target.checked; configWidth(); schedule(true); });
+
+/* drag & drop */
+const stage = $("#srcStage");
+["dragenter", "dragover"].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.add("drag"); }));
+["dragleave", "drop"].forEach(ev => stage.addEventListener(ev, e => { e.preventDefault(); stage.classList.remove("drag"); }));
+stage.addEventListener("drop", e => loadFile(e.dataTransfer.files[0]));
+document.addEventListener("dragover", e => e.preventDefault());
+document.addEventListener("drop", e => { if (!stage.contains(e.target)) { e.preventDefault(); if (e.dataTransfer.files[0]) loadFile(e.dataTransfer.files[0]); } });
+$("#fileIn").addEventListener("change", e => loadFile(e.target.files[0]));
+
+/* ---------- sample loop ---------- */
+function makeSample() {
+  const W = 320, H = 180, N = 24, c = document.createElement("canvas"); c.width = W; c.height = H;
+  const x = c.getContext("2d", { willReadFrequently: true }), frames = [], horizon = H * 0.6;
+  const ridge = [0, .55, .08, .38, .16, .5, .25, .3, .34, .62, .44, .4, .52, .58, .6, .33, .7, .47, .8, .28, .9, .52, 1, .4];
+  for (let i = 0; i < N; i++) {
+    const p = i / N, TAU = Math.PI * 2;
+    const sky = x.createLinearGradient(0, 0, 0, horizon);
+    sky.addColorStop(0, "#241a4a"); sky.addColorStop(.55, "#b8506b"); sky.addColorStop(1, "#ffc98a");
+    x.fillStyle = sky; x.fillRect(0, 0, W, horizon);
+    const glow = x.createRadialGradient(W * .68, horizon - 14, 4, W * .68, horizon - 14, 70);
+    glow.addColorStop(0, "rgba(255,240,200,.9)"); glow.addColorStop(1, "rgba(255,200,140,0)");
+    x.fillStyle = glow; x.fillRect(0, 0, W, horizon);
+    x.fillStyle = "#fff4cf"; x.beginPath(); x.arc(W * .68, horizon - 14, 22, 0, TAU); x.fill();
+    x.fillStyle = "#3b2350"; x.beginPath(); x.moveTo(0, horizon);
+    for (let k = 0; k < ridge.length; k += 2) x.lineTo(ridge[k] * W, horizon - ridge[k + 1] * 46);
+    x.lineTo(W, horizon); x.closePath(); x.fill();
+    const sea = x.createLinearGradient(0, horizon, 0, H); sea.addColorStop(0, "#2d3f73"); sea.addColorStop(1, "#0f1530");
+    x.fillStyle = sea; x.fillRect(0, horizon, W, H - horizon);
+    for (let k = 0; k < 9; k++) {
+      const y = horizon + 3 + k * k * 1.15 + k * 2, amp = 0.6 + k * 0.45, len = 18 + k * 7;
+      x.strokeStyle = "rgba(255,190,140," + (0.75 - k * 0.07) + ")"; x.lineWidth = 1 + k * 0.18; x.beginPath();
+      for (let sx = 0; sx <= W; sx += 2) { const yy = y + Math.sin(sx / len * TAU + p * TAU * (k % 2 ? 1 : -1) + k) * amp; sx ? x.lineTo(sx, yy) : x.moveTo(sx, yy); }
+      x.stroke();
+    }
+    x.fillStyle = "rgba(255,230,170,.55)";
+    for (let k = 0; k < 6; k++) { const w = 26 - k * 3, sx = W * .68 - w / 2 + Math.sin(p * TAU + k) * 3; x.fillRect(sx, horizon + 4 + k * 5, w, 1.5); }
+    const by = horizon + 18 + Math.sin(p * TAU) * 2.5, bx = W * .28;
+    x.fillStyle = "#1b1020"; x.beginPath(); x.moveTo(bx - 16, by); x.lineTo(bx + 16, by); x.lineTo(bx + 11, by + 6); x.lineTo(bx - 11, by + 6); x.closePath(); x.fill();
+    x.fillRect(bx - 1, by - 22, 2, 22); x.beginPath(); x.moveTo(bx + 1, by - 21); x.lineTo(bx + 13, by - 3); x.lineTo(bx + 1, by - 3); x.closePath(); x.fill();
+    const gx = W * .42 + Math.cos(p * TAU) * 46, gy = H * .26 + Math.sin(p * TAU * 2) * 7, flap = Math.sin(p * TAU * 4) * 5;
+    x.strokeStyle = "#1b1020"; x.lineWidth = 2; x.beginPath(); x.moveTo(gx - 9, gy - flap); x.quadraticCurveTo(gx - 4, gy - 2, gx, gy + 1); x.quadraticCurveTo(gx + 4, gy - 2, gx + 9, gy - flap); x.stroke();
+    frames.push({ data: x.getImageData(0, 0, W, H).data, t: i / 12, on: true });
+    if (i === 0) { sampleThumb = document.createElement("canvas"); sampleThumb.width = W; sampleThumb.height = H; sampleThumb.getContext("2d").drawImage(c, 0, 0); }
+  }
+  S.frames = frames; S.workW = W; S.workH = H; S.play.fps = 12;
+}
+
+/* ---------- palette UI ---------- */
+function fillPresets() {
+  const sel = $("#preset"); sel.textContent = "";
+  const add = (v, t) => { const o = document.createElement("option"); o.value = v; o.textContent = t; sel.append(o); };
+  Object.keys(PRESETS).forEach(k => add(k, k + " (" + parseHexList(PRESETS[k]).length + ")"));
+  add("Custom", "Custom (" + S.pal.length + ")");
+  sel.value = PRESETS[S.presetName] ? S.presetName : "Custom";
+}
+function markCustom() { S.presetName = "Custom"; fillPresets(); }
+function renderPalette() {
+  const box = $("#swatches"); box.textContent = "";
+  S.pal.forEach((c, i) => {
+    const b = document.createElement("button"); b.type = "button"; b.className = "sw" + (i === S.selSw ? " sel" : "") + (i === S.trans ? " tr" : "");
+    b.style.background = rgb2hex(c); b.title = rgb2hex(c) + (i === S.trans ? " (transparent)" : ""); b.setAttribute("role", "option");
+    b.setAttribute("aria-selected", i === S.selSw ? "true" : "false"); b.setAttribute("aria-label", "Color " + (i + 1) + " " + rgb2hex(c));
+    b.addEventListener("click", () => { S.selSw = i; renderPalette(); });
+    box.append(b);
+  });
+  const c = S.pal[S.selSw] || S.pal[0];
+  $("#swColor").value = rgb2hex(c); $("#swHex").value = rgb2hex(c).toUpperCase();
+  const t = $("#swTrans"); t.classList.toggle("on", S.selSw === S.trans); t.setAttribute("aria-pressed", S.selSw === S.trans ? "true" : "false");
+  $("#swDel").disabled = S.pal.length <= 2; $("#swAdd").disabled = S.pal.length >= MAX_PAL; updateChips();
+  $("#palMeta").textContent = S.pal.length + " colors";
+  $("#hexArea").value = S.pal.map(c => rgb2hex(c).slice(1).toUpperCase()).join(" ");
+}
+function palChanged(custom) { if (custom) markCustom(); S.selSw = clamp(S.selSw, 0, S.pal.length - 1); if (S.trans >= S.pal.length) S.trans = -1; renderPalette(); schedule(false); savePrefs(); }
+$("#preset").addEventListener("change", e => { const v = e.target.value; if (!PRESETS[v]) return; S.pal = parseHexList(PRESETS[v]); S.presetName = v; S.trans = -1; S.selSw = 0; palChanged(false); fillPresets(); });
+$("#swColor").addEventListener("input", e => { S.pal[S.selSw] = hex2rgb(e.target.value); palChanged(true); });
+$("#swHex").addEventListener("change", e => { if (/^#?[0-9a-f]{6}$/i.test(e.target.value.trim())) { S.pal[S.selSw] = hex2rgb(e.target.value.trim()); palChanged(true); } else { status("Use a 6-digit hex color like #FF7A3D.", "err"); renderPalette(); } });
+$("#swTrans").addEventListener("click", () => { S.trans = S.trans === S.selSw ? -1 : S.selSw; palChanged(false); });
+$("#swDel").addEventListener("click", () => {
+  if (S.pal.length <= 2) return; const i = S.selSw; S.pal.splice(i, 1);
+  if (S.trans === i) S.trans = -1; else if (S.trans > i) S.trans--;
+  palChanged(true);
+});
+$("#swAdd").addEventListener("click", () => { if (S.pal.length >= MAX_PAL) return; S.pal.push((S.pal[S.selSw] || [128, 128, 128]).slice()); S.selSw = S.pal.length - 1; palChanged(true); });
+$("#sortBtn").addEventListener("click", () => {
+  const tr = S.trans >= 0 ? S.pal[S.trans] : null;
+  S.pal.sort((a, b) => oklab(a[0], a[1], a[2])[0] - oklab(b[0], b[1], b[2])[0]);
+  if (tr) S.trans = S.pal.indexOf(tr); palChanged(true);
+});
+$("#hexApply").addEventListener("click", () => {
+  const list = parseHexList($("#hexArea").value);
+  if (list.length < 2) { status("Paste at least 2 hex colors (e.g. 1a1c2c 5d275d …).", "err"); return; }
+  S.pal = list.slice(0, MAX_PAL); S.trans = -1; S.selSw = 0; palChanged(true); status("Palette set to " + S.pal.length + " colors.", "good");
+});
+$("#hexCopy").addEventListener("click", async () => {
+  const t = $("#hexArea"); try { await navigator.clipboard.writeText(t.value); status("Hex list copied.", "good"); } catch (e) { t.focus(); t.select(); status("Press Ctrl/Cmd+C to copy the selected list."); }
+});
+$("#exBtn").addEventListener("click", () => {
+  const n = clamp(+$("#exN").value || 16, 2, 64), sel = selected(); if (!sel.length) { status("Select some frames first.", "err"); return; }
+  const px = []; const per = Math.max(1, Math.ceil(sel.length * S.outW * S.outH / 60000));
+  let k = 0; sel.forEach(fi => { const p = S.prep[fi].px, m = S.prep[fi].mask; for (let j = 0, q = 0; j < p.length; j += 3, q++, k++) if (k % per === 0 && !m[q]) px.push([clamp(p[j], 0, 255), clamp(p[j + 1], 0, 255), clamp(p[j + 2], 0, 255)]); });
+  if (px.length < n) { status("Not enough opaque pixels to extract a palette. Lower the key tolerance.", "err"); return; }
+  S.pal = kmeans(px, medianCut(px, n), 4).map(c => c.map(v => Math.round(v)));
+  S.pal.sort((a, b) => oklab(a[0], a[1], a[2])[0] - oklab(b[0], b[1], b[2])[0]);
+  S.trans = -1; S.selSw = 0; palChanged(true); status("Extracted " + S.pal.length + " colors from " + sel.length + " frames.", "good");
+});
+/* palette straight from the source (crop region, current adjustments and key applied) */
+function setPaletteFrom(px, n, what) {
+  if (px.length < n) { status("Not enough opaque pixels to pick " + n + " colors. Lower the key tolerance or widen the crop.", "err"); return false; }
+  S.pal = kmeans(px, medianCut(px, n), 5).map(c => c.map(v => Math.round(v)));
+  S.pal.sort((a, b) => oklab(a[0], a[1], a[2])[0] - oklab(b[0], b[1], b[2])[0]);
+  S.trans = -1; S.selSw = 0; palChanged(true);
+  status("Palette of " + S.pal.length + " colors extracted from " + what + ".", "good");
+  return true;
+}
+function collectPx(data, W, H, px, step) {
+  rebuildKey();
+  const f = prepFrame(data, W, H, W, H);
+  const keyed = !!(S.key.on && S.key.rgb); if (keyed) rebuildKeyLevels();
+  for (let q = 0, j = 0; q < f.mask.length; q++, j += 3) {
+    if (f.mask[q] || q % step !== 0) continue;
+    const r = clamp(f.px[j], 0, 255) | 0, g = clamp(f.px[j + 1], 0, 255) | 0, b = clamp(f.px[j + 2], 0, 255) | 0;
+    if (keyed && keyLevel(r, g, b) >= 1) continue; // background and its fringe don't earn palette slots
+    px.push([r, g, b]);
+  }
+}
+$("#spBtn").addEventListener("click", async () => {
+  const n = clamp(Math.round(+$("#spN").value) || 16, 2, 64); $("#spN").value = n;
+  const scope = $("#spScope").value, btn = $("#spBtn"), px = [];
+  if (!S.src) { // sample loop: use its frames
+    const list = scope === "frame" ? [S.frames[S.curFi] || S.frames[0]] : S.frames.filter((_, i) => i % Math.max(1, Math.floor(S.frames.length / 8)) === 0);
+    list.forEach(f => collectPx(f.data, S.workW, S.workH, px, Math.max(1, Math.floor(S.workW * S.workH * list.length / 50000))));
+    setPaletteFrom(px, n, scope === "frame" ? "the current frame" : list.length + " sample frames");
+    return;
+  }
+  if (extracting || loopSearch) return;
+  const c = S.crop, k = Math.min(1, 160 / Math.max(c.w, c.h)), W = Math.max(8, Math.round(c.w * k)), H = Math.max(8, Math.round(c.h * k));
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingQuality = "high";
+  const here = video.currentTime;
+  const times = scope === "frame" ? [here] : Array.from({ length: 10 }, (_, i) => S.tIn + (S.tOut - S.tIn) * (i + 0.5) / 10);
+  const label = btn.textContent; btn.disabled = true; btn.textContent = "Sampling…";
+  try {
+    for (const t of times) {
+      if (scope !== "frame") await seek(t);
+      ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, W, H);
+      collectPx(ctx.getImageData(0, 0, W, H).data, W, H, px, Math.max(1, Math.floor(W * H * times.length / 60000)));
+    }
+    setPaletteFrom(px, n, scope === "frame" ? "the frame at " + here.toFixed(2) + " s" : times.length + " frames between in and out");
+  } catch (e) { status("Couldn't sample the video: " + (e && e.message || e), "err"); }
+  finally { btn.disabled = false; btn.textContent = label; if (scope !== "frame") scrubTo(here); }
+});
+function medianCut(px, n) {
+  let boxes = [px];
+  while (boxes.length < n) {
+    let bi = -1, br = -1, bc = 0;
+    boxes.forEach((b, i) => { if (b.length < 2) return; for (let c = 0; c < 3; c++) { let lo = 255, hi = 0; for (const p of b) { if (p[c] < lo) lo = p[c]; if (p[c] > hi) hi = p[c]; } const r = (hi - lo) * Math.sqrt(b.length); if (r > br) { br = r; bi = i; bc = c; } } });
+    if (bi < 0) break;
+    const b = boxes[bi].sort((p, q) => p[bc] - q[bc]), m = b.length >> 1;
+    boxes.splice(bi, 1, b.slice(0, m), b.slice(m));
+  }
+  return boxes.filter(b => b.length).map(b => { const s = [0, 0, 0]; b.forEach(p => { s[0] += p[0]; s[1] += p[1]; s[2] += p[2]; }); return s.map(v => v / b.length); });
+}
+function kmeans(px, cent, iters) {
+  for (let it = 0; it < iters; it++) {
+    const sum = cent.map(() => [0, 0, 0, 0]);
+    for (const p of px) { let bi = 0, bd = Infinity; for (let i = 0; i < cent.length; i++) { const c = cent[i], d = (p[0] - c[0]) ** 2 + (p[1] - c[1]) ** 2 + (p[2] - c[2]) ** 2; if (d < bd) { bd = d; bi = i; } } const s = sum[bi]; s[0] += p[0]; s[1] += p[1]; s[2] += p[2]; s[3]++; }
+    cent = cent.map((c, i) => sum[i][3] ? [sum[i][0] / sum[i][3], sum[i][1] / sum[i][3], sum[i][2] / sum[i][3]] : c);
+  }
+  return cent;
+}
+
+/* ---------- pixel controls ---------- */
+function bindSlider(id, key, fmt, toVal, prep) {
+  const el = $("#" + id), out = $("#" + id + "v");
+  const show = () => { if (out) out.textContent = fmt(+el.value); };
+  el.addEventListener("input", () => { S.out[key] = toVal(+el.value); show(); schedule(prep); savePrefs(); });
+  return v => { el.value = v; show(); };
+}
+const setW = bindSlider("oW", "w", v => v, v => v, true);
+const setBri = bindSlider("aBri", "bri", v => v, v => v, true);
+const setCon = bindSlider("aCon", "con", v => v, v => v, true);
+const setSat = bindSlider("aSat", "sat", v => v, v => v, true);
+const setGam = bindSlider("aGam", "gam", v => (v / 100).toFixed(2), v => v / 100, true);
+const setStab = bindSlider("fStab", "stab", v => v, v => v, false);
+const setSmooth = bindSlider("fSmooth", "smooth", v => v, v => v, false);
+$("#fPops").addEventListener("change", e => { S.out.pops = e.target.checked; schedule(false); savePrefs(); });
+$("#dith").addEventListener("change", e => { S.out.dith = e.target.value; schedule(false); savePrefs(); });
+$("#dAmt").addEventListener("input", e => { S.out.amt = +e.target.value / 100; schedule(false); savePrefs(); });
+
+/* ---------- playback controls ---------- */
+const playBtn = $("#playBtn");
+function setPlaying(v) { S.play.playing = v; playBtn.textContent = v ? "Pause" : "Play"; }
+playBtn.addEventListener("click", () => setPlaying(!S.play.playing));
+$("#stepF").addEventListener("click", () => { setPlaying(false); S.play.pos++; renderOut(); });
+$("#stepB").addEventListener("click", () => { setPlaying(false); S.play.pos--; renderOut(); });
+$("#pFps").addEventListener("change", e => { S.play.fps = clamp(+e.target.value || 12, 1, 60); e.target.value = S.play.fps; savePrefs(); updateExpMeta(); });
+$$(".seg [data-mode]").forEach(b => b.addEventListener("click", () => {
+  S.play.mode = b.dataset.mode; $$(".seg [data-mode]").forEach(x => x.setAttribute("aria-pressed", x === b ? "true" : "false"));
+  S.play.pos = 0; updateSeam(); renderOut(); savePrefs();
+}));
+$("#onionBtn").addEventListener("click", e => { S.play.onion = !S.play.onion; e.currentTarget.classList.toggle("on", S.play.onion); e.currentTarget.setAttribute("aria-pressed", S.play.onion); renderOut(); });
+$("#zoom").addEventListener("change", e => { S.play.zoom = e.target.value; sizeOut(); savePrefs(); });
+$("#bg").addEventListener("change", e => { S.play.bg = e.target.value; applyBg(); savePrefs(); });
+function applyBg() { const st = $("#outStage"); st.classList.toggle("bgdark", S.play.bg === "dark"); st.classList.toggle("bglight", S.play.bg === "light"); }
+document.addEventListener("keydown", e => {
+  if (pv.open || e.target.closest("input,textarea,select,.tabs")) return;
+  if (e.key === " ") { e.preventDefault(); setPlaying(!S.play.playing); }
+  else if (e.key === "ArrowRight") { setPlaying(false); S.play.pos++; renderOut(); }
+  else if (e.key === "ArrowLeft") { setPlaying(false); S.play.pos--; renderOut(); }
+});
+
+/* ---------- export ---------- */
+let dl = null;
+async function save(filename, data) {
+  if (!dl) { status("Saving files isn't available in this view. Open the published page in Claude to export.", "err"); return false; }
+  try { await dl.save({ filename, data }); status("Saved " + filename, "good"); return true; }
+  catch (e) {
+    const c = e && e.code;
+    if (c === "declined") status("Save cancelled.");
+    else if (c === "too_large") status("That file is too large here. Try a lower scale or fewer frames.", "err");
+    else if (c === "rate_limited") status("Another save is still waiting. Try again in a moment.", "err");
+    else status("Couldn't save " + filename + (e && e.message ? ": " + e.message : "."), "err");
+    return false;
+  }
+}
+const safeName = () => (S.exp.name || "sprite").replace(/[^\w-]+/g, "_").replace(/^_+|_+$/g, "") || "sprite";
+const toBlob = img => new Promise(res => { const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; c.getContext("2d").putImageData(img, 0, 0); c.toBlob(res, "image/png"); });
+function playSeq() { const sel = selected(); return S.play.mode === "pingpong" && sel.length > 2 ? sel.concat(sel.slice(1, -1).reverse()) : sel; }
+function sheetLayout(n, scale) {
+  const fw = S.outW * scale, fh = S.outH * scale, pad = S.exp.pad;
+  const cols = S.exp.cols > 0 ? Math.min(S.exp.cols, n) : Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
+  return { fw, fh, pad, cols, rows, W: cols * fw + (cols - 1) * pad, H: rows * fh + (rows - 1) * pad };
+}
+function buildSheet(frames, scale) {
+  const L = sheetLayout(frames.length, scale), data = new Uint8ClampedArray(L.W * L.H * 4), rects = [];
+  frames.forEach((fi, k) => {
+    const img = rgbaOf(S.idx[fi], S.outW, S.outH, scale), cx = (k % L.cols) * (L.fw + L.pad), cy = Math.floor(k / L.cols) * (L.fh + L.pad);
+    for (let y = 0; y < L.fh; y++) data.set(img.data.subarray(y * L.fw * 4, (y + 1) * L.fw * 4), ((cy + y) * L.W + cx) * 4);
+    rects.push({ index: k, x: cx, y: cy, w: L.fw, h: L.fh, time: +(k / S.play.fps).toFixed(4), sourceFrame: fi, sourceTime: +S.frames[fi].t.toFixed(3) });
+  });
+  return { img: new ImageData(data, L.W, L.H), rects, L };
+}
+function updateExpMeta() {
+  const n = selected().length;
+  if (!n || !S.outW) { $("#expMeta").textContent = ""; ["#xUnity", "#xSheet", "#xFrames", "#xGif", "#xVid"].forEach(s => $(s).disabled = true); return; }
+  const L = sheetLayout(n, 1);
+  $("#expMeta").textContent = n + " fr · sheet " + L.cols + "×" + L.rows + " · " + L.W + "×" + L.H;
+  $("#vidFmt").textContent = videoMime() ? (/mp4/.test(videoMime()) ? "MP4" : "WebM") + " · real-time" : "not supported here";
+  const off = !dl; ["#xUnity", "#xSheet", "#xFrames", "#xGif", "#xVid"].forEach(s => $(s).disabled = off || !n);
+  if (off) $("#expNote").textContent = "Exports save through the published page in Claude. The Unity package holds a sprite sheet, a JSON manifest, single frames, the palette and an editor importer.";
+  else $("#expNote").textContent = "The Unity package holds a sprite sheet, a JSON manifest, single frames, the palette and an editor importer that slices the sheet and builds a looping animation clip.";
+}
+["eName", "eScale", "ePPU", "ePivot", "eCols", "ePad", "eLoops"].forEach(id => $("#" + id).addEventListener("change", e => {
+  const v = e.target.value, key = { eName: "name", eScale: "scale", ePPU: "ppu", ePivot: "pivot", eCols: "cols", ePad: "pad", eLoops: "loops" }[id];
+  S.exp[key] = id === "eName" || id === "ePivot" ? v : clamp(+v || 0, 0, 4096); savePrefs(); updateExpMeta();
+}));
+async function busy(btn, label, fn) { const t = btn.textContent; btn.disabled = true; btn.textContent = label; try { await fn(); } catch (e) { status("Export failed: " + (e && e.message || e), "err"); } finally { btn.textContent = t; btn.disabled = false; updateExpMeta(); } }
+
+$("#xSheet").addEventListener("click", e => busy(e.currentTarget, "Building…", async () => {
+  const { img } = buildSheet(selected(), S.exp.scale); await save(safeName() + "_sheet_x" + S.exp.scale + ".png", await toBlob(img));
+}));
+$("#xFrames").addEventListener("click", e => busy(e.currentTarget, "Zipping…", async () => {
+  if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
+  const z = new JSZip(), nm = safeName(), sc = S.exp.scale;
+  const sel = selected();
+  for (let k = 0; k < sel.length; k++) z.file(nm + "_" + String(k).padStart(3, "0") + ".png", await toBlob(rgbaOf(S.idx[sel[k]], S.outW, S.outH, sc)));
+  await save(nm + "_frames_x" + sc + ".zip", await z.generateAsync({ type: "blob" }));
+}));
+$("#xGif").addEventListener("click", e => busy(e.currentTarget, "Encoding…", async () => {
+  const seq = playSeq(), sc = S.exp.scale, w = S.outW * sc, h = S.outH * sc;
+  const frames = seq.map(fi => { if (sc === 1) return S.idx[fi]; const src = S.idx[fi], o = new Uint8Array(w * h); for (let y = 0; y < h; y++) { const sy = (y / sc | 0) * S.outW; for (let x = 0; x < w; x++) o[y * w + x] = src[sy + (x / sc | 0)]; } return o; });
+  // keyed or erased pixels (index 255) need a real palette slot in the GIF
+  let pal = S.pal, tIdx = S.trans, gf = frames;
+  if (frames.some(f => f.includes(TRANSP))) {
+    if (tIdx < 0) { tIdx = S.pal.length; pal = S.pal.concat([[0, 0, 0]]); }
+    gf = frames.map(f => { if (!f.includes(TRANSP)) return f; const o = f.slice(); for (let i = 0; i < o.length; i++) if (o[i] === TRANSP) o[i] = tIdx; return o; });
+  }
+  const delay = Math.max(2, Math.round(100 / S.play.fps)); // GIF timing is in 1/100 s; under 2 browsers slow it down
+  const bytes = encodeGIF(w, h, gf, pal, delay, tIdx);
+  const ok = await save(safeName() + "_x" + sc + ".gif", new Blob([bytes], { type: "image/gif" }));
+  if (ok && S.play.fps > 50) status("Saved. GIF timing tops out at 50 fps, so it plays at " + Math.round(100 / delay) + " fps. Video and Unity exports keep " + S.play.fps + " fps.");
+}));
+function videoMime() {
+  if (!window.MediaRecorder) return "";
+  return ["video/mp4;codecs=avc1.42E01E", "video/mp4", "video/webm;codecs=vp9", "video/webm;codecs=vp8", "video/webm"].find(m => { try { return MediaRecorder.isTypeSupported(m); } catch (e) { return false; } }) || "";
+}
+$("#xVid").addEventListener("click", e => busy(e.currentTarget, "Recording…", async () => {
+  const mime = videoMime(); if (!mime) { status("This browser can't record video. Use the GIF or PNG exports.", "err"); return; }
+  const sc = S.exp.scale, w = S.outW * sc, h = S.outH * sc, W = w + (w & 1), H = h + (h & 1);
+  const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const ctx = cv.getContext("2d");
+  const stream = cv.captureStream(0), track = stream.getVideoTracks()[0];
+  const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 }), chunks = [];
+  rec.ondataavailable = ev => { if (ev.data.size) chunks.push(ev.data); };
+  const stopped = new Promise(r => rec.onstop = r);
+  const seq = playSeq(), loops = S.exp.loops || 1, per = 1000 / S.play.fps, total = seq.length * loops;
+  const imgs = seq.map(fi => rgbaOf(S.idx[fi], S.outW, S.outH, sc));
+  const tmp = document.createElement("canvas"); tmp.width = w; tmp.height = h; const tctx = tmp.getContext("2d");
+  rec.start();
+  const t0 = performance.now();
+  for (let k = 0; k < total; k++) {
+    ctx.fillStyle = "#000"; ctx.fillRect(0, 0, W, H);
+    tctx.putImageData(imgs[k % seq.length], 0, 0); ctx.drawImage(tmp, 0, 0);
+    if (track.requestFrame) track.requestFrame();
+    if (k % seq.length === 0) status("Recording loop " + (k / seq.length + 1) + " of " + loops + "…");
+    const wait = t0 + (k + 1) * per - performance.now(); await new Promise(r => setTimeout(r, Math.max(0, wait)));
+  }
+  rec.stop(); await stopped;
+  const ext = /mp4/.test(mime) ? "mp4" : "webm";
+  await save(safeName() + "_x" + sc + "." + ext, new Blob(chunks, { type: mime.split(";")[0] }));
+}));
+$("#xUnity").addEventListener("click", e => busy(e.currentTarget, "Packing…", async () => {
+  if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
+  const nm = safeName(), sel = selected(), z = new JSZip(), dir = z.folder(nm);
+  const { img, rects, L } = buildSheet(sel, 1);
+  const [px, py] = S.exp.pivot.split(",").map(Number);
+  const manifest = {
+    format: "bitreel.pixelsheet", version: 1, name: nm, image: nm + "_sheet.png",
+    sheetWidth: L.W, sheetHeight: L.H, frameWidth: L.fw, frameHeight: L.fh, columns: L.cols, rows: L.rows, padding: L.pad,
+    frameCount: rects.length, fps: S.play.fps, loopMode: S.play.mode === "pingpong" ? "pingpong" : "loop",
+    pixelsPerUnit: S.exp.ppu || 16, pivotX: px, pivotY: py, filterMode: "Point", compression: "None",
+    createAnimator: true, transparentIndex: S.trans, palette: S.pal.map(rgb2hex),
+    key: S.key.on && S.key.rgb ? { color: rgb2hex(S.key.rgb), tolerance: S.key.tol, choke: S.key.choke } : null,
+    paintedFrames: sel.map((fi, k) => hasEdits(fi) ? k : -1).filter(k => k >= 0),
+    coordinateOrigin: "top-left", frames: rects,
+    source: { file: S.src ? S.src.name : "procedural sample", crop: S.src ? { ...S.crop } : null, in: S.src ? +S.tIn.toFixed(3) : 0, out: S.src ? +S.tOut.toFixed(3) : 0, sampleFps: S.src ? S.sampleFps : 12 },
+    conversion: S.native ? { mode: "grid-snap", cellWidth: +S.grid.w.toFixed(3), cellHeight: +S.grid.h.toFixed(3), offsetX: +S.grid.x.toFixed(2), offsetY: +S.grid.y.toFixed(2) } : { mode: "downscale" },
+    settings: { ...S.out }, createdWith: "BitReel"
+  };
+  dir.file(nm + "_sheet.png", await toBlob(img));
+  dir.file(nm + ".pixelsheet.json", JSON.stringify(manifest, null, 2));
+  for (let k = 0; k < sel.length; k++) dir.file("frames/" + nm + "_" + String(k).padStart(3, "0") + ".png", await toBlob(rgbaOf(S.idx[sel[k]], S.outW, S.outH, 1)));
+  const palImg = new ImageData(S.pal.length, 1); S.pal.forEach((c, i) => { palImg.data.set([c[0], c[1], c[2], i === S.trans ? 0 : 255], i * 4); });
+  dir.file(nm + "_palette.png", await toBlob(palImg));
+  dir.file(nm + ".hex", S.pal.map(c => rgb2hex(c).slice(1)).join("\n") + "\n");
+  z.file("Editor/PixelSheetImporter.cs", $("#csImporter").textContent);
+  z.file("README.md", readme(nm, manifest));
+  await save(nm + "_unity.zip", await z.generateAsync({ type: "blob", compression: "DEFLATE" }));
+}));
+function readme(nm, m) {
+  return [
+    "# " + nm + " (BitReel export)", "",
+    m.frameCount + " frames, " + m.frameWidth + "x" + m.frameHeight + " px, " + m.fps + " fps, " + m.loopMode + ", " + m.palette.length + "-color palette, " + m.pixelsPerUnit + " pixels per unit.", "",
+    "## Contents", "",
+    "- `" + nm + "/" + nm + "_sheet.png`: sprite sheet, " + m.columns + " x " + m.rows + " grid, " + m.padding + " px padding, 1:1 pixels",
+    "- `" + nm + "/" + nm + ".pixelsheet.json`: manifest (frame rects with top-left origin, fps, loop mode, pivot, PPU, palette)",
+    "- `" + nm + "/frames/`: one PNG per frame, same order as the sheet",
+    "- `" + nm + "/" + nm + "_palette.png` and `" + nm + ".hex`: the palette",
+    "- `Editor/PixelSheetImporter.cs`: Unity editor importer", "",
+    "## Import into Unity", "",
+    "1. Install the importer once: copy `Editor/PixelSheetImporter.cs` to `Assets/Editor/PixelSheetImporter.cs`. Skip this if it is already in the project (two copies will not compile). It needs the 2D Sprite package (`com.unity.2d.sprite`).",
+    "2. Copy the `" + nm + "/` folder anywhere under `Assets/`, for example `Assets/Art/Animations/" + nm + "/`.",
+    "3. The importer runs on its own when the `.pixelsheet.json` file is imported. It sets the sheet to Sprite (Multiple), Point filter, no compression, no mipmaps, PPU " + m.pixelsPerUnit + ", slices " + m.frameCount + " sprites named `" + nm + "_000`..., creates `" + nm + ".anim` (looping, SpriteRenderer sprite curve) and `" + nm + ".controller`.",
+    "4. To re-run it: select the JSON and use Tools > BitReel > Import Selected Sheet, or call `PixelSheetImporter.Import(\"Assets/.../" + nm + ".pixelsheet.json\")`.", "",
+    "## Notes for an assistant using the Unity MCP", "",
+    "- Check for an existing `PixelSheetImporter` class before adding the script, then refresh and wait for compilation.",
+    "- After copying the folder, refresh the AssetDatabase. If the clip does not appear, call `PixelSheetImporter.Import(path)` through code execution and read the console for the `[BitReel] Imported` line.",
+    "- To place it in a scene: create a GameObject with a SpriteRenderer (sprite = `" + nm + "_000`) and an Animator using `" + nm + ".controller`.",
+    "- Manual fallback without the importer: Texture Type Sprite (2D and UI), Sprite Mode Multiple, Filter Point, Compression None, Generate Mip Maps off; slice by Cell Size " + m.frameWidth + " x " + m.frameHeight + " with offset 0 and padding " + m.padding + "; build an AnimationClip at " + m.fps + " fps from the sliced sprites in order" + (m.loopMode === "pingpong" ? ", then the same sprites in reverse without the first and last" : "") + ".", ""
+  ].join("\n");
+}
+
+/* GIF89a encoder (exact palette, LZW) */
+function encodeGIF(w, h, frames, pal, delayCs, trans) {
+  const out = []; const b = v => out.push(v & 255), w16 = v => { b(v); b(v >> 8); }, str = s => { for (let i = 0; i < s.length; i++) b(s.charCodeAt(i)); };
+  let bits = 1; while ((1 << bits) < pal.length) bits++;
+  str("GIF89a"); w16(w); w16(h); b(0x80 | ((bits - 1) << 4) | (bits - 1)); b(0); b(0);
+  for (let i = 0; i < (1 << bits); i++) { const c = pal[i] || [0, 0, 0]; b(c[0]); b(c[1]); b(c[2]); }
+  b(0x21); b(0xff); b(11); str("NETSCAPE2.0"); b(3); b(1); w16(0); b(0);
+  const minCode = Math.max(2, bits);
+  for (const f of frames) {
+    b(0x21); b(0xf9); b(4); b(((trans >= 0 ? 2 : 1) << 2) | (trans >= 0 ? 1 : 0)); w16(delayCs); b(trans >= 0 ? trans : 0); b(0);
+    b(0x2c); w16(0); w16(0); w16(w); w16(h); b(0);
+    b(minCode);
+    const data = lzw(f, minCode);
+    for (let i = 0; i < data.length; i += 255) { const n = Math.min(255, data.length - i); b(n); for (let k = 0; k < n; k++) out.push(data[i + k]); }
+    b(0);
+  }
+  b(0x3b);
+  return new Uint8Array(out);
+}
+function lzw(ix, min) {
+  const out = []; let cur = 0, curBits = 0, size = min + 1;
+  const clear = 1 << min, eoi = clear + 1; let next = eoi + 1, table = new Map();
+  const emit = c => { cur |= c << curBits; curBits += size; while (curBits >= 8) { out.push(cur & 255); cur >>>= 8; curBits -= 8; } };
+  emit(clear);
+  let code = ix[0];
+  for (let i = 1; i < ix.length; i++) {
+    const k = ix[i], key = code << 8 | k, v = table.get(key);
+    if (v !== undefined) { code = v; continue; }
+    emit(code);
+    if (next === 4096) { emit(clear); next = eoi + 1; size = min + 1; table = new Map(); }
+    else { if (next >= (1 << size)) size++; table.set(key, next++); }
+    code = k;
+  }
+  emit(code); emit(eoi);
+  if (curBits > 0) out.push(cur & 255);
+  return out;
+}
+
+/* ---------- key color picker (source) ---------- */
+let picking = false;
+function setPicking(v) {
+  picking = v; const b = $("#keyPick");
+  b.classList.toggle("on", v); b.setAttribute("aria-pressed", v ? "true" : "false");
+  srcCv.classList.toggle("picking", v);
+  if (v) status("Click the color in the source to make transparent (a green screen, a flat sky, a backdrop).");
+}
+function sourceColorAt(e) {
+  const p = toSrc(e), x = Math.floor(p.x), y = Math.floor(p.y);
+  if (!S.src) { // sample: read its first frame
+    if (x < 0 || y < 0 || x >= S.workW || y >= S.workH) return null;
+    const d = S.frames[0].data, s = [0, 0, 0]; let n = 0;
+    for (let yy = Math.max(0, y - 1); yy <= Math.min(S.workH - 1, y + 1); yy++) for (let xx = Math.max(0, x - 1); xx <= Math.min(S.workW - 1, x + 1); xx++) { const i = (yy * S.workW + xx) * 4; s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; n++; }
+    return s.map(v => Math.round(v / n));
+  }
+  if (x < 0 || y < 0 || x >= S.src.w || y >= S.src.h) return null;
+  const c = document.createElement("canvas"); c.width = 3; c.height = 3;
+  const t = c.getContext("2d", { willReadFrequently: true });
+  t.drawImage(video, clamp(x - 1, 0, S.src.w - 3), clamp(y - 1, 0, S.src.h - 3), 3, 3, 0, 0, 3, 3);
+  const d = t.getImageData(0, 0, 3, 3).data, s = [0, 0, 0];
+  for (let i = 0; i < d.length; i += 4) { s[0] += d[i]; s[1] += d[i + 1]; s[2] += d[i + 2]; }
+  return s.map(v => Math.round(v / 9));
+}
+function pickKey(e) {
+  const c = sourceColorAt(e); setPicking(false);
+  if (!c) { status("Click inside the picture to pick a key color.", "err"); return; }
+  S.key.rgb = c; S.key.on = true; updateKeyUI(); schedule(true);
+  status("Keying out " + rgb2hex(c).toUpperCase() + ". Adjust tolerance until the background clears, then choke to trim edges.", "good");
+}
+function updateKeyUI() {
+  const chip = $("#keyChip"), on = $("#keyOn");
+  if (S.key.rgb) { chip.style.background = rgb2hex(S.key.rgb); chip.title = "Key color " + rgb2hex(S.key.rgb); }
+  on.disabled = !S.key.rgb; on.textContent = S.key.on ? "On" : "Off"; on.classList.toggle("on", S.key.on); on.setAttribute("aria-pressed", S.key.on ? "true" : "false");
+  $("#keyRead").textContent = S.key.rgb ? rgb2hex(S.key.rgb).toUpperCase() + (S.key.on ? " keyed" : " (off)") : "no key color";
+  $("#kTol").value = S.key.tol; $("#kTolv").textContent = S.key.tol;
+  $("#kChoke").value = S.key.choke; $("#kChokev").textContent = S.key.choke + " px";
+}
+$("#keyPick").addEventListener("click", () => setPicking(!picking));
+$("#keyOn").addEventListener("click", () => { if (!S.key.rgb) return; S.key.on = !S.key.on; updateKeyUI(); schedule(true); });
+$("#kTol").addEventListener("input", e => { S.key.tol = +e.target.value; $("#kTolv").textContent = S.key.tol; if (S.key.on) schedule(true); savePrefs(); });
+$("#kChoke").addEventListener("input", e => { S.key.choke = +e.target.value; $("#kChokev").textContent = S.key.choke + " px"; if (S.key.on) schedule(true); savePrefs(); });
+
+/* ---------- grid snap: recover the native pixel grid of AI "pixel art" footage ---------- */
+// Edge-strength profile along one axis; peaks sit on cell boundaries.
+function edgeProfiles(d, W, H, px, py) {
+  for (let y = 0; y < H; y++) {
+    let i = y * W * 4;
+    for (let x = 0; x < W; x++, i += 4) {
+      if (x > 0) px[x] += Math.abs(d[i] - d[i - 4]) + Math.abs(d[i + 1] - d[i - 3]) + Math.abs(d[i + 2] - d[i - 2]);
+      if (y > 0) { const j = i - W * 4; py[y] += Math.abs(d[i] - d[j]) + Math.abs(d[i + 1] - d[j + 1]) + Math.abs(d[i + 2] - d[j + 2]); }
+    }
+  }
+}
+// Period and phase of the strongest regular edge spacing. Harmonics (p/2, p/3) score as high as p for sharp
+// edges, so among the strong peaks the largest period wins.
+// Period and offset of the fake pixel grid from one or more edge profiles (one per sampled frame). Each frame is
+// scored on its own (spectral strength doesn't depend on where the grid sits), so a grid that wobbles between
+// frames doesn't smear the measurement. The offset is taken from the first profile.
+function findPeriod(profs) {
+  if (!Array.isArray(profs)) profs = [profs];
+  const F = profs.map(prof => {
+    const n = prof.length, q = highPass(prof); let tot = 0; for (let x = 0; x < n; x++) tot += q[x];
+    return { prof, q, n, tot, mean: tot / n };
+  }).filter(f => f.tot > 0);
+  if (!F.length) return null;
+  const n = F[0].n;
+  const score1 = (f, p) => { let re = 0, im = 0; const w = 2 * Math.PI / p, q = f.q; for (let x = 0; x < f.n; x++) if (q[x]) { re += q[x] * Math.cos(w * x); im += q[x] * Math.sin(w * x); } return Math.hypot(re, im) / f.tot; };
+  const score = p => { let s = 0; for (const f of F) s += score1(f, p); return s / F.length; };
+  const atq = (f, v) => { if (v < 0 || v > f.n - 1) return 0; const i = Math.floor(v), r = v - i; return f.q[i] * (1 - r) + (i + 1 < f.n ? f.q[i + 1] : 0) * r; };
+  const atr = (f, v) => { if (v < 0 || v > f.n - 1) return 0; const i = Math.floor(v), r = v - i; return f.prof[i] * (1 - r) + (i + 1 < f.n ? f.prof[i + 1] : 0) * r; };
+  const lines = (f, p, o) => { let s = 0, c = 0; for (let v = o; v < f.n; v += p) { s += Math.max(atr(f, v - 0.5), atr(f, v), atr(f, v + 0.5)); c++; } return c ? s / c : 0; };
+  const bestOffset = (f, p) => { let bo = 0, bs = -1; for (let o = 0; o < p; o += 0.05) { let s = 0; for (let v = o; v < f.n; v += p) s += atq(f, v); if (s > bs) { bs = s; bo = o; } } return bo; };
+  const refine = p0 => { let bp = p0, bm = score(p0); for (let p = p0 - 0.06; p <= p0 + 0.06; p += 0.002) { const m = score(p); if (m > bm) { bm = m; bp = p; } } return bp; };
+  const maxP = Math.min(64, n / 4), list = [];
+  for (let p = 2; p <= maxP; p += 0.05) list.push([p, score(p)]);
+  const best = Math.max(...list.map(v => v[1]));
+  // harmonics (p/2, p/3) score as high as p for sharp edges, so start from the largest strong peak...
+  const peaks = list.filter((v, i) => v[1] >= best * 0.72 && (i === 0 || v[1] >= list[i - 1][1]) && (i === list.length - 1 || v[1] >= list[i + 1][1]));
+  let p = refine(peaks.length ? peaks[peaks.length - 1][0] : list.find(v => v[1] === best)[0]);
+  // ...then halve while the in-between lines still carry real edges (content can skip odd lines; a real grid's half-lines are empty)
+  for (let guard = 0; guard < 4 && p / 2 >= 2; guard++) {
+    let votes = 0;
+    for (const f of F) {
+      const o = bestOffset(f, p), main = lines(f, p, o), half = lines(f, p, (o + p / 2) % p);
+      const quarter = (lines(f, p, (o + p / 4) % p) + lines(f, p, (o + 3 * p / 4) % p)) / 2;
+      if (half - quarter > (main - quarter) * 0.04 && half > quarter * 1.3) votes++; // on a true grid the half-line sits between edges, at or below the quarter-line level
+    }
+    if (votes * 2 > F.length) p = refine(p / 2); else break;
+  }
+  return { p, off: bestOffset(F[0], p), conf: score(p) };
+}
+function gridDims() {
+  const g = S.grid, c = S.crop;
+  return [Math.max(0, Math.floor((c.w - g.x) / g.w + 0.001)), Math.max(0, Math.floor((c.h - g.y) / g.h + 0.001))];
+}
+function syncGridUI() {
+  const g = S.grid;
+  $("#gW").value = +g.w.toFixed(3); $("#gH").value = +g.h.toFixed(3); $("#gX").value = +g.x.toFixed(2); $("#gY").value = +g.y.toFixed(2);
+  $("#gSq").checked = g.sq; $("#gH").disabled = g.sq; $("#gTrack").checked = g.track !== false;
+  $("#gShow").classList.toggle("on", g.show); $("#gShow").setAttribute("aria-pressed", g.show ? "true" : "false");
+  if (!S.src) $("#gRead").textContent = "load a video";
+  else { const [cw, ch] = gridDims(); $("#gRead").textContent = g.set ? cw + " × " + ch + " native px" + (g.conf ? " · " + Math.round(g.conf * 100) + "% regular" : "") : "detect or enter a cell size"; }
+}
+function setConv(m) {
+  S.conv = m; savePrefs();
+  $("#extract").textContent = "Extract frames · " + (m === "grid" ? "grid snap" : "downscale");
+  $$("[data-conv]").forEach(b => b.setAttribute("aria-pressed", b.dataset.conv === m ? "true" : "false"));
+  $("#gridBox").hidden = m !== "grid";
+  $("#convNote").textContent = m === "grid"
+    ? "Grid snap is for footage that already looks like pixel art (AI video in a pixel style). It finds the fake pixel grid and keeps one clean color per cell, at the native resolution."
+    : "Downscale averages the footage into blocks. Use it for live action and renders.";
+  syncGridUI(); drawSource(); updateEst();
+}
+$$("[data-conv]").forEach(b => b.addEventListener("click", () => setConv(b.dataset.conv)));
+function gridInput() {
+  const g = S.grid;
+  g.w = clamp(+$("#gW").value || g.w, 1.5, 128); g.h = g.sq ? g.w : clamp(+$("#gH").value || g.h, 1.5, 128);
+  g.x = clamp(+$("#gX").value || 0, 0, g.w); g.y = clamp(+$("#gY").value || 0, 0, g.h); g.set = true; g.conf = 0;
+  syncGridUI(); drawSource(); updateEst();
+}
+["#gW", "#gH", "#gX", "#gY"].forEach(s => $(s).addEventListener("change", gridInput));
+$("#gSq").addEventListener("change", e => { S.grid.sq = e.target.checked; gridInput(); });
+$("#gTrack").addEventListener("change", e => { S.grid.track = e.target.checked; });
+$("#gShow").addEventListener("click", () => { S.grid.show = !S.grid.show; syncGridUI(); drawSource(); });
+// Measure the grid from the given times; returns the result without touching state.
+async function measureGrid(times) {
+  const c = S.crop, here = video.currentTime;
+  const cv = document.createElement("canvas"); cv.width = c.w; cv.height = c.h;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  const pxs = [], pys = [];
+  for (const t of times) {
+    if (Math.abs(t - video.currentTime) > 0.001) await seek(t);
+    ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, c.w, c.h);
+    const px = new Float64Array(c.w), py = new Float64Array(c.h);
+    edgeProfiles(ctx.getImageData(0, 0, c.w, c.h).data, c.w, c.h, px, py); pxs.push(px); pys.push(py);
+  }
+  if (Math.abs(video.currentTime - here) > 0.001) await seek(here);
+  const ax = findPeriod(pxs), ay = findPeriod(pys);
+  return ax && ay ? { ax, ay } : null;
+}
+function applyGrid(m) {
+  // keep each axis's own measurement: AI footage is often a hair anisotropic, and averaging drifts over many rows
+  const g = S.grid, { ax, ay } = m; g.w = ax.p; g.h = ay.p; g.sq = Math.abs(ax.p - ay.p) / Math.max(ax.p, ay.p) < 0.0015;
+  g.x = ((ax.off % g.w) + g.w) % g.w; g.y = ((ay.off % g.h) + g.h) % g.h; g.set = true; g.conf = Math.min(ax.conf, ay.conf);
+  syncGridUI(); drawSource(); updateEst(); savePrefs();
+}
+const looksLikePixelArt = m => m && Math.min(m.ax.conf, m.ay.conf) >= 0.45 && m.ax.p >= 3 && m.ay.p >= 3 && m.ax.p <= 48 && m.ay.p <= 48;
+$("#gDetect").addEventListener("click", async () => {
+  if (!S.src) { status("Load a video first. Grid snap works on the source footage.", "err"); return; }
+  if (extracting || loopSearch) return;
+  const btn = $("#gDetect"), label = btn.textContent, here = video.currentTime;
+  const times = $("#gScope").value === "frame" ? [here] : [here].concat(Array.from({ length: 5 }, (_, i) => S.tIn + (S.tOut - S.tIn) * (i + 0.5) / 5));
+  btn.disabled = true; btn.textContent = "Detecting…";
+  try {
+    const m = await measureGrid(times);
+    if (!m) { status("No grid found. The crop may be flat or not pixel art.", "err"); return; }
+    applyGrid(m);
+    const g = S.grid, [cw, ch] = gridDims();
+    status(g.conf < 0.25 ? "Found a weak " + g.w.toFixed(2) + " px grid. Check the overlay and adjust the cell size if it drifts."
+      : "Grid found: " + g.w.toFixed(2) + (g.sq ? "" : " × " + g.h.toFixed(2)) + " px cells, " + cw + " × " + ch + " native. Check the overlay, then extract.", g.conf < 0.25 ? "" : "good");
+  } catch (e) { status("Grid detection failed: " + (e && e.message || e), "err"); }
+  finally { btn.disabled = false; btn.textContent = label; }
+});
+// On load: look for a fake pixel grid and switch to grid snap when it's clear.
+async function autoGrid() {
+  if (!S.src) return;
+  S.grid.set = false; syncGridUI();
+  const d = S.src.dur, times = [0.2, 0.45, 0.7].map(f => Math.min(d - 0.05, d * f));
+  let m = null; try { m = await measureGrid(times); } catch (e) {}
+  await seek(0); drawSource();
+  if (looksLikePixelArt(m)) {
+    applyGrid(m); setConv("grid");
+    const g = S.grid, [cw, ch] = gridDims();
+    status("This looks like pixel art: Grid snap is on, with " + g.w.toFixed(2) + (g.sq ? "" : " × " + g.h.toFixed(2)) + " px cells (" + cw + " × " + ch + "). Switch to Downscale in the Source tab for live action.", "good");
+  } else {
+    const was = S.conv === "grid"; setConv("downscale");
+    status(was ? "No pixel grid in this video, so conversion is back to Downscale. Switch in the Source tab if you want Grid snap." : "Drag on the frame to crop, set in and out, then Extract frames.");
+  }
+}
+// High-passed edge profile (edges stand out, smooth gradients drop out).
+function highPass(prof) {
+  const n = prof.length, q = new Float64Array(n), win = 4;
+  for (let x = 0; x < n; x++) { let s = 0, c = 0; for (let k = Math.max(0, x - win); k <= Math.min(n - 1, x + win); k++) { s += prof[k]; c++; } q[x] = Math.max(0, prof[x] - s / c); }
+  return q;
+}
+// Grid lines for one frame on one axis: shift the whole grid to this frame's phase (staying near the detected
+// offset), then pull each line to the nearest real edge within a third of a cell. Lines with no edge nearby
+// follow their neighbours, so flat areas (keyed backgrounds, sky) don't wander.
+function trackLines(q, p, off0, count, track) {
+  const model = o => Array.from({ length: count + 1 }, (_, k) => o + k * p);
+  if (!track || !q) return model(off0);
+  const n = q.length, at = v => { if (v < 0 || v > n - 1) return 0; const i = Math.floor(v), f = v - i; return q[i] * (1 - f) + (i + 1 < n ? q[i + 1] : 0) * f; };
+  const fit = o => { let s = 0; for (let k = 0; k <= count; k++) s += Math.max(at(o + k * p - 0.5), at(o + k * p), at(o + k * p + 0.5)); return s; };
+  // 1) whole-grid shift for this frame, only when it clearly fits better than the detected offset
+  const s0 = fit(off0); let bo = off0, bs = s0;
+  for (let o = off0 - p * 0.35; o <= off0 + p * 0.35; o += 0.1) { const s = fit(o); if (s > bs) { bs = s; bo = o; } }
+  if (bs < s0 * 1.12) bo = off0;
+  const base = model(bo);
+  // 2) single lines move only onto a strong edge that clearly beats the model position
+  let mean = 0; for (let x = 0; x < n; x++) mean += q[x]; mean /= n;
+  const delta = base.map(L => {
+    const here = Math.max(at(L - 0.5), at(L), at(L + 0.5)); let bt = 0, bv = 0;
+    for (let t = -p * 0.25; t <= p * 0.25; t += 0.25) { const v = at(L + t); if (v > bv) { bv = v; bt = t; } }
+    return bv > mean * 4 && bv > here * 1.6 && Math.abs(bt) > 0.5 ? bt : 0;
+  });
+  // keep only shifts that agree with their neighbours (a drifting grid moves together; an outline does not)
+  const med = delta.map((d, k) => { const w = delta.slice(Math.max(0, k - 2), k + 3).sort((x, y) => x - y); return w[(w.length - 1) >> 1]; });
+  const lines = base.map((L, k) => L + (Math.abs(delta[k] - med[k]) <= p * 0.12 ? med[k] : 0));
+  for (let k = 1; k < lines.length; k++) if (lines[k] < lines[k - 1] + p * 0.6) lines[k] = lines[k - 1] + p * 0.6;
+  return lines;
+}
+// One color per cell: the dominant color of the cell's center, so blurred edges and dither mush don't leak in.
+function snapFrame(d, W, H, cols, rows, g, out) {
+  const keyed = !!(S.key.on && S.key.rgb); if (keyed) rebuildKeyLevels();
+  let xs, ys;
+  if (g.track !== false) {
+    const px = new Float64Array(W), py = new Float64Array(H); edgeProfiles(d, W, H, px, py);
+    xs = trackLines(highPass(px), g.w, g.x, cols, true); ys = trackLines(highPass(py), g.h, g.y, rows, true);
+  } else { xs = trackLines(null, g.w, g.x, cols, false); ys = trackLines(null, g.h, g.y, rows, false); }
+  const counts = new Map();
+  for (let cy = 0; cy < rows; cy++) {
+    const y0 = ys[cy], ch = ys[cy + 1] - y0, ya = clamp(Math.floor(y0 + ch * 0.25), 0, H - 1), yb = clamp(Math.max(ya + 1, Math.ceil(y0 + ch * 0.75)), 1, H);
+    for (let cx = 0; cx < cols; cx++) {
+      const x0 = xs[cx], cw = xs[cx + 1] - x0, xa = clamp(Math.floor(x0 + cw * 0.25), 0, W - 1), xb = clamp(Math.max(xa + 1, Math.ceil(x0 + cw * 0.75)), 1, W);
+      counts.clear(); let bestK = -1, bestN = 0, keyedN = 0, fringeN = 0, total = 0;
+      for (let y = ya; y < yb; y++) for (let x = xa; x < xb; x++) {
+        const i = (y * W + x) * 4; total++;
+        if (keyed) { const lv = keyLevel(d[i], d[i + 1], d[i + 2]); if (lv === 2) { keyedN++; continue; } if (lv === 1) { fringeN++; continue; } }
+        const k = (d[i] >> 4) << 8 | (d[i + 1] >> 4) << 4 | (d[i + 2] >> 4);
+        let e = counts.get(k); if (!e) { e = [0, 0, 0, 0]; counts.set(k, e); }
+        e[0]++; e[1] += d[i]; e[2] += d[i + 1]; e[3] += d[i + 2];
+        if (e[0] > bestN) { bestN = e[0]; bestK = k; }
+      }
+      const o = (cy * cols + cx) * 4, e = counts.get(bestK);
+      // mostly background (or only fringe left): make the cell the key color so it keys out cleanly
+      if (keyed && (!e || keyedN + fringeN > total * 0.5 && bestN < total * 0.3)) { out[o] = S.key.rgb[0]; out[o + 1] = S.key.rgb[1]; out[o + 2] = S.key.rgb[2]; out[o + 3] = 255; continue; }
+      if (!e) { out[o + 3] = 255; continue; }
+      out[o] = Math.round(e[1] / e[0]); out[o + 1] = Math.round(e[2] / e[0]); out[o + 2] = Math.round(e[3] / e[0]); out[o + 3] = 255;
+    }
+  }
+}
+
+/* ---------- full-screen paint editor ---------- */
+const pv = { open: false, fi: 0, zoom: 8, x: 0, y: 0, w: 0, h: 0, grid: true, onion: false, hover: null, pan: null, space: false };
+const pvCv = $("#pvCanvas"), pvCtx = pvCv.getContext("2d"), pvImg = document.createElement("canvas"), pvOnionImg = document.createElement("canvas");
+const ZSTEPS = [1, 2, 3, 4, 6, 8, 10, 12, 16, 20, 24, 32, 40, 48, 64];
+
+function updateChips() {
+  const c = S.pal[S.selSw], chip = $("#paintChip"); if (!chip) return;
+  const t = S.paint.tool;
+  if (t === "eraser") { chip.style.background = ""; chip.title = "Transparent"; }
+  else if (t === "restore") { chip.style.background = ""; chip.title = "Original converted pixel"; }
+  else if (c) { chip.style.background = rgb2hex(c); chip.title = "Current color " + rgb2hex(c); }
+  const sw = $("#pvSwatches");
+  if (sw) {
+    if (sw.children.length !== S.pal.length) {
+      sw.textContent = "";
+      S.pal.forEach((_, i) => { const b = document.createElement("button"); b.type = "button"; b.dataset.i = i; sw.append(b); });
+    }
+    [...sw.children].forEach((b, i) => { const col = rgb2hex(S.pal[i]); b.style.background = col; b.title = col; b.setAttribute("aria-label", "Color " + col); b.classList.toggle("sel", i === S.selSw && (t === "pencil" || t === "fill")); });
+  }
+}
+$("#pvSwatches").addEventListener("click", e => {
+  const b = e.target.closest("button"); if (!b) return;
+  S.selSw = +b.dataset.i; if (S.paint.tool !== "pencil" && S.paint.tool !== "fill") S.paint.tool = "pencil";
+  renderPalette(); setTool(S.paint.tool);
+});
+function setTool(t) {
+  S.paint.tool = t;
+  $$("[data-tool]").forEach(b => b.setAttribute("aria-pressed", b.dataset.tool === t ? "true" : "false"));
+  pvCv.classList.toggle("hand", t === "hand");
+  updateChips(); renderPV();
+}
+function pvList() { const s = selected(); return s.includes(pv.fi) ? s : S.frames.map((_, i) => i); }
+function pvResize() {
+  const r = $("#pvStage").getBoundingClientRect(), d = window.devicePixelRatio || 1;
+  pv.w = r.width; pv.h = r.height; pvCv.width = Math.max(1, Math.round(r.width * d)); pvCv.height = Math.max(1, Math.round(r.height * d));
+}
+function setZoom(z, cx, cy, center) {
+  z = clamp(z, 1, 64);
+  if (center) { pv.zoom = z; pv.x = Math.round((pv.w - S.outW * z) / 2); pv.y = Math.round((pv.h - S.outH * z) / 2); }
+  else { const ix = (cx - pv.x) / pv.zoom, iy = (cy - pv.y) / pv.zoom; pv.zoom = z; pv.x = Math.round(cx - ix * z); pv.y = Math.round(cy - iy * z); }
+  $("#pvZoom").textContent = "×" + z; renderPV();
+}
+function pvFit() { pvResize(); setZoom(Math.max(1, Math.floor(Math.min((pv.w - 48) / S.outW, (pv.h - 48) / S.outH))), 0, 0, true); }
+function zoomStep(dir, cx, cy) {
+  const next = dir > 0 ? (ZSTEPS.find(s => s > pv.zoom) || 64) : ([...ZSTEPS].reverse().find(s => s < pv.zoom) || 1);
+  setZoom(next, cx == null ? pv.w / 2 : cx, cy == null ? pv.h / 2 : cy);
+}
+let chkPattern = null, chkKey = "";
+function checker(c) {
+  const css = getComputedStyle(document.documentElement), a = css.getPropertyValue("--chk1").trim(), b = css.getPropertyValue("--chk2").trim();
+  if (chkKey !== a + b) {
+    const t = document.createElement("canvas"); t.width = t.height = 16; const x = t.getContext("2d");
+    x.fillStyle = a; x.fillRect(0, 0, 16, 16); x.fillStyle = b; x.fillRect(0, 0, 8, 8); x.fillRect(8, 8, 8, 8);
+    chkPattern = c.createPattern(t, "repeat"); chkKey = a + b;
+  }
+  return chkPattern;
+}
+function renderPV() {
+  if (!pv.open || !S.idx.length) return;
+  const d = window.devicePixelRatio || 1, c = pvCtx, W = S.outW, H = S.outH, z = pv.zoom;
+  c.setTransform(d, 0, 0, d, 0, 0); c.clearRect(0, 0, pv.w, pv.h);
+  const fx0 = Math.max(0, pv.x), fy0 = Math.max(0, pv.y), fx1 = Math.min(pv.w, pv.x + W * z), fy1 = Math.min(pv.h, pv.y + H * z);
+  if (fx1 > fx0 && fy1 > fy0) { c.fillStyle = checker(c); c.fillRect(fx0, fy0, fx1 - fx0, fy1 - fy0); }
+  pvImg.width = W; pvImg.height = H; pvImg.getContext("2d").putImageData(rgbaOf(S.idx[pv.fi], W, H), 0, 0);
+  c.imageSmoothingEnabled = false; c.drawImage(pvImg, pv.x, pv.y, W * z, H * z);
+  if (pv.onion) {
+    const list = pvList(), k = list.indexOf(pv.fi), prev = list[(k - 1 + list.length) % list.length];
+    if (prev !== undefined && prev !== pv.fi) { pvOnionImg.width = W; pvOnionImg.height = H; pvOnionImg.getContext("2d").putImageData(rgbaOf(S.idx[prev], W, H), 0, 0); c.globalAlpha = 0.35; c.drawImage(pvOnionImg, pv.x, pv.y, W * z, H * z); c.globalAlpha = 1; }
+  }
+  if (pv.grid && z >= 6) {
+    const gx0 = Math.max(0, Math.floor(-pv.x / z)), gx1 = Math.min(W, Math.ceil((pv.w - pv.x) / z)), gy0 = Math.max(0, Math.floor(-pv.y / z)), gy1 = Math.min(H, Math.ceil((pv.h - pv.y) / z));
+    c.strokeStyle = "rgba(128,128,140,.28)"; c.lineWidth = 1; c.beginPath();
+    for (let x = gx0; x <= gx1; x++) { const px = Math.round(pv.x + x * z) + 0.5; c.moveTo(px, pv.y + gy0 * z); c.lineTo(px, pv.y + gy1 * z); }
+    for (let y = gy0; y <= gy1; y++) { const py = Math.round(pv.y + y * z) + 0.5; c.moveTo(pv.x + gx0 * z, py); c.lineTo(pv.x + gx1 * z, py); }
+    c.stroke();
+  }
+  c.strokeStyle = "rgba(128,128,140,.6)"; c.strokeRect(pv.x - 0.5, pv.y - 0.5, W * z + 1, H * z + 1);
+  if (pv.hover && S.paint.tool !== "hand" && !pv.pan) {
+    const s = ["pencil", "eraser", "restore"].includes(S.paint.tool) ? S.paint.size : 1, o = Math.floor((s - 1) / 2);
+    c.strokeStyle = accentColor(); c.lineWidth = 2; c.strokeRect(pv.x + (pv.hover[0] - o) * z, pv.y + (pv.hover[1] - o) * z, s * z, s * z);
+  }
+  const list = pvList();
+  $("#pvFrame").textContent = "#" + String(pv.fi).padStart(3, "0") + "  ·  " + (list.indexOf(pv.fi) + 1) + " / " + list.length + (S.frames[pv.fi].on ? "" : "  (excluded)");
+}
+function pvGo(dir) { const list = pvList(), k = list.indexOf(pv.fi); pv.fi = list[((k < 0 ? 0 : k) + dir + list.length) % list.length]; renderPV(); }
+function setPaint(v, fi) {
+  if (v && !S.idx.length) { status("Extract frames before painting.", "err"); return; }
+  S.paint.on = v; pv.open = v; $("#paintView").hidden = !v;
+  document.documentElement.style.overflow = v ? "hidden" : "";
+  if (v) {
+    setPlaying(false); pv.fi = fi != null ? fi : S.curFi;
+    requestAnimationFrame(() => { pvFit(); updateChips(); });
+    $("#pvClose").focus();
+  } else {
+    if (pvPlaying) setPvPlay(false);
+    const seq = sequence(), k = seq.indexOf(pv.fi); if (k >= 0) S.play.pos = k;
+    paintThumbs(); updateSeam(); renderOut(); updateFlick();
+  }
+}
+new ResizeObserver(() => { if (pv.open) { pvResize(); renderPV(); } }).observe($("#pvStage"));
+/* playback inside the paint editor */
+let pvPlaying = false, pvDir = 1, pvAcc = 0, pvLast = 0;
+function setPvPlay(v) {
+  pvPlaying = v; const b = $("#pvPlay");
+  b.textContent = v ? "■ Stop" : "▶︎ Play"; b.setAttribute("aria-pressed", v ? "true" : "false");
+  if (v) { pvAcc = 0; pvLast = 0; pvDir = 1; requestAnimationFrame(pvTick); }
+}
+function pvTick(t) {
+  if (!pvPlaying || !pv.open) { if (!pv.open) setPvPlay(false); return; }
+  const dt = Math.min(250, t - (pvLast || t)); pvLast = t; pvAcc += dt;
+  const per = 1000 / clamp(S.play.fps, 1, 60);
+  while (pvAcc >= per) {
+    pvAcc -= per;
+    const list = pvList(), k = list.indexOf(pv.fi);
+    if (S.play.mode === "pingpong" && list.length > 2) {
+      let n = (k < 0 ? 0 : k) + pvDir;
+      if (n >= list.length || n < 0) { pvDir = -pvDir; n = (k < 0 ? 0 : k) + pvDir; }
+      pv.fi = list[n];
+    } else pv.fi = list[((k < 0 ? 0 : k) + 1) % list.length];
+  }
+  renderPV(); requestAnimationFrame(pvTick);
+}
+$("#pvPlay").addEventListener("click", () => setPvPlay(!pvPlaying));
+pvCv.addEventListener("pointerdown", () => { if (pvPlaying) setPvPlay(false); }, true);
+$("#pvPrev").addEventListener("click", () => setPvPlay(false), true);
+$("#pvNext").addEventListener("click", () => setPvPlay(false), true);
+document.addEventListener("keydown", e => {
+  if (!pv.open || e.target.closest("input,textarea,select") || e.ctrlKey || e.metaKey || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "p") { e.preventDefault(); setPvPlay(!pvPlaying); }
+  else if ((e.key === "ArrowLeft" || e.key === "ArrowRight") && pvPlaying) setPvPlay(false);
+}, true);
+
+
+function updateUndo() { const u = $("#undoBtn"), r = $("#redoBtn"); if (u) u.disabled = !S.undo.length; if (r) r.disabled = !S.redo.length; }
+function snapshot(targets) { return targets.map(fi => { const ed = editsFor(fi, false); return { fi, ed: ed ? ed.slice() : null }; }); }
+function restoreSnap(snap) {
+  const set = S.edits[dimKey()] || (S.edits[dimKey()] = {});
+  snap.forEach(({ fi, ed }) => { if (ed) set[fi] = ed.slice(); else delete set[fi]; applyEdits(fi); paintThumb(fi); });
+}
+function doUndo(from, to) {
+  const snap = from.pop(); if (!snap) return;
+  to.push(snapshot(snap.map(s => s.fi))); restoreSnap(snap);
+  updateUndo(); renderPV(); renderOut(); updateSeam(); paintThumbs();
+}
+function paintValue() {
+  const t = S.paint.tool;
+  if (t === "eraser") return -2;
+  if (t === "restore") return -1;
+  const c = S.pal[S.selSw]; return c[0] << 16 | c[1] << 8 | c[2];
+}
+function setPx(fi, i, v) {
+  const ed = editsFor(fi, true); ed[i] = v;
+  if (S.idx[fi] === S.base[fi]) S.idx[fi] = S.base[fi].slice();
+  S.idx[fi][i] = v === -1 ? S.base[fi][i] : editIndex(v);
+}
+function cellAt(e) { const r = pvCv.getBoundingClientRect(); return [Math.floor((e.clientX - r.left - pv.x) / pv.zoom), Math.floor((e.clientY - r.top - pv.y) / pv.zoom)]; }
+function dab(targets, cx, cy, v) {
+  const s = S.paint.size, o = Math.floor((s - 1) / 2);
+  for (let dy = 0; dy < s; dy++) for (let dx = 0; dx < s; dx++) {
+    const x = cx - o + dx, y = cy - o + dy; if (x < 0 || y < 0 || x >= S.outW || y >= S.outH) continue;
+    for (const fi of targets) setPx(fi, y * S.outW + x, v);
+  }
+}
+function line(targets, x0, y0, x1, y1, v) {
+  const dx = Math.abs(x1 - x0), dy = -Math.abs(y1 - y0), sx = x0 < x1 ? 1 : -1, sy = y0 < y1 ? 1 : -1; let err = dx + dy;
+  for (let guard = 0; guard < 4096; guard++) { dab(targets, x0, y0, v); if (x0 === x1 && y0 === y1) break; const e2 = 2 * err; if (e2 >= dy) { err += dy; x0 += sx; } if (e2 <= dx) { err += dx; y0 += sy; } }
+}
+function fill(fi, x, y, v) {
+  const w = S.outW, h = S.outH, idx = S.idx[fi], start = y * w + x, q0 = idx[start];
+  const target = v === -1 ? null : editIndex(v);
+  if (target !== null && target === q0) return;
+  const seen = new Uint8Array(w * h), stack = [start], cells = []; seen[start] = 1;
+  while (stack.length) {
+    const i = stack.pop(); cells.push(i);
+    const cx = i % w, cy = (i / w) | 0;
+    if (cx > 0 && !seen[i - 1] && idx[i - 1] === q0) { seen[i - 1] = 1; stack.push(i - 1); }
+    if (cx < w - 1 && !seen[i + 1] && idx[i + 1] === q0) { seen[i + 1] = 1; stack.push(i + 1); }
+    if (cy > 0 && !seen[i - w] && idx[i - w] === q0) { seen[i - w] = 1; stack.push(i - w); }
+    if (cy < h - 1 && !seen[i + w] && idx[i + w] === q0) { seen[i + w] = 1; stack.push(i + w); }
+  }
+  cells.forEach(i => setPx(fi, i, v));
+}
+let stroke = null;
+function targetsNow() { if (S.paint.all) { const s = selected(); return s.length ? s : [pv.fi]; } return [pv.fi]; }
+function finishStroke(targets) { targets.forEach(paintThumb); paintThumbs(); renderPV(); S.redo = []; updateUndo(); }
+pvCv.addEventListener("pointerdown", e => {
+  if (!pv.open) return;
+  e.preventDefault(); pvCv.setPointerCapture(e.pointerId);
+  const r = pvCv.getBoundingClientRect();
+  if (e.button === 1 || pv.space || S.paint.tool === "hand") {
+    pv.pan = { sx: e.clientX, sy: e.clientY, x0: pv.x, y0: pv.y }; pvCv.classList.add("panning"); return;
+  }
+  if (e.button !== 0) return;
+  const [x, y] = cellAt(e); if (x < 0 || y < 0 || x >= S.outW || y >= S.outH) return;
+  const tool = S.paint.tool;
+  if (tool === "picker") {
+    const q = S.idx[pv.fi][y * S.outW + x];
+    if (q === TRANSP || q === S.trans) setTool("eraser"); else { S.selSw = q; renderPalette(); setTool("pencil"); }
+    return;
+  }
+  const targets = targetsNow(), v = paintValue();
+  S.undo.push(snapshot(targets)); if (S.undo.length > 80) S.undo.shift();
+  if (tool === "fill") { targets.forEach(fi => fill(fi, x, y, v)); finishStroke(targets); return; }
+  stroke = { targets, last: [x, y], v };
+  dab(targets, x, y, v); renderPV();
+});
+pvCv.addEventListener("pointermove", e => {
+  if (!pv.open) return;
+  if (pv.pan) { pv.x = pv.pan.x0 + e.clientX - pv.pan.sx; pv.y = pv.pan.y0 + e.clientY - pv.pan.sy; renderPV(); return; }
+  const [x, y] = cellAt(e);
+  const inside = x >= 0 && y >= 0 && x < S.outW && y < S.outH;
+  pv.hover = inside ? [x, y] : null;
+  $("#pvCell").textContent = inside ? x + ", " + y : "";
+  if (stroke) {
+    const cx = clamp(x, -1, S.outW), cy = clamp(y, -1, S.outH);
+    line(stroke.targets, stroke.last[0], stroke.last[1], cx, cy, stroke.v); stroke.last = [cx, cy];
+  }
+  renderPV();
+});
+const endPointer = () => {
+  if (pv.pan) { pv.pan = null; pvCv.classList.remove("panning"); }
+  if (stroke) { const t = stroke.targets; stroke = null; finishStroke(t); }
+};
+pvCv.addEventListener("pointerup", endPointer); pvCv.addEventListener("pointercancel", endPointer);
+pvCv.addEventListener("pointerleave", () => { pv.hover = null; renderPV(); });
+pvCv.addEventListener("wheel", e => {
+  e.preventDefault();
+  const r = pvCv.getBoundingClientRect(), cx = e.clientX - r.left, cy = e.clientY - r.top;
+  if (e.shiftKey && !e.ctrlKey) { pv.x -= e.deltaY; renderPV(); return; }
+  zoomStep(e.deltaY < 0 ? 1 : -1, cx, cy);
+}, { passive: false });
+pvCv.addEventListener("contextmenu", e => e.preventDefault());
+$("#paintBtn").addEventListener("click", () => setPaint(true));
+$("#pvClose").addEventListener("click", () => setPaint(false));
+$("#pvIn").addEventListener("click", () => zoomStep(1));
+$("#pvOut").addEventListener("click", () => zoomStep(-1));
+$("#pvFit").addEventListener("click", pvFit);
+$("#pvPrev").addEventListener("click", () => pvGo(-1));
+$("#pvNext").addEventListener("click", () => pvGo(1));
+$("#pvOnion").addEventListener("click", e => { pv.onion = !pv.onion; e.currentTarget.classList.toggle("on", pv.onion); e.currentTarget.setAttribute("aria-pressed", pv.onion); renderPV(); });
+$("#pvGrid").addEventListener("click", e => { pv.grid = !pv.grid; e.currentTarget.classList.toggle("on", pv.grid); e.currentTarget.setAttribute("aria-pressed", pv.grid); renderPV(); });
+$$("[data-tool]").forEach(b => b.addEventListener("click", () => setTool(b.dataset.tool)));
+$("#pSize").addEventListener("change", e => { S.paint.size = +e.target.value; });
+$("#pAll").addEventListener("change", e => { S.paint.all = e.target.checked; });
+$("#undoBtn").addEventListener("click", () => doUndo(S.undo, S.redo));
+$("#redoBtn").addEventListener("click", () => doUndo(S.redo, S.undo));
+$("#clearEd").addEventListener("click", () => {
+  const targets = targetsNow().filter(hasEdits); if (!targets.length) { status("No painted edits on " + (S.paint.all ? "the selected frames." : "this frame.")); return; }
+  S.undo.push(snapshot(targets)); const set = S.edits[dimKey()];
+  targets.forEach(fi => { delete set[fi]; applyEdits(fi); }); finishStroke(targets);
+  status("Cleared edits on " + targets.length + " frame" + (targets.length > 1 ? "s" : "") + ". Undo brings them back.");
+});
+thumbsEl.addEventListener("dblclick", e => { const b = e.target.closest(".thumb"); if (b) setPaint(true, +b.dataset.i); });
+document.addEventListener("keydown", e => {
+  if (!pv.open || e.target.closest("input,textarea,select")) return;
+  const k = e.key.toLowerCase();
+  if ((e.ctrlKey || e.metaKey) && k === "z") { e.preventDefault(); e.shiftKey ? doUndo(S.redo, S.undo) : doUndo(S.undo, S.redo); return; }
+  if ((e.ctrlKey || e.metaKey) && k === "y") { e.preventDefault(); doUndo(S.redo, S.undo); return; }
+  if (e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.key === "Escape") { setPaint(false); return; }
+  if (e.key === " ") { e.preventDefault(); pv.space = true; pvCv.classList.add("hand"); return; }
+  if (e.key === "ArrowRight") { e.preventDefault(); pvGo(1); return; }
+  if (e.key === "ArrowLeft") { e.preventDefault(); pvGo(-1); return; }
+  if (e.key === "+" || e.key === "=") { zoomStep(1); return; }
+  if (e.key === "-" || e.key === "_") { zoomStep(-1); return; }
+  if (e.key === "0") { pvFit(); return; }
+  const map = { b: "pencil", e: "eraser", r: "restore", g: "fill", i: "picker", h: "hand" };
+  if (map[k]) setTool(map[k]);
+});
+document.addEventListener("keyup", e => { if (e.key === " " && pv.space) { pv.space = false; pvCv.classList.toggle("hand", S.paint.tool === "hand"); } });
+
+/* ---------- tabs and viewer ---------- */
+let curView = "output";
+function setView(v) { curView = v; }
+function setTab(t) {
+  $$("[data-tab]").forEach(b => b.setAttribute("aria-selected", b.dataset.tab === t ? "true" : "false"));
+  $$("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
+  setView(t === "source" ? "source" : "output");
+  try { localStorage.setItem(LS + ":tab", t); } catch (e) {}
+  if (t === "versions") refreshVersions();
+}
+$$("[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
+$(".tabs").addEventListener("keydown", e => {
+  if (e.key !== "ArrowRight" && e.key !== "ArrowLeft") return;
+  const tabs = $$("[data-tab]"), i = tabs.findIndex(b => b.getAttribute("aria-selected") === "true");
+  const n = tabs[(i + (e.key === "ArrowRight" ? 1 : -1) + tabs.length) % tabs.length]; e.preventDefault(); e.stopPropagation(); setTab(n.dataset.tab); n.focus();
+});
+$$("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
+
+/* ---------- versions ---------- */
+const store = { kind: "pending", db: null, assets: null, idb: null };
+function openIDB() {
+  return new Promise((res, rej) => {
+    if (!window.indexedDB) return rej(new Error("no IndexedDB"));
+    const r = indexedDB.open("bitreel", 1);
+    r.onupgradeneeded = () => r.result.createObjectStore("versions", { keyPath: "id" });
+    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
+  });
+}
+const idbReq = (mode, fn) => new Promise((res, rej) => { const tx = store.idb.transaction("versions", mode), st = tx.objectStore("versions"), q = fn(st); tx.oncomplete = () => res(q && q.result); tx.onerror = () => rej(tx.error); });
+async function initStore() {
+  for (let i = 0; i < 20 && !(window.claude && window.claude.use); i++) await new Promise(r => setTimeout(r, 100));
+  try {
+    if (window.claude && window.claude.use) {
+      const [d, db, as] = await Promise.all([window.claude.use("downloads"), window.claude.use("db"), window.claude.use("assets")]);
+      dl = d; if (db && as) { store.kind = "cloud"; store.db = db; store.assets = as; }
+    }
+  } catch (e) {}
+  if (store.kind !== "cloud") { try { store.idb = await openIDB(); store.kind = "local"; } catch (e) { store.kind = "none"; } }
+  updateExpMeta();
+  $("#vWhere").textContent = store.kind === "cloud" ? "Versions are stored with this artifact, so they're there on any device you open it from."
+    : store.kind === "local" ? "Versions are stored in this browser only. Download the project file to move work between devices."
+    : "Saving versions isn't available in this view. Use Download project to keep your work.";
+  $("#vSave").disabled = store.kind === "none";
+  refreshVersions();
+}
+const canvasBlob = (cv, type, q) => new Promise(r => cv.toBlob(r, type, q));
+async function buildProject(name) {
+  const n = S.frames.length, W = S.workW, H = S.workH, cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
+  const cv = document.createElement("canvas"); cv.width = cols * W; cv.height = rows * H;
+  const ctx = cv.getContext("2d");
+  S.frames.forEach((f, i) => ctx.putImageData(new ImageData(new Uint8ClampedArray(f.data), W, H), (i % cols) * W, Math.floor(i / cols) * H));
+  let atlas = await canvasBlob(cv, "image/webp", 0.95);
+  if (!atlas || atlas.type !== "image/webp") atlas = await canvasBlob(cv, "image/jpeg", 0.94);
+  for (const q of [0.85, 0.75]) if (atlas.size > 19.5 * 1048576) atlas = await canvasBlob(cv, atlas.type, q);
+  const edits = {};
+  for (const k in S.edits) for (const fi in S.edits[k]) {
+    const a = S.edits[k][fi], sp = []; for (let i = 0; i < a.length; i++) if (a[i] !== -1) sp.push(i, a[i]);
+    if (sp.length) { (edits[k] = edits[k] || {})[fi] = sp; }
+  }
+  const state = {
+    app: "bitreel", v: 1, name, savedAt: new Date().toISOString(),
+    frameCount: n, workW: W, workH: H, cols, atlasType: atlas.type,
+    times: S.frames.map(f => +f.t.toFixed(4)), on: S.frames.map(f => f.on ? 1 : 0),
+    out: { ...S.out }, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
+    key: { on: S.key.on, rgb: S.key.rgb, tol: S.key.tol, choke: S.key.choke },
+    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode }, exp: { ...S.exp },
+    native: S.native, conv: S.conv, grid: { ...S.grid },
+    source: { label: $("#srcName").textContent, file: S.src ? S.src.name : null, crop: S.src ? { ...S.crop } : null, tIn: S.tIn, tOut: S.tOut, sampleFps: S.sampleFps },
+    edits
+  };
+  const sel = selected(), fi = sel.length ? sel[0] : 0, tw = Math.min(96, S.outW * 2), th = Math.round(tw * S.outH / S.outW);
+  const tc = document.createElement("canvas"); tc.width = S.outW; tc.height = S.outH; tc.getContext("2d").putImageData(rgbaOf(S.idx[fi], S.outW, S.outH), 0, 0);
+  const t2 = document.createElement("canvas"); t2.width = tw; t2.height = th; const t2x = t2.getContext("2d"); t2x.imageSmoothingEnabled = false; t2x.drawImage(tc, 0, 0, tw, th);
+  return { atlas, state, thumb: t2.toDataURL("image/png") };
+}
+async function applyProject(atlasBlob, state) {
+  if (!state || (state.app !== "bitreel" && state.app !== "pixelbench")) throw new Error("This isn't a BitReel project.");
+  const bmp = await createImageBitmap(atlasBlob), W = state.workW, H = state.workH, cols = state.cols;
+  const cv = document.createElement("canvas"); cv.width = bmp.width; cv.height = bmp.height;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.drawImage(bmp, 0, 0);
+  const frames = [];
+  for (let i = 0; i < state.frameCount; i++) frames.push({ data: ctx.getImageData((i % cols) * W, Math.floor(i / cols) * H, W, H).data, t: state.times[i] || 0, on: state.on ? !!state.on[i] : true });
+  S.frames = frames; S.workW = W; S.workH = H;
+  S.native = !!state.native; if (state.grid) Object.assign(S.grid, state.grid); if (state.conv) setConv(state.conv);
+  Object.assign(S.out, state.out || {});
+  S.pal = (state.pal || []).map(hex2rgb).slice(0, MAX_PAL); if (S.pal.length < 2) S.pal = parseHexList(PRESETS["PICO-8"]);
+  S.presetName = state.presetName || "Custom"; S.trans = Number.isInteger(state.trans) && state.trans < S.pal.length ? state.trans : -1; S.selSw = 0;
+  Object.assign(S.key, state.key || {});
+  if (state.play) { S.play.fps = state.play.fps || 12; S.play.mode = state.play.mode || "loop"; }
+  if (state.exp) Object.assign(S.exp, state.exp);
+  S.edits = {};
+  for (const k in state.edits || {}) {
+    const [w, h] = k.split("x").map(Number); S.edits[k] = {};
+    for (const fi in state.edits[k]) { const a = new Int32Array(w * h).fill(-1), sp = state.edits[k][fi]; for (let i = 0; i < sp.length; i += 2) a[sp[i]] = sp[i + 1]; S.edits[k][fi] = a; }
+  }
+  S.undo = []; S.redo = []; S.play.pos = 0; S.lastClick = -1;
+  const src = state.source || {};
+  if (S.src && src.file && S.src.name === src.file && src.crop) { S.crop = { ...src.crop }; S.tIn = src.tIn; S.tOut = src.tOut; S.sampleFps = src.sampleFps || S.sampleFps; $("#sFps").value = S.sampleFps; syncTrim(); }
+  else if (!S.src) { $("#srcName").textContent = (src.label || "Restored frames") + " · " + (state.name || "version"); }
+  sampleThumb = document.createElement("canvas"); sampleThumb.width = W; sampleThumb.height = H; sampleThumb.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(frames[0].data), W, H), 0, 0);
+  if (!S.src) { $("#srcMeta").textContent = W + " × " + H + " · restored"; $("#dropText").textContent = src.file ? "Load " + src.file + " again to re-crop, or" : "Drop a video here, or"; }
+  syncControls(); buildThumbs(); prepDirty = true; runProcess(); drawSource();
+}
+async function saveVersion() {
+  if (!S.frames.length) { status("Nothing to save yet.", "err"); return; }
+  const btn = $("#vSave"), label = btn.textContent;
+  const name = ($("#vName").value.trim() || ((S.src ? S.src.name.replace(/\.[^.]+$/, "") : "sample") + " " + new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }))).slice(0, 80);
+  btn.disabled = true; btn.textContent = "Saving…";
+  try {
+    const { atlas, state, thumb } = await buildProject(name);
+    const json = new Blob([JSON.stringify(state)], { type: "application/json" });
+    const meta = { name, createdAt: Date.now(), frames: S.frames.length, size: S.outW + "×" + S.outH, colors: S.pal.length, painted: S.frames.filter((_, i) => hasEdits(i)).length, source: state.source.label, thumb, bytes: atlas.size + json.size };
+    if (store.kind === "cloud") {
+      if (atlas.size > 20 * 1048576) throw { message: "The frames are too large to store (over 20 MB). Trim or crop smaller." };
+      const a = await store.assets.upload(atlas, { type: atlas.type });
+      const j = await store.assets.upload(json, { type: "application/json" });
+      await store.db.collection("versions").doc().set({ ...meta, atlas: a.id, state: j.id });
+    } else if (store.kind === "local") {
+      const stateText = await json.text();
+      await idbReq("readwrite", st => st.put({ id: "v" + Date.now(), ...meta, atlasBlob: atlas, stateText }));
+    }
+    $("#vName").value = "";
+    status("Saved version “" + name + "”.", "good");
+    refreshVersions();
+  } catch (e) {
+    const c = e && e.code;
+    status(c === "quota_or_state" || c === "quota_exceeded" ? "Storage is full. Delete an older version and try again." : c === "too_large" ? "The frames are too large to store. Trim or crop smaller." : "Couldn't save the version" + (e && e.message ? ": " + e.message : "."), "err");
+  } finally { btn.disabled = store.kind === "none"; btn.textContent = label; }
+}
+$("#vSave").addEventListener("click", saveVersion);
+$("#vName").addEventListener("keydown", e => { if (e.key === "Enter") saveVersion(); });
+async function listVersions() {
+  if (store.kind === "cloud") { const snap = await store.db.collection("versions").orderBy("createdAt", "desc").limit(200).get(); return snap.docs.map(d => ({ id: d.id, ...d.data() })); }
+  if (store.kind === "local") { const all = await idbReq("readonly", st => st.getAll()); return (all || []).sort((a, b) => b.createdAt - a.createdAt); }
+  return [];
+}
+async function fetchVersion(v) {
+  if (store.kind === "cloud") {
+    const [a, j] = await Promise.all([fetch("/_blob/" + v.atlas), fetch("/_blob/" + v.state)]);
+    if (!a.ok || !j.ok) throw new Error("the stored files couldn't be read");
+    return { atlas: await a.blob(), state: await j.json() };
+  }
+  const rec = await idbReq("readonly", st => st.get(v.id));
+  return { atlas: rec.atlasBlob, state: JSON.parse(rec.stateText) };
+}
+async function removeVersion(v) {
+  if (store.kind === "cloud") {
+    await store.db.collection("versions").doc(v.id).delete();
+    for (const id of [v.atlas, v.state]) { try { await store.assets.delete(id); } catch (e) {} }
+  } else await idbReq("readwrite", st => st.delete(v.id));
+}
+const fmtBytes = b => b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
+async function refreshVersions() {
+  const ul = $("#vList"); if (!ul || store.kind === "pending") return;
+  let list = [];
+  try { list = await listVersions(); } catch (e) { ul.innerHTML = ""; const li = document.createElement("li"); li.className = "vempty"; li.textContent = "Couldn't load saved versions."; ul.append(li); return; }
+  $("#vCount").textContent = list.length ? list.length + " saved" : "";
+  ul.textContent = "";
+  if (!list.length) { const li = document.createElement("li"); li.className = "vempty"; li.textContent = "No versions yet. Save one to come back to this exact state later."; ul.append(li); return; }
+  list.forEach(v => {
+    const li = document.createElement("li"); li.className = "vitem";
+    const img = document.createElement("img"); img.alt = ""; if (v.thumb) img.src = v.thumb;
+    const body = document.createElement("div"); body.style.minWidth = "0";
+    const nm = document.createElement("div"); nm.className = "vname"; nm.textContent = v.name;
+    const meta = document.createElement("div"); meta.className = "vmeta";
+    meta.textContent = new Date(v.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " · " + v.frames + " fr · " + v.size + " · " + v.colors + " col" + (v.painted ? " · " + v.painted + " painted" : "") + " · " + fmtBytes(v.bytes || 0);
+    const row = document.createElement("div"); row.className = "row";
+    const bLoad = document.createElement("button"); bLoad.className = "btn sm"; bLoad.textContent = "Load";
+    const bDown = document.createElement("button"); bDown.className = "btn sm"; bDown.textContent = "Download";
+    const bDel = document.createElement("button"); bDel.className = "btn sm"; bDel.textContent = "Delete";
+    armConfirm(bLoad, "Replace current work?", async () => {
+      bLoad.disabled = true; bLoad.textContent = "Loading…";
+      try { const { atlas, state } = await fetchVersion(v); await applyProject(atlas, state); status("Loaded version “" + v.name + "”.", "good"); }
+      catch (e) { status("Couldn't load that version: " + (e && e.message || e), "err"); }
+      finally { bLoad.disabled = false; bLoad.textContent = "Load"; }
+    });
+    bDown.addEventListener("click", async () => { try { const { atlas, state } = await fetchVersion(v); await downloadProject(atlas, state); } catch (e) { status("Couldn't read that version: " + (e && e.message || e), "err"); } });
+    armConfirm(bDel, "Delete for good?", async () => { try { await removeVersion(v); status("Deleted “" + v.name + "”."); refreshVersions(); } catch (e) { status("Couldn't delete: " + (e && e.message || e), "err"); } });
+    row.append(bLoad, bDown, bDel); body.append(nm, meta, row); li.append(img, body); ul.append(li);
+  });
+}
+function armConfirm(btn, ask, fn) {
+  let armed = false, timer;
+  const label = btn.textContent;
+  btn.addEventListener("click", () => {
+    if (!armed) { armed = true; btn.textContent = ask; btn.classList.add("on"); timer = setTimeout(() => { armed = false; btn.textContent = label; btn.classList.remove("on"); }, 3500); return; }
+    clearTimeout(timer); armed = false; btn.classList.remove("on"); btn.textContent = label; fn();
+  });
+}
+async function downloadProject(atlas, state) {
+  if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
+  const z = new JSZip(), ext = atlas.type === "image/webp" ? "webp" : "jpg";
+  z.file("bitreel.json", JSON.stringify(state, null, 1)); z.file("frames." + ext, atlas);
+  const nm = (state.name || "project").replace(/[^\w-]+/g, "_").slice(0, 60);
+  await save(nm + ".bitreel.zip", await z.generateAsync({ type: "blob" }));
+}
+$("#pDown").addEventListener("click", async e => {
+  const b = e.currentTarget; b.disabled = true;
+  if (!S.frames.length) { status("Nothing to save yet. Extract frames first.", "err"); b.disabled = false; return; }
+  try { const { atlas, state } = await buildProject($("#vName").value.trim() || safeName()); await downloadProject(atlas, state); }
+  catch (err) { status("Couldn't build the project file: " + (err && err.message || err), "err"); }
+  finally { b.disabled = false; }
+});
+$("#pOpen").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try {
+    if (!window.JSZip) throw new Error("the zip library didn't load");
+    const z = await JSZip.loadAsync(f), sj = z.file("bitreel.json") || z.file("pixelbench.json"), fr = z.file(/^frames\.(webp|jpg|png)$/)[0];
+    if (!sj || !fr) throw new Error("it doesn't contain a BitReel project");
+    const state = JSON.parse(await sj.async("string")), ext = fr.name.split(".").pop();
+    const atlas = new Blob([await fr.async("arraybuffer")], { type: ext === "webp" ? "image/webp" : ext === "png" ? "image/png" : "image/jpeg" });
+    await applyProject(atlas, state); status("Opened project “" + (state.name || f.name) + "”.", "good");
+  } catch (err) { status("Couldn't open " + f.name + ": " + (err && err.message || err), "err"); }
+});
+
+/* ---------- boot ---------- */
+function syncControls() {
+  configWidth();
+  setBri(S.out.bri); setCon(S.out.con); setSat(S.out.sat); setGam(Math.round(S.out.gam * 100));
+  $("#dith").value = S.out.dith; $("#dAmt").value = Math.round(S.out.amt * 100);
+  setStab(S.out.stab); setSmooth(S.out.smooth); $("#fPops").checked = !!S.out.pops;
+  $("#pFps").value = S.play.fps;
+  $("#zoom").value = S.play.zoom; $("#bg").value = S.play.bg; applyBg();
+  $$(".seg [data-mode]").forEach(x => x.setAttribute("aria-pressed", x.dataset.mode === S.play.mode ? "true" : "false"));
+  $("#eName").value = S.exp.name; $("#eScale").value = S.exp.scale; $("#ePPU").value = S.exp.ppu; $("#ePivot").value = S.exp.pivot; $("#eCols").value = S.exp.cols; $("#ePad").value = S.exp.pad; $("#eLoops").value = S.exp.loops;
+  updateKeyUI(); updateUndo(); fillPresets(); renderPalette(); syncGridUI();
+}
+loadPrefs();
+makeSample();
+S.play.fps = 12;
+syncControls();
+buildThumbs(); prepDirty = true; runProcess(); drawSource(); updateEst();
+setConv(S.conv);
+let startTab = "pixels"; try { startTab = localStorage.getItem(LS + ":tab") || "pixels"; } catch (e) {}
+setTab($$("[data-tab]").some(b => b.dataset.tab === startTab) ? startTab : "pixels");
+initStore();
+window.__pb = { encodeGIF, lzw, S, buildProject, applyProject };
+requestAnimationFrame(tick);
+})();
+</script>
