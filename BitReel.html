@@ -2377,7 +2377,7 @@ function syncGridUI() {
   else { const [cw, ch] = gridDims(); $("#gRead").textContent = g.set ? cw + " × " + ch + " native px" + (g.conf ? " · " + Math.round(g.conf * 100) + "% regular" : "") : "detect or enter a cell size"; }
 }
 function setConv(m) {
-  S.conv = m; savePrefs();
+  S.conv = m; savePrefs(); try { if (SD) updateCreateBtn(); } catch (e) {}
   $("#extract").textContent = "Extract frames · " + (m === "grid" ? "grid snap" : "downscale");
   $$("[data-conv]").forEach(b => b.setAttribute("aria-pressed", b.dataset.conv === m ? "true" : "false"));
   $("#gridBox").hidden = m !== "grid";
@@ -3634,7 +3634,14 @@ function mergeStates(k, j) {
   status("Merged " + absorbed + " states (“" + a.name + "” to “" + b.name + "”, " + a.t0.toFixed(2) + "–" + b.t1.toFixed(2) + " s) into “" + named.name + "”. Rename it if you like.", "good");
 }
 function frameCountFor(a, b) { return Math.max(1, Math.floor((b - a) * S.sampleFps + 1e-6)); }
-function updateCreateBtn() { const n = SD ? SD.states.filter(s => s.use).length + SD.transitions.filter(t => t.use).length : 0; const b = $("#stCreate"); b.textContent = "Create animations (" + n + ")"; b.disabled = !n; }
+function updateCreateBtn() {
+  const rows = SD ? SD.states.filter(s => s.use).concat(SD.transitions.filter(t => t.use)) : [], n = rows.length, b = $("#stCreate");
+  if (!b) return;
+  const redo = rows.filter(o => animIndexFor(o) >= 0).length;
+  b.textContent = (redo && redo === n ? "Update animations (" : "Create animations (") + n + ") · " + (S.conv === "grid" ? "grid snap" : "downscale");
+  b.title = redo ? redo + " of these already have an animation: they are re-extracted in place with the current conversion." : "Extracts each checked row with the current crop, key and conversion.";
+  b.disabled = !n;
+}
 function animIndexFor(o) { return o && o.animId ? A.list.findIndex(a => a.id === o.animId) : -1; }
 async function selectState(o) {
   if (!SD || !o || extracting) return;
@@ -3662,22 +3669,32 @@ async function createStateAnims() {
   const picks = SD.states.filter(s => s.use).map(s => ({ o: s, name: s.name, tIn: s.tIn, tOut: s.tOut, once: s.kind === "once" }))
     .concat(SD.transitions.filter(t => t.use).map(t => ({ o: t, name: t.name, tIn: t.t0, tOut: t.t1, once: true })));
   if (!picks.length) return;
-  const btn = $("#stCreate"), made = [];
+  // the conversion chosen right now applies to every animation made here, along with the current crop and grid
+  const conv = S.conv, grid = { ...S.grid }, crop = { ...S.crop }, fps = S.sampleFps;
+  if (conv === "grid" && !grid.set) { status("Grid snap is selected but no grid is set. Detect the grid or enter a cell size in the Source tab first.", "err"); return; }
+  const btn = $("#stCreate"), made = [], updated = [];
   btn.disabled = true;
   try {
     for (let k = 0; k < picks.length; k++) {
-      const p = picks[k];
-      if (k > 0 || S.frames.length) newAnim(p.name);
-      const a = curAnim(); a.name = uniqueAnimName(p.name, a); a.autoName = false; a.oneShot = p.once;
-      S.tIn = p.tIn; S.tOut = Math.max(p.tOut, p.tIn + 1 / S.sampleFps); syncTrim();
-      status("Creating “" + a.name + "” (" + (k + 1) + " of " + picks.length + ")…");
+      const p = picks[k], ai = animIndexFor(p.o);
+      if (ai >= 0) { if (ai !== A.cur) switchAnim(ai); }          // already made: redo it in place
+      else if (k > 0 || S.frames.length) newAnim(p.name);
+      const a = curAnim();
+      if (ai < 0) { a.name = uniqueAnimName(p.name, a); a.autoName = false; }
+      a.oneShot = p.once;
+      S.conv = conv; S.grid = { ...grid }; S.crop = { ...crop }; S.sampleFps = fps; setConv(conv); syncGridUI();
+      S.tIn = p.tIn; S.tOut = Math.max(p.tOut, p.tIn + 1 / fps); syncTrim();
+      status((ai >= 0 ? "Updating" : "Creating") + " “" + a.name + "” with " + (conv === "grid" ? "grid snap" : "downscale") + " (" + (k + 1) + " of " + picks.length + ")…");
       const ok = await extractRange(true); if (!ok) break;
-      made.push(a.name); p.o.animId = a.id;
+      (ai >= 0 ? updated : made).push(a.name); p.o.animId = a.id;
       // repeats of the same action point at the same animation, so they compare against it too
       if (p.o.repeatOf === null && SD.states.includes(p.o)) SD.states.forEach(x => { if (SD.states[x.repeatOf] === p.o && !x.animId) x.animId = a.id; });
     }
     renderAnims(); syncOneShotUI(); renderStateList();
-    if (made.length) status("Created " + made.length + " animation" + (made.length > 1 ? "s" : "") + ": " + made.join(", ") + ". Click a state in the States column to compare it with its source.", "good");
+    const mode = conv === "grid" ? "grid snap" : "downscale", parts = [];
+    if (made.length) parts.push("created " + made.join(", "));
+    if (updated.length) parts.push("updated " + updated.join(", "));
+    if (parts.length) status(parts.join("; ").replace(/^./, c => c.toUpperCase()) + " with " + mode + ". Click a state in the States column to compare it with its source.", "good");
   } finally { btn.disabled = false; updateCreateBtn(); }
 }
 

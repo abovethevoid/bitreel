@@ -193,6 +193,9 @@ Generated sprite videos often chain several actions in one clip: idle, a short t
    - **Chips** under the trim bar list each state and transition, for example `run · 4.33–4.83 s · 6 fr · 100%`.
    - **The States column**, a narrow panel to the right of the Output panel, lists every state and transition as a row you can rename, check or uncheck.
 4. Click **Create animations (N)** at the bottom of the States column. Each checked row becomes an animation in the set, extracted with your current crop, key and conversion settings.
+   - The button shows the conversion it will use, for example `Create animations (4) · grid snap`. Pick **Downscale** or **Grid snap** in the Source tab first. Every animation made in one click uses that mode, crop and grid, even if you were looking at an animation made another way.
+   - With **Grid snap**, set the grid first (**Detect grid** or a cell size). Nothing is created until it is set.
+   - Rows that already have an animation are re-extracted in place instead of duplicated, and the button reads **Update animations**. Use this to redo a whole set in the other conversion mode. Paint edits on those animations are replaced.
 
 ### Comparing states
 
