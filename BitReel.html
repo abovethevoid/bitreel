@@ -76,13 +76,25 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom
 .viewers.has-states{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 250px}
 @media (max-width:1180px){ .viewers.has-states{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .viewers.has-states .stpanel{grid-column:1/-1} }
 @media (max-width:860px){ .viewers.has-states{grid-template-columns:minmax(0,1fr)} }
-.stpanel{position:sticky;top:10px}
-.stbody{display:grid;gap:8px}
+/* all three panels share the row height; the states column never makes the row taller, its list scrolls instead */
+.viewers.has-states{align-items:stretch}
+.viewers.has-states > .panel{display:flex;flex-direction:column}
+.viewers.has-states > .viewer > .pb{flex:1 1 auto}
+.stpanel{position:relative;min-height:0}
+.stwrap{position:absolute;inset:0;display:flex;flex-direction:column;min-height:0}
+.stpanel .stbody{display:flex;flex-direction:column;gap:8px;flex:1 1 auto;min-height:0;min-width:0}
+.stpanel .stbody > *{flex:0 0 auto;min-width:0}
+.stpanel .stbody > .stlist{flex:1 1 auto;min-height:0}
+.stbody .note{font-size:11.5px;margin:0}
+.stpanel #stCreate{white-space:normal;line-height:1.25;height:auto;min-height:32px;padding-top:6px;padding-bottom:6px}
 .stnav{display:flex;align-items:center;gap:6px}
-.stnav .chk{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.stnav .chk{margin-left:auto;white-space:nowrap;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
 .stnav .chk input{accent-color:var(--accent)}
-.stlist{list-style:none;margin:0;padding:0 2px 0 0;display:grid;grid-template-columns:minmax(0,1fr);gap:5px;max-height:calc(100vh - 230px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
-@media (max-width:1180px){ .stlist{max-height:none;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))} }
+.stlist{list-style:none;margin:0;padding:0 2px 0 0;display:grid;grid-template-columns:minmax(0,1fr);gap:5px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+@media (max-width:1180px){
+  .stwrap{position:static}
+  .stlist{max-height:420px;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))}
+}
 .strow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:6px 7px;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:4px;background:var(--bg);cursor:pointer}
 .strow:hover{border-color:var(--muted);border-left-color:var(--c)}
 .strow.sel{background:color-mix(in srgb,var(--c) 14%,var(--bg));border-color:var(--c)}
@@ -98,6 +110,12 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom
 .strow.tr{border-style:dashed}
 .arow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
 .arow.cur{border-color:var(--accent)}
+.esel{display:grid;gap:6px;margin:2px 0 8px}
+.esel .row{gap:6px}.esel .row .kv{margin-right:auto}
+.esellist{list-style:none;margin:0;padding:0;display:grid;gap:3px;max-height:220px;overflow:auto}
+.esellist label{display:flex;align-items:center;gap:7px;padding:4px 7px;border:1px solid var(--line);border-radius:4px;background:var(--bg);font-size:12.5px;cursor:pointer}
+.esellist label input{accent-color:var(--accent)}
+.esellist .kv{margin-left:auto;font-size:11px}
 .aname{appearance:none;border:0;background:none;text-align:left;font-weight:600;cursor:pointer;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);min-width:0}
 .aname:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #outStage{position:relative}
@@ -307,6 +325,7 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
       </div>
     </section>
     <section class="panel stpanel" id="stGroup" aria-labelledby="hStates" hidden>
+      <div class="stwrap">
       <div class="ph"><h2 id="hStates">States</h2><span class="meta mono" id="stCount"></span></div>
       <div class="pb stbody">
         <div class="stnav">
@@ -316,7 +335,8 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
         </div>
         <ul class="stlist" id="stList" aria-label="Detected states and transitions"></ul>
         <button class="btn pri" id="stCreate" disabled>Create animations (0)</button>
-        <p class="note">Click a row to jump to it: the source loops that range and, once it has an animation, the output switches to it. Checked rows become animations. Names are guesses, rename them before creating.</p>
+        <p class="note">Click a row to compare its source with its animation. Checked rows become animations.</p>
+      </div>
       </div>
     </section>
   </div>
@@ -568,7 +588,11 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
       </div>
       <div class="group">
         <h3>Unity</h3>
-        <div class="row"><label class="lb" for="eWhich">Include</label><select id="eWhich"><option value="all">All animations</option><option value="this">This animation</option></select></div>
+        <div class="row"><label class="lb" for="eWhich">Include</label><select id="eWhich"><option value="all">All animations</option><option value="sel">Selected animations</option><option value="this">This animation</option></select></div>
+        <div class="esel" id="eSel" hidden>
+          <div class="row"><span class="kv" id="eSelCount"></span><button class="btn sm" id="eSelAll" type="button">All</button><button class="btn sm" id="eSelNone" type="button">None</button></div>
+          <ul class="esellist" id="eSelList" aria-label="Animations to include"></ul>
+        </div>
         <button class="btn pri" id="xUnity">Unity package (.zip)</button>
         <p class="note" id="expNote">Sprite sheet at 1:1, JSON manifest, single frames, the palette and an editor importer that slices the sheet and builds a looping animation clip.</p>
       </div>
@@ -2042,10 +2066,12 @@ function layoutsFor(infos) {
 }
 function exportPlan(scope) {
   stashAnim(curAnim());
-  const anims = (scope === "all" ? A.list : [curAnim()]).filter(hasFrames);
+  const anims = (scope === "all" ? A.list : scope === "sel" ? A.list.filter(a => a.exportOn !== false) : [curAnim()]).filter(hasFrames);
   const pool = S.exp.trim && S.exp.same ? A.list.filter(hasFrames) : anims;
   const infos = pool.map(infoFor), lays = layoutsFor(infos);
-  return anims.map(a => { const k = pool.indexOf(a); return { info: infos[k], L: lays[k] }; });
+  // the default Unity state: the first animation in the list, or the first one exported when it isn't included
+  const def = scope === "current" ? A.list[0] : anims.includes(A.list[0]) ? A.list[0] : anims[0];
+  return anims.map(a => { const k = pool.indexOf(a); return { info: infos[k], L: lays[k], isDefault: a === def }; });
 }
 // Unity pivot, normalized with a bottom-left origin
 function pivotOf(L) { if (S.exp.pivot === "anchor") return [L.ax / L.cw, (L.ch - L.ay) / L.ch]; return S.exp.pivot.split(",").map(Number); }
@@ -2081,10 +2107,31 @@ function updateExpMeta() {
   $("#expMeta").textContent = n && cur ? n + " fr · " + cur.name : "";
   $("#vidFmt").textContent = videoMime() ? (/mp4/.test(videoMime()) ? "MP4" : "WebM") + " · real-time" : "not supported here";
   ["#xSheet", "#xFrames", "#xGif", "#xVid"].forEach(s => $(s).disabled = !n);
-  $("#xUnity").disabled = S.exp.which === "this" ? !n : !k;
+  const ks = A.list.filter(a => a.exportOn !== false && hasFrames(a)).length;
+  $("#xUnity").disabled = S.exp.which === "this" ? !n : S.exp.which === "sel" ? !ks : !k;
   const opt = $('#eWhich option[value="all"]'); if (opt) opt.textContent = "All animations (" + k + ")";
+  const os = $('#eWhich option[value="sel"]'); if (os) os.textContent = "Selected animations (" + ks + " of " + k + ")";
+  renderExpSel();
   $("#expNote").textContent = "Each animation gets a sprite sheet and a JSON manifest, plus the palette and an editor importer that slices the sheets and builds one looping clip per animation in a single Animator Controller.";
 }
+function renderExpSel() {
+  const box = $("#eSel"), ul = $("#eSelList"); if (!box || !ul) return;
+  box.hidden = S.exp.which !== "sel"; if (box.hidden) return;
+  ul.textContent = "";
+  const withFrames = A.list.filter(hasFrames);
+  A.list.forEach((a, i) => {
+    const fr = i === A.cur ? S.frames.length : a.frames.length;
+    const li = document.createElement("li"), lb = document.createElement("label"), cb = document.createElement("input");
+    cb.type = "checkbox"; cb.checked = a.exportOn !== false && fr > 0; cb.disabled = !fr;
+    cb.addEventListener("change", () => { a.exportOn = cb.checked; markDirty(true); updateExpMeta(); });
+    const meta = document.createElement("span"); meta.className = "kv"; meta.textContent = fr ? fr + " fr" + (a.oneShot ? " · once" : "") : "no frames";
+    lb.append(cb, document.createTextNode(a.name), meta); li.append(lb); ul.append(li);
+  });
+  const on = withFrames.filter(a => a.exportOn !== false).length;
+  $("#eSelCount").textContent = on + " of " + withFrames.length + " selected";
+}
+$("#eSelAll").addEventListener("click", () => { A.list.forEach(a => a.exportOn = true); markDirty(true); updateExpMeta(); });
+$("#eSelNone").addEventListener("click", () => { A.list.forEach(a => a.exportOn = false); markDirty(true); updateExpMeta(); });
 let planTimer = 0;
 function updatePlanPreviewSoon() { clearTimeout(planTimer); planTimer = setTimeout(updatePlanPreview, 160); }
 function updatePlanPreview() {
@@ -2166,7 +2213,7 @@ $("#xVid").addEventListener("click", e => busy(e.currentTarget, "Recording…", 
 async function buildUnityZip(scope) {
   const plan = exportPlan(scope); if (!plan.length) throw new Error("there are no extracted frames to export");
   const set = safeName(), z = new JSZip(), dir = z.folder(set), manifests = [];
-  for (const { info, L } of plan) {
+  for (const { info, L, isDefault } of plan) {
     const base = baseName(info), an = fileSlug(info.name);
     const cells = info.sel.map(fi => cellIdx(info, L, fi));
     const { img, rects, L: SL } = buildSheetCells(cells, L.cw, L.ch, 1, info.fps);
@@ -2177,7 +2224,7 @@ async function buildUnityZip(scope) {
     });
     const [pvx, pvy] = pivotOf(L), st = info.stab;
     const m = {
-      format: "bitreel.pixelsheet", version: 2, name: base, stateName: info.name, controller: set, isDefaultState: info.anim === A.list[0],
+      format: "bitreel.pixelsheet", version: 2, name: base, stateName: info.name, controller: set, isDefaultState: !!isDefault,
       image: base + "_sheet.png", sheetWidth: SL.W, sheetHeight: SL.H, frameWidth: SL.fw, frameHeight: SL.fh, columns: SL.cols, rows: SL.rows, padding: SL.pad,
       frameCount: rects.length, fps: info.fps, loopMode: info.anim.oneShot ? "once" : info.mode === "pingpong" ? "pingpong" : "loop",
       pixelsPerUnit: S.exp.ppu || 16, pivotX: +pvx.toFixed(5), pivotY: +pvy.toFixed(5), anchor: { x: L.ax, y: L.ay },
@@ -2203,7 +2250,7 @@ async function buildUnityZip(scope) {
 }
 $("#xUnity").addEventListener("click", e => busy(e.currentTarget, "Packing…", async () => {
   if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
-  const { blob, set, manifests } = await buildUnityZip(S.exp.which === "this" ? "current" : "all");
+  const { blob, set, manifests } = await buildUnityZip(S.exp.which === "this" ? "current" : S.exp.which === "sel" ? "sel" : "all");
   if (await save(set + "_unity.zip", blob)) status("Saved " + set + "_unity.zip with " + manifests.length + " animation" + (manifests.length > 1 ? "s" : "") + " (" + manifests.map(m => m.stateName).join(", ") + ").", "good");
 }));
 function readmeSet(set, ms) {
@@ -2861,7 +2908,7 @@ function animState(a, atlasId) {
     frameCount: a.frames.length, workW: a.workW, workH: a.workH,
     times: a.frames.map(f => +f.t.toFixed(4)), on: a.frames.map(f => f.on ? 1 : 0),
     native: a.native, conv: a.conv, grid: { ...a.grid }, play: { fps: a.fps, mode: a.mode === "seam" ? "loop" : a.mode },
-    source: a.source ? JSON.parse(JSON.stringify(a.source)) : null, stab: { ...a.stab }, oneShot: !!a.oneShot, edits: encEdits(a.edits) };
+    source: a.source ? JSON.parse(JSON.stringify(a.source)) : null, stab: { ...a.stab }, oneShot: !!a.oneShot, exportOn: a.exportOn !== false, edits: encEdits(a.edits) };
 }
 async function setState() {
   stashAnim(curAnim());
@@ -2905,7 +2952,7 @@ async function applySetState(st) {
       list.push(makeAnim({ id: as.id || newAnimId(), name: as.name || "anim " + (list.length + 1), frames, workW: as.workW || 0, workH: as.workH || 0,
         native: !!as.native, conv: as.conv || "downscale", grid: Object.assign(defaultGrid(), as.grid || {}), edits: decEdits(as.edits), undo: [], redo: [],
         fps: (as.play && as.play.fps) || 12, mode: (as.play && as.play.mode) || "loop", source: as.source || null,
-        stab: Object.assign({ x: false, y: "off" }, as.stab || {}), oneShot: !!as.oneShot }));
+        stab: Object.assign({ x: false, y: "off" }, as.stab || {}), oneShot: !!as.oneShot, exportOn: as.exportOn !== false }));
     }
     if (!list.length) list.push(makeAnim({ name: "anim 1" }));
     const sh = st.shared || {};
@@ -3140,7 +3187,7 @@ function hasFrames(a) { return a === curAnim() ? S.frames.length > 0 : !!(a && a
 function makeAnim(o) {
   return Object.assign({ id: newAnimId(), name: "anim " + (A.list.length + 1), frames: [], workW: 0, workH: 0, native: false,
     conv: S.conv, grid: { ...S.grid }, edits: {}, undo: [], redo: [], fps: S.sampleFps || 12, mode: "loop", lastClick: -1, pos: 0,
-    stab: { x: false, y: "off" }, source: null, isSample: false, oneShot: false }, o || {});
+    stab: { x: false, y: "off" }, source: null, isSample: false, oneShot: false, exportOn: true }, o || {});
 }
 function uniqueAnimName(n, except) {
   n = (n || "anim").toString().trim().slice(0, 40) || "anim";
@@ -3223,7 +3270,7 @@ function dupAnim() {
   stashAnim(curAnim()); const s = curAnim();
   const edits = {}; for (const k in s.edits) { edits[k] = {}; for (const fi in s.edits[k]) edits[k][fi] = s.edits[k][fi].slice(); }
   const a = makeAnim({ name: uniqueAnimName(s.name + " copy"), frames: s.frames.map(f => ({ data: f.data, t: f.t, on: f.on })), workW: s.workW, workH: s.workH,
-    native: s.native, conv: s.conv, grid: { ...s.grid }, edits, fps: s.fps, mode: s.mode, stab: { ...s.stab }, oneShot: !!s.oneShot, source: s.source ? JSON.parse(JSON.stringify(s.source)) : null });
+    native: s.native, conv: s.conv, grid: { ...s.grid }, edits, fps: s.fps, mode: s.mode, stab: { ...s.stab }, oneShot: !!s.oneShot, exportOn: s.exportOn !== false, source: s.source ? JSON.parse(JSON.stringify(s.source)) : null });
   A.list.splice(A.cur + 1, 0, a); A.cur += 1;
   applyAnimFields(a); refreshAnimUI(); markDirty(true);
   status("Duplicated as “" + a.name + "”.", "good");
@@ -3256,7 +3303,7 @@ function renderAnims() {
   add.title = "Start an empty animation that keeps the loaded video"; add.addEventListener("click", () => newAnim()); bar.append(add);
   const a = curAnim(), nm = $("#aName"); if (nm && document.activeElement !== nm) nm.value = a.name;
   $("#aMeta").textContent = S.frames.length ? S.frames.length + " frames · " + S.play.fps + " fps" + (S.native ? " · grid snap" : "") : "no frames yet";
-  $("#aDel").disabled = A.list.length < 2; syncOneShotUI();
+  $("#aDel").disabled = A.list.length < 2; syncOneShotUI(); try { updateExpMeta(); } catch (e) {}
   $("#aCount").textContent = A.list.length + (A.list.length > 1 ? " animations" : " animation");
   const ul = $("#aList"); ul.textContent = "";
   A.list.forEach((x, i) => {

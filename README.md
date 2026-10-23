@@ -203,6 +203,7 @@ The States column is built for going back and forth between states:
 
 - **Click a row** (or a mark on the trim bar, or a chip) to select it. The source jumps to that range and loops it when **Play on select** is on. Once the state has an animation (marked `● anim`), the Output panel switches to that animation, so source and result play side by side. Repeats of an action show the same animation.
 - **↑ and ↓** at the top of the column, or **Alt+↑ / Alt+↓** anywhere on the page, step to the previous or next state or transition.
+- The column is always the same height as the Source and Output panels. When there are more rows than fit, the list scrolls inside it.
 - Under 1180 px wide, the column moves below the viewers. On phones it stacks with them.
 
 How states are labeled:
@@ -539,7 +540,7 @@ Trimming applies to every export, so GIFs, videos and PNG frames are cropped the
 
 | Button | Output |
 |---|---|
-| **Unity package (.zip)** | **Include: All animations** (default) or **This animation**. One sprite sheet, manifest and frame folder per animation, the shared palette, and the editor importer. See [Unity integration](#unity-integration). |
+| **Unity package (.zip)** | **Include: All animations** (default), **Selected animations** or **This animation**. With **Selected animations**, a checklist of the set appears under the menu (with **All** and **None**). Your picks are saved in the project. One sprite sheet, manifest and frame folder per animation, the shared palette, and the editor importer. See [Unity integration](#unity-integration). |
 | **Sprite sheet .png** | The current animation's frames in a grid at the chosen scale. |
 | **PNG frames .zip** | One PNG per frame of the current animation at the chosen scale. |
 | **Animated .gif** | Exact palette with no re-quantization. Loops forever. Transparent pixels stay transparent. |
@@ -643,7 +644,7 @@ When the set name and the animation name are the same, the animation's files use
    - creates or updates `hero_run.anim`, a looping clip on `SpriteRenderer.m_Sprite` at the animation's FPS, including ping-pong
    - adds or updates a state named `run` in **`hero.controller`**, creating the controller on the first animation. The first animation of the set is the default state.
 
-Exporting a single animation later (**Include: This animation**) into the same folder adds or updates just that state.
+Exporting a single animation later (**Include: This animation**) into the same folder adds or updates just that state. **Selected animations** works the same way for a few states at once. The default state is the set's first animation when it is included, otherwise the first selected one. With **Same size and anchor** on, the shared frame is still sized for the whole set, so a partial export lines up with the rest.
 
 ### Re-running the importer
 
