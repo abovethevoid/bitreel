@@ -40,6 +40,7 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom
 .logo i b:nth-child(2),.logo i b:nth-child(4),.logo i b:nth-child(9){background:var(--ink)}
 .logo i b:nth-child(5){background:transparent}
 .srcname{font-family:var(--f-mono);font-size:12.5px;color:var(--muted);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:40ch}
+.projbadge{font-family:var(--f-mono);font-size:12.5px;color:var(--ink);padding:3px 8px;border:1px solid var(--line);border-radius:4px;white-space:nowrap}
 #status{margin-left:auto;font-size:12.5px;color:var(--muted);min-width:0}
 #status.err{color:var(--bad)} #status.good{color:var(--ok)}
 
@@ -59,6 +60,46 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom
 .grid4 input{width:100%}
 .gridbox{display:grid;gap:10px}
 .loops{display:flex;flex-wrap:wrap;gap:6px}
+.animrow{border-bottom:1px solid var(--line);flex-wrap:wrap;row-gap:8px}
+.animrow .loops{margin-left:12px}
+.loops .addanim{border-style:dashed;color:var(--muted);font-family:var(--f-body)}
+.alist{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.statetrack{position:relative;height:22px;margin:2px 0 4px}
+.stband{position:absolute;top:9px;height:4px;background:var(--c);opacity:.35;border-radius:2px;pointer-events:none}
+.stloop{position:absolute;top:1px;height:20px;background:var(--c);color:#fff;font:600 11px/20px var(--f-body);border:0;border-radius:3px;padding:0 5px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;cursor:pointer;min-width:8px;text-shadow:0 1px 1px rgba(0,0,0,.35)}
+.stloop.once{background:var(--panel);color:var(--ink);box-shadow:inset 0 0 0 2px var(--c);text-shadow:none}
+.sttr{position:absolute;top:6px;height:10px;border:0;padding:0;border-radius:2px;cursor:pointer;background:repeating-linear-gradient(135deg,var(--c) 0 2px,transparent 2px 5px);opacity:.9}
+.stloop:focus-visible,.sttr:focus-visible{outline:2px solid var(--ink);outline-offset:1px}
+.loops .dot,.strow .dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:var(--c);margin-right:6px;vertical-align:-1px;flex:0 0 auto}
+.strow .dot.hatch{border-radius:2px;background:repeating-linear-gradient(135deg,var(--c) 0 2px,transparent 2px 4px);margin-right:0}
+.loops .trchip{border-style:dashed;color:var(--muted)}
+.viewers.has-states{grid-template-columns:minmax(0,1fr) minmax(0,1fr) 250px}
+@media (max-width:1180px){ .viewers.has-states{grid-template-columns:minmax(0,1fr) minmax(0,1fr)} .viewers.has-states .stpanel{grid-column:1/-1} }
+@media (max-width:860px){ .viewers.has-states{grid-template-columns:minmax(0,1fr)} }
+.stpanel{position:sticky;top:10px}
+.stbody{display:grid;gap:8px}
+.stnav{display:flex;align-items:center;gap:6px}
+.stnav .chk{margin-left:auto;font-size:12px;color:var(--muted);display:flex;align-items:center;gap:5px}
+.stnav .chk input{accent-color:var(--accent)}
+.stlist{list-style:none;margin:0;padding:0 2px 0 0;display:grid;grid-template-columns:minmax(0,1fr);gap:5px;max-height:calc(100vh - 230px);overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+@media (max-width:1180px){ .stlist{max-height:none;grid-template-columns:repeat(auto-fill,minmax(220px,1fr))} }
+.strow{display:flex;flex-wrap:wrap;align-items:center;gap:4px 6px;padding:6px 7px;border:1px solid var(--line);border-left:3px solid var(--c);border-radius:4px;background:var(--bg);cursor:pointer}
+.strow:hover{border-color:var(--muted);border-left-color:var(--c)}
+.strow.sel{background:color-mix(in srgb,var(--c) 14%,var(--bg));border-color:var(--c)}
+.strow{min-width:0}
+.stpanel .strow input[type=text]{flex:1 1 0;width:0;min-width:0;padding:3px 6px}
+.strow .kv{flex:1 1 100%;font-size:11px;line-height:1.35}
+.strow select.merge{flex:1 1 auto;min-width:0;max-width:100%;font-size:11px;padding:2px 4px;height:auto}
+.strow .acts{display:flex;align-items:center;gap:6px;flex:1 1 100%;min-width:0}
+.strow .acts .btn{padding:2px 6px;font-size:11px}
+.strow .anim{font-size:11px;font-family:var(--f-mono);color:var(--ok);white-space:nowrap;flex:0 0 auto}
+.strow input[type=text]{flex:1 1 90px;min-width:0}
+.strow input[type=checkbox]{accent-color:var(--accent)}
+.strow.tr{border-style:dashed}
+.arow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
+.arow.cur{border-color:var(--accent)}
+.aname{appearance:none;border:0;background:none;text-align:left;font-weight:600;cursor:pointer;padding:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink);min-width:0}
+.aname:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #outStage{position:relative}
 .outempty{position:absolute;inset:0;display:grid;place-content:center;justify-items:center;gap:8px;padding:16px;text-align:center;background:var(--well);color:var(--muted);font-size:13px}
 .outempty b{color:var(--ink);font-size:14px}
@@ -186,6 +227,7 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
 
 <header class="top">
   <div class="logo" aria-label="BitReel"><i aria-hidden="true"><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b><b></b></i>BitReel</div>
+  <div class="projbadge" id="projBadge" title="All changes saved">untitled.bitreel</div>
   <div class="srcname" id="srcName">Sample loop (procedural, 24 frames)</div>
   <div id="status" role="status" aria-live="polite">Drop a video to start, or play with the sample loop.</div>
 </header>
@@ -206,6 +248,7 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
         <div class="field">
           <div class="row sp"><span class="lb">Trim</span><span class="kv" id="tRead">load a video to trim</span></div>
           <div class="tl" id="tl"><div class="track"></div><div class="band" id="tBand"></div><input type="range" id="scrub" min="0" max="1" step="0.001" value="0" disabled aria-label="Playhead"></div>
+          <div class="statetrack" id="stateTrack" hidden aria-label="Detected states and transitions"></div>
           <div class="row sp">
             <div class="row">
               <button class="btn sm pri" id="srcPlay" disabled aria-pressed="false" title="Play between in and out, looping (P)" style="min-width:62px">▶︎ Play</button>
@@ -218,6 +261,7 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
             <div class="row">
               <button class="btn sm" id="findLoop" title="Keep the in point and move the out point to the frame that best matches it">Find loop point</button>
               <button class="btn sm pri" id="loopDetect" title="Search for the best loop and set both in and out">Loop detect</button>
+              <button class="btn sm pri" id="stDetect" title="Split the clip into states (idle, run, jump…) and transitions, with a clean loop in each">Detect states</button>
             </div>
           </div>
           <div class="loops" id="loopList" hidden></div>
@@ -262,6 +306,19 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
         </div>
       </div>
     </section>
+    <section class="panel stpanel" id="stGroup" aria-labelledby="hStates" hidden>
+      <div class="ph"><h2 id="hStates">States</h2><span class="meta mono" id="stCount"></span></div>
+      <div class="pb stbody">
+        <div class="stnav">
+          <button class="btn sm" id="stPrev" title="Previous state (Alt+↑)" aria-label="Previous state">↑</button>
+          <button class="btn sm" id="stNext" title="Next state (Alt+↓)" aria-label="Next state">↓</button>
+          <label class="chk sm"><input type="checkbox" id="stAuto" checked> Play on select</label>
+        </div>
+        <ul class="stlist" id="stList" aria-label="Detected states and transitions"></ul>
+        <button class="btn pri" id="stCreate" disabled>Create animations (0)</button>
+        <p class="note">Click a row to jump to it: the source loops that range and, once it has an animation, the output switches to it. Checked rows become animations. Names are guesses, rename them before creating.</p>
+      </div>
+    </section>
   </div>
 
   <section class="panel tools" aria-label="Tools">
@@ -269,9 +326,10 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
       <button role="tab" data-tab="source" aria-selected="false">Source</button>
       <button role="tab" data-tab="pixels" aria-selected="true">Pixels</button>
       <button role="tab" data-tab="palette" aria-selected="false">Palette</button>
+      <button role="tab" data-tab="anim" aria-selected="false">Animation</button>
       <button role="tab" data-tab="paint" aria-selected="false">Paint</button>
       <button role="tab" data-tab="export" aria-selected="false">Export</button>
-      <button role="tab" data-tab="versions" aria-selected="false">Versions</button>
+      <button role="tab" data-tab="project" aria-selected="false">Project</button>
     </nav>
 
     <!-- SOURCE TAB -->
@@ -325,7 +383,11 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
           <label class="lb" for="ldScope">Search</label>
           <select id="ldScope"><option value="all" selected>whole video</option><option value="range">between in and out</option></select>
         </div>
-        <p class="note">Loop detect compares every start and end pair in that range, ignores stretches with no movement, and sets in and out to the cleanest wrap. Pick another candidate under the trim bar.</p>
+        <div class="row">
+          <label class="lb" for="stSens">States</label>
+          <select id="stSens"><option value="fewer">Fewer, bigger states</option><option value="normal" selected>Normal</option><option value="more">More, finer states</option></select>
+        </div>
+        <p class="note">Loop detect compares every start and end pair in that range, ignores stretches with no movement, and sets in and out to the cleanest wrap. Detect states splits a clip that shows several actions into states and transitions, with one clean cycle in each state.</p>
       </div>
       <div class="group">
         <h3>Conversion</h3>
@@ -431,6 +493,33 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
       </div>
     </div>
 
+    <!-- ANIMATION TAB -->
+    <div class="pane" role="tabpanel" data-pane="anim" hidden>
+      <div class="group">
+        <h3>This animation <span class="kv" id="aMeta"></span></h3>
+        <div class="field"><label class="lb" for="aName">Name</label><input type="text" id="aName" spellcheck="false" placeholder="idle, run, jump…"></div>
+        <label class="row chk" for="aOnce"><input type="checkbox" id="aOnce"> Plays once (one-shot action or transition)</label>
+        <div class="row">
+          <button class="btn sm pri" id="aNew">New animation</button>
+          <button class="btn sm" id="aDup">Duplicate</button>
+          <button class="btn sm" id="aDel">Delete</button>
+        </div>
+        <p class="note">Animations in a project share the palette, key and pixel settings, so a character set looks consistent. Each keeps its own frames, trim, grid, frame rate, loop mode, paint edits and stabilization. A new animation keeps the loaded video, so idle, run and jump can come from different parts of one clip.</p>
+      </div>
+      <div class="group">
+        <h3>Stabilize <span class="pill" id="stPill">off</span></h3>
+        <label class="row chk" for="stX"><input type="checkbox" id="stX"> Lock horizontal position</label>
+        <div class="field"><label class="lb" for="stY">Vertical</label>
+          <select id="stY"><option value="off">Free</option><option value="feet">Lock feet to the ground line</option><option value="center">Lock center</option></select></div>
+        <p class="note">Keeps the character on the spot, so a walk or run cycle plays in place the way game sprites need. It tracks the opaque pixels, so key out the background or mark a transparent swatch first. Frames move by whole pixels, and paint edits sit on top of the stabilized frames.</p>
+      </div>
+      <div class="group">
+        <h3>Set <span class="kv" id="aCount"></span></h3>
+        <ul class="alist" id="aList"></ul>
+        <p class="note">The first animation is the default state in the Unity controller. Use the arrows to reorder.</p>
+      </div>
+    </div>
+
     <!-- PAINT TAB -->
     <div class="pane" role="tabpanel" data-pane="paint" hidden>
       <div class="group">
@@ -459,23 +548,32 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
       <div class="group">
         <h3>Settings <span class="kv" id="expMeta"></span></h3>
         <div class="grid2">
-          <div class="field"><label class="lb" for="eName">Name</label><input type="text" id="eName" value="sample_loop" spellcheck="false"></div>
+          <div class="field"><label class="lb" for="eName">Set name</label><input type="text" id="eName" value="sample_loop" spellcheck="false"></div>
           <div class="field"><label class="lb" for="eScale">Scale</label>
             <select id="eScale"><option>1</option><option>2</option><option selected>4</option><option>6</option><option>8</option></select></div>
           <div class="field"><label class="lb" for="ePPU">Pixels / unit</label><input type="number" id="ePPU" min="1" max="1024" value="16"></div>
           <div class="field"><label class="lb" for="ePivot">Pivot</label>
-            <select id="ePivot"><option value="0.5,0">Bottom center</option><option value="0.5,0.5">Center</option><option value="0,0">Bottom left</option></select></div>
+            <select id="ePivot"><option value="anchor">Feet (anchor)</option><option value="0.5,0">Bottom center</option><option value="0.5,0.5">Center</option><option value="0,0">Bottom left</option></select></div>
           <div class="field"><label class="lb" for="eCols">Sheet columns</label><input type="number" id="eCols" min="0" max="64" value="0" title="0 = automatic"></div>
           <div class="field"><label class="lb" for="ePad">Padding</label><select id="ePad"><option>0</option><option>1</option><option>2</option></select></div>
         </div>
       </div>
       <div class="group">
+        <h3>Sprite frame</h3>
+        <span class="kv" id="eCell"></span>
+        <label class="row chk" for="eTrim"><input type="checkbox" id="eTrim" checked> Trim to content</label>
+        <label class="row chk" for="eSame"><input type="checkbox" id="eSame" checked> Same size and anchor for all animations</label>
+        <div class="row"><label class="lb" for="eMargin">Margin</label><select id="eMargin"><option>0</option><option>1</option><option>2</option><option>4</option></select><span class="kv">px</span></div>
+        <p class="note">Trimming crops every frame to the tightest box around the opaque pixels across the whole loop. With the same size option, every animation shares one frame and their anchors (the feet) line up, so switching from idle to run doesn't make the sprite jump.</p>
+      </div>
+      <div class="group">
         <h3>Unity</h3>
+        <div class="row"><label class="lb" for="eWhich">Include</label><select id="eWhich"><option value="all">All animations</option><option value="this">This animation</option></select></div>
         <button class="btn pri" id="xUnity">Unity package (.zip)</button>
         <p class="note" id="expNote">Sprite sheet at 1:1, JSON manifest, single frames, the palette and an editor importer that slices the sheet and builds a looping animation clip.</p>
       </div>
       <div class="group">
-        <h3>Files <span class="kv">at the chosen scale</span></h3>
+        <h3>Files <span class="kv">this animation, at the chosen scale</span></h3>
         <div class="grid2">
           <button class="btn" id="xSheet">Sprite sheet .png</button>
           <button class="btn" id="xFrames">PNG frames .zip</button>
@@ -486,34 +584,41 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
       </div>
     </div>
 
-    <!-- VERSIONS TAB -->
-    <div class="pane" role="tabpanel" data-pane="versions" hidden>
+    <!-- PROJECT TAB -->
+    <div class="pane" role="tabpanel" data-pane="project" hidden>
       <div class="group">
-        <h3>Save this state</h3>
+        <h3>Project file</h3>
+        <div class="field"><label class="lb" for="pName">Project name</label><input type="text" id="pName" placeholder="untitled" spellcheck="false"></div>
         <div class="row">
-          <input type="text" id="vName" placeholder="Version name" spellcheck="false" style="flex:1">
-          <button class="btn pri" id="vSave">Save version</button>
+          <button class="btn pri" id="pSave" title="Ctrl/⌘ + S">Save</button>
+          <button class="btn" id="pSaveAs" title="Ctrl/⌘ + Shift + S">Save as…</button>
+          <button class="btn" id="pOpenBtn" title="Ctrl/⌘ + O">Open…</button>
+          <button class="btn" id="pNew">New</button>
+          <input type="file" id="pOpen" accept=".bitreel,.zip" hidden>
         </div>
-        <p class="note" id="vWhere">Checking storage…</p>
+        <p class="note" id="pWhere">Projects are saved as .bitreel files on your computer: the extracted frames, every setting, painted edits and all saved versions in one file. Drop a .bitreel file on the page to open it.</p>
       </div>
       <div class="group">
-        <h3>Saved versions <span class="kv" id="vCount"></span></h3>
+        <h3>Versions <span class="kv" id="vCount"></span></h3>
+        <div class="row">
+          <input type="text" id="vName" placeholder="Version name" spellcheck="false" style="flex:1">
+          <button class="btn sm" id="vSave">Save version</button>
+        </div>
         <ul class="vlist" id="vList"></ul>
       </div>
       <div class="group">
-        <h3>Project file</h3>
-        <div class="row">
-          <button class="btn sm" id="pDown">Download project (.zip)</button>
-          <label class="btn sm" for="pOpen">Open project</label>
-          <input type="file" id="pOpen" accept=".zip,application/zip" hidden>
-        </div>
-        <p class="note">A version holds the extracted frames, crop and trim, key, pixel and flicker settings, palette, frame selection and painted edits. The source video itself isn't stored: load it again to re-crop or re-extract.</p>
+        <h3>What's in a project</h3>
+        <p class="note">Every animation in the set with its frames, trim, grid, frame rate, selection, painted edits and stabilization; the shared key, pixel, flicker, palette and export settings; and every saved version. The source video isn't stored: load it again to re-crop or re-extract.</p>
       </div>
     </div>
   </section>
 </main>
 
 <section class="panel strip" aria-labelledby="hStrip">
+  <div class="ph animrow">
+    <h2 id="hAnims">Animations</h2>
+    <div class="loops" id="animBar" role="group" aria-labelledby="hAnims"></div>
+  </div>
   <div class="ph">
     <h2 id="hStrip">Frames</h2>
     <div class="row" style="margin-left:12px">
@@ -583,7 +688,7 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
 //   - the sibling sprite sheet PNG is set to Sprite (Multiple), Point filter, no compression, no mipmaps
 //   - it is sliced into one sprite per frame using the manifest rects and pivot
 //   - a looping AnimationClip (SpriteRenderer.m_Sprite) is created or updated next to it
-//   - an AnimatorController is created once if the manifest asks for it
+//   - the clip is added as a state of the set's AnimatorController (one controller per character, one state per animation)
 // Re-run manually: Tools > BitReel > Import Selected Sheet
 // From code (e.g. Unity MCP execute_code): PixelSheetImporter.Import("Assets/.../name.pixelsheet.json");
 using System.Collections.Generic;
@@ -604,6 +709,7 @@ public class PixelSheetImporter : AssetPostprocessor
         public int frameCount; public float fps; public string loopMode;
         public int pixelsPerUnit; public float pivotX; public float pivotY;
         public bool createAnimator; public FrameData[] frames;
+        public string controller; public string stateName; public bool isDefaultState;
     }
 
     static readonly HashSet<string> busy = new HashSet<string>();
@@ -710,13 +816,26 @@ public class PixelSheetImporter : AssetPostprocessor
             var binding = EditorCurveBinding.PPtrCurve("", typeof(SpriteRenderer), "m_Sprite");
             AnimationUtility.SetObjectReferenceCurve(clip, binding, keys);
             var settings = AnimationUtility.GetAnimationClipSettings(clip);
-            settings.loopTime = true;
+            settings.loopTime = data.loopMode != "once"; // one-shot actions and transitions play once
             AnimationUtility.SetAnimationClipSettings(clip, settings);
             if (isNew) AssetDatabase.CreateAsset(clip, clipPath); else EditorUtility.SetDirty(clip);
 
-            var ctrlPath = dir + "/" + data.name + ".controller";
-            if (data.createAnimator && AssetDatabase.LoadAssetAtPath<AnimatorController>(ctrlPath) == null)
-                AnimatorController.CreateAnimatorControllerAtPathWithClip(ctrlPath, clip);
+            // one controller per set: each animation becomes (or updates) a state named after it
+            if (data.createAnimator)
+            {
+                var ctrlName = string.IsNullOrEmpty(data.controller) ? data.name : data.controller;
+                var ctrlPath = dir + "/" + ctrlName + ".controller";
+                var ctrl = AssetDatabase.LoadAssetAtPath<AnimatorController>(ctrlPath);
+                if (ctrl == null) ctrl = AnimatorController.CreateAnimatorControllerAtPath(ctrlPath);
+                var sm = ctrl.layers[0].stateMachine;
+                var stName = string.IsNullOrEmpty(data.stateName) ? data.name : data.stateName;
+                AnimatorState state = null;
+                foreach (var cs in sm.states) if (cs.state.name == stName) { state = cs.state; break; }
+                if (state == null) state = sm.AddState(stName);
+                state.motion = clip;
+                if (data.isDefaultState || sm.defaultState == null) sm.defaultState = state;
+                EditorUtility.SetDirty(ctrl);
+            }
 
             AssetDatabase.SaveAssets();
             Debug.Log("[BitReel] Imported " + data.name + ": " + rects.Count + " sprites at " + fps + " fps -> " + clipPath);
@@ -763,15 +882,17 @@ const S = {
   edits: {}, undo: [], redo: [], curFi: 0,
   paint: { on: false, tool: "pencil", size: 1, all: false },
   play: { fps: 12, mode: "loop", playing: true, pos: 0, zoom: "fit", onion: false, bg: "chk" },
-  exp: { name: "sample_loop", scale: 4, ppu: 16, pivot: "0.5,0", cols: 0, pad: 0, loops: 4 },
+  exp: { name: "sample_loop", scale: 4, ppu: 16, pivot: "anchor", cols: 0, pad: 0, loops: 4, trim: true, same: true, margin: 0, which: "all", nameAuto: true },
+  stab: { x: false, y: "off" }, shifts: [], stabInfo: {},
   lastClick: -1
 };
+const A = { list: [], cur: 0 }; // the animations of the project (see "animation sets")
 
 /* persistence (per viewer) */
 const LS = "bitreel:v1", LS_OLD = "pixelbench:v1";
 function savePrefs() {
   try { localStorage.setItem(LS, JSON.stringify({ out: S.out, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
-    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode, zoom: S.play.zoom, bg: S.play.bg }, exp: { ...S.exp, name: undefined }, key: { tol: S.key.tol, choke: S.key.choke }, conv: S.conv, grid: { sq: S.grid.sq, track: S.grid.track, show: S.grid.show } })); } catch (e) {}
+    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode, zoom: S.play.zoom, bg: S.play.bg }, exp: { ...S.exp, name: undefined, nameAuto: undefined }, key: { tol: S.key.tol, choke: S.key.choke }, conv: S.conv, grid: { sq: S.grid.sq, track: S.grid.track, show: S.grid.show } })); } catch (e) {}
 }
 function loadPrefs() {
   try {
@@ -779,7 +900,7 @@ function loadPrefs() {
     Object.assign(S.out, p.out || {});
     if (Array.isArray(p.pal) && p.pal.length >= 2) { S.pal = p.pal.map(hex2rgb); S.presetName = p.presetName || "Custom"; S.trans = Number.isInteger(p.trans) && p.trans < S.pal.length ? p.trans : -1; }
     if (p.play) Object.assign(S.play, p.play);
-    if (p.exp) { const { name, ...rest } = p.exp; Object.assign(S.exp, rest); }
+    if (p.exp) { const { name, nameAuto, ...rest } = p.exp; if (rest.trim === undefined) rest.pivot = "anchor"; Object.assign(S.exp, rest); }
     if (p.key) { S.key.tol = clamp(+p.key.tol || 22, 1, 100); S.key.choke = clamp(+p.key.choke || 0, 0, 3); }
     if (p.conv === "grid" || p.conv === "downscale") S.conv = p.conv;
     if (p.grid) { S.grid.sq = !!p.grid.sq; S.grid.track = p.grid.track !== false; S.grid.show = p.grid.show !== false; }
@@ -1031,15 +1152,10 @@ function deflicker(raw, src) {
 
 let prepDirty = true, procTimer = 0;
 function schedule(prep) { if (prep) prepDirty = true; clearTimeout(procTimer); procTimer = setTimeout(runProcess, 50); }
-function runProcess() {
-  if (!S.frames.length) return;
+// The whole pipeline for the current animation, without touching the UI (also used to render other animations for export).
+function computeCore() {
   const [w, h] = outDims();
   if (prepDirty || w !== S.outW || h !== S.outH) {
-    if (w !== S.outW || h !== S.outH) {
-      const hadEdits = S.edits[dimKey()] && Object.keys(S.edits[dimKey()]).length;
-      S.undo = []; S.redo = []; updateUndo();
-      if (hadEdits) status("Painted edits stay with " + S.outW + " × " + S.outH + ". Go back to that width to see them.");
-    }
     S.outW = w; S.outH = h;
     rebuildKey();
     S.prep = S.frames.map(f => prepFrame(f.data, S.workW, S.workH, w, h));
@@ -1050,8 +1166,65 @@ function runProcess() {
   const raw = src.map(p => quantFrame(p, w, h));
   S.flickRaw = changeRate(raw);
   S.base = deflicker(raw, src);
+  stabilize();
   S.idx = []; S.base.forEach((_, i) => applyEdits(i));
+}
+function runProcess() {
+  if (!S.frames.length) return;
+  const [w, h] = outDims();
+  if (S.outW && (w !== S.outW || h !== S.outH)) {
+    const hadEdits = S.edits[dimKey()] && Object.keys(S.edits[dimKey()]).length;
+    S.undo = []; S.redo = []; updateUndo();
+    if (hadEdits) status("Painted edits stay with " + S.outW + " × " + S.outH + ". Go back to that width to see them.");
+  }
+  computeCore();
   afterProcess();
+}
+
+/* ---------- stabilize in place ---------- */
+// Measures the opaque pixels of one frame: count, center of mass, bounding box and the "feet" line (the lowest row
+// with real content, ignoring single stray pixels). Returns null when the frame has no transparency to work with.
+function measureIdx(q, w, h) {
+  const tr = S.trans, rows = new Int32Array(h);
+  let n = 0, sx = 0, sy = 0, minX = w, maxX = -1, minY = h, maxY = -1;
+  for (let y = 0; y < h; y++) {
+    const o = y * w;
+    for (let x = 0; x < w; x++) {
+      const v = q[o + x]; if (v === TRANSP || v === tr) continue;
+      n++; sx += x; sy += y; rows[y]++;
+      if (x < minX) minX = x; if (x > maxX) maxX = x; if (y < minY) minY = y; maxY = y;
+    }
+  }
+  if (!n || n === w * h) return null;
+  const need = Math.max(2, Math.round(w * 0.01)); let feet = maxY;
+  for (let y = maxY; y >= minY; y--) if (rows[y] >= need) { feet = y; break; }
+  return { n, cx: sx / n, cy: sy / n, feet: feet + 1, minX, maxX, minY, maxY };
+}
+const median = a => { const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+// Shifts each frame by whole pixels so the subject's anchor stays at the loop's median position.
+function stabilize() {
+  S.shifts = []; S.stabInfo = { on: false };
+  const st = S.stab; if (!st || (!st.x && st.y === "off")) return;
+  const w = S.outW, h = S.outH, seq = loopSeq();
+  const ms = S.base.map(q => measureIdx(q, w, h)), ref = seq.map(fi => ms[fi]).filter(Boolean);
+  if (!ref.length) { S.stabInfo = { on: true, failed: true }; return; }
+  const tx = median(ref.map(m => m.cx)), tyF = median(ref.map(m => m.feet)), tyC = median(ref.map(m => m.cy));
+  let mx = 0, my = 0;
+  S.base = S.base.map((q, fi) => {
+    const m = ms[fi]; if (!m) { S.shifts[fi] = [0, 0]; return q; }
+    const dx = st.x ? Math.round(tx - m.cx) : 0;
+    const dy = st.y === "feet" ? Math.round(tyF - m.feet) : st.y === "center" ? Math.round(tyC - m.cy) : 0;
+    S.shifts[fi] = [dx, dy]; mx = Math.max(mx, Math.abs(dx)); my = Math.max(my, Math.abs(dy));
+    if (!dx && !dy) return q;
+    const o = new Uint8Array(w * h).fill(TRANSP);
+    for (let y = 0; y < h; y++) {
+      const sy = y - dy; if (sy < 0 || sy >= h) continue;
+      const so = sy * w, oo = y * w;
+      for (let x = 0; x < w; x++) { const sx = x - dx; if (sx >= 0 && sx < w) o[oo + x] = q[so + sx]; }
+    }
+    return o;
+  });
+  S.stabInfo = { on: true, mx, my };
 }
 
 /* ---------- rendering ---------- */
@@ -1101,7 +1274,8 @@ function clearOutput() {
   $("#seamPill").className = "pill"; $("#seamPill").textContent = "Seam: no frames"; $("#seamView").hidden = true;
   $("#flickPill").className = "pill"; $("#flickPill").textContent = "no frames";
   $("#nativeRow").hidden = true; $("#oW").disabled = false;
-  updateUndo(); updateExpMeta(); updateEmpty();
+  S.shifts = []; S.stabInfo = {};
+  updateUndo(); updateExpMeta(); updateEmpty(); if (A.list.length) { renderAnims(); syncStabUI(); }
 }
 function updateEmpty() { $("#outEmpty").hidden = S.frames.length > 0; }
 $("#goExtract").addEventListener("click", () => setTab("source"));
@@ -1170,7 +1344,7 @@ $$("[data-sel]").forEach(b => b.addEventListener("click", () => {
   afterSelection();
 }));
 function afterSelection() {
-  if (S.out.stab || S.out.pops || S.out.smooth) schedule(false); // flicker passes depend on the loop order
+  if (S.out.stab || S.out.pops || S.out.smooth || S.stab.x || S.stab.y !== "off") schedule(false); // flicker and stabilize depend on the loop
   paintThumbs(); updateSeam(); renderOut(); updateExpMeta(); updateFlick();
 }
 function updateFlick() {
@@ -1376,7 +1550,8 @@ function findLoopInFrames() {
 }
 
 function afterProcess() {
-  updateEmpty(); sizeOut(); paintThumbs(); updateSeam(); renderOut(); updateExpMeta(); updateFlick();
+  updateEmpty(); sizeOut(); paintThumbs(); updateSeam(); renderOut(); updateExpMeta(); updateFlick(); markDirty(true);
+  syncStabUI(); renderAnims(); updatePlanPreviewSoon();
   $("#pixMeta").textContent = S.outW + " × " + S.outH;
 }
 
@@ -1394,17 +1569,26 @@ function loadFile(file) {
   videoURL = URL.createObjectURL(file);
   status("Loading " + file.name + "…");
   video.onloadedmetadata = async () => {
-    clearOutput();
+    // a new video starts a new animation when the current one already has frames; the others stay in the set
+    const base = file.name.replace(/\.[^.]+$/, "").slice(0, 40) || "clip", keep = curAnim();
+    A.list = A.list.filter(a => !a.isSample || a === keep); A.cur = A.list.indexOf(keep);
+    let started = null;
+    if (keep.isSample) { clearOutput(); keep.isSample = false; keep.source = null; keep.name = uniqueAnimName(base, keep); keep.autoName = true; }
+    else if (S.frames.length) { started = newAnim(base); started.source = null; started.autoName = true; }
+    else { clearOutput(); keep.source = null; if (keep.autoName || /^anim \d+$/.test(keep.name)) { keep.name = uniqueAnimName(base, keep); keep.autoName = true; } }
+    SD = null; renderStates();
     S.src = { w: video.videoWidth, h: video.videoHeight, dur: video.duration, name: file.name };
     S.crop = { x: 0, y: 0, w: S.src.w, h: S.src.h }; S.aspect = "free"; $("#aspect").value = "free";
     S.tIn = 0; S.tOut = Math.min(S.src.dur, 4);
     $("#srcName").textContent = file.name; $("#srcMeta").textContent = S.src.w + " × " + S.src.h + " · " + S.src.dur.toFixed(2) + " s";
-    $("#eName").value = S.exp.name = file.name.replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "_").toLowerCase().slice(0, 40) || "clip";
+    if (S.exp.nameAuto !== false && A.list.length <= 1) $("#eName").value = S.exp.name = file.name.replace(/\.[^.]+$/, "").replace(/[^\w-]+/g, "_").toLowerCase().slice(0, 40) || "clip";
+    renderAnims();
     ["#scrub", "#setIn", "#setOut", "#tIn", "#tOut", "#extract", "#srcPlay"].forEach(s => $(s).disabled = false);
     $("#scrub").max = S.src.dur; $("#tIn").max = $("#tOut").max = S.src.dur.toFixed(2);
     srcCv.classList.remove("locked"); $("#dropHint").hidden = true;
     await seek(0); syncTrim(); drawSource();
-    status("Checking for a pixel grid…"); autoGrid();
+    status("Checking for a pixel grid…");
+    autoGrid().then(() => { if (started) { const el = $("#status"); el.textContent = "New animation \u201c" + started.name + "\u201d for this video; the others are kept in the set. " + el.textContent; } });
   };
   video.onerror = () => status("This browser can't decode that file. Try MP4 (H.264) or WebM.", "err");
   video.src = videoURL;
@@ -1524,15 +1708,15 @@ $("#sFps").addEventListener("change", e => { S.sampleFps = +e.target.value; upda
 
 /* extraction */
 let extracting = false;
-$("#extract").addEventListener("click", async () => {
-  if (!S.src || extracting) return;
+async function extractRange(quiet) {
+  if (!S.src || extracting) return false;
   extracting = true; $("#extract").disabled = true;
   const fps = S.sampleFps, n = Math.min(MAX_FRAMES, Math.max(1, Math.floor((S.tOut - S.tIn) * fps + 1e-6)));
   const c = S.crop, grid = S.conv === "grid";
   if (grid) {
-    if (!S.grid.set) { status("Detect the grid or enter a cell size first.", "err"); extracting = false; $("#extract").disabled = false; return; }
+    if (!S.grid.set) { status("Detect the grid or enter a cell size first.", "err"); extracting = false; $("#extract").disabled = false; return false; }
     const [gc, gr] = gridDims();
-    if (gc < 4 || gr < 4 || gc > 640 || gr > 640) { status("That grid gives " + gc + " × " + gr + " pixels. Check the cell size.", "err"); extracting = false; $("#extract").disabled = false; return; }
+    if (gc < 4 || gr < 4 || gc > 640 || gr > 640) { status("That grid gives " + gc + " × " + gr + " pixels. Check the cell size.", "err"); extracting = false; $("#extract").disabled = false; return false; }
   }
   const k = Math.min(1, WORK_MAX / Math.max(c.w, c.h));
   const [W, H] = grid ? gridDims() : [Math.max(8, Math.round(c.w * k)), Math.max(8, Math.round(c.h * k))];
@@ -1555,7 +1739,7 @@ $("#extract").addEventListener("click", async () => {
     }
   } catch (err) {
     status("Couldn't read frames from this video: " + (err && err.message || err), "err");
-    extracting = false; $("#extract").disabled = false; return;
+    extracting = false; $("#extract").disabled = false; return false;
   }
   S.frames = frames; S.workW = W; S.workH = H; S.play.pos = 0; S.lastClick = -1;
   S.edits = {}; S.undo = []; S.redo = []; updateUndo();
@@ -1566,9 +1750,11 @@ $("#extract").addEventListener("click", async () => {
   buildThumbs(); prepDirty = true; runProcess();
   extracting = false; $("#extract").disabled = false;
   setTimeout(() => $("#prog").style.width = "0", 600);
-  status(n + " frames extracted" + (grid ? " at the native " + W + " × " + H + " grid (dither set to None)" : "") + ". Tune pixels and palette, then check the loop.", "good");
-  scrubTo(S.tIn);
-});
+  if (!quiet) { status(n + " frames extracted" + (grid ? " at the native " + W + " × " + H + " grid (dither set to None)" : "") + ". Tune pixels and palette, then check the loop.", "good"); scrubTo(S.tIn); }
+  return true;
+}
+$("#extract").addEventListener("click", () => extractRange(false));
+
 function configWidth() {
   const r = $("#oW"); r.max = maxOutW();
   S.out.w = snap16(S.out.w);
@@ -1792,8 +1978,22 @@ document.addEventListener("keydown", e => {
 
 /* ---------- export ---------- */
 let dl = null;
+// Plain browser download: used when Claude's save service isn't there (a normal tab, GitHub Pages, a local file).
+function browserDownload(filename, data) {
+  const blob = data instanceof Blob ? data : new Blob([data]);
+  const url = URL.createObjectURL(blob), a = document.createElement("a");
+  a.href = url; a.download = filename; a.rel = "noopener"; a.style.display = "none";
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
 async function save(filename, data) {
-  if (!dl) { status("Saving files isn't available in this view. Open the published page in Claude to export.", "err"); return false; }
+  if (!dl) {
+    try { browserDownload(filename, data); status("Downloading " + filename + ".", "good"); return true; }
+    catch (e) { status("This view blocks downloads. Open the page in a regular browser tab to export.", "err"); return false; }
+  }
+  // Inside Claude's sandbox the browser blocks page downloads, so the file is handed to the viewer's save dialog.
+  // Its extension allowlist has no .bitreel, so project files travel there as .bitreel.zip (Open accepts both).
+  if (/\.bitreel$/i.test(filename)) filename += ".zip";
   try { await dl.save({ filename, data }); status("Saved " + filename, "good"); return true; }
   catch (e) {
     const c = e && e.code;
@@ -1807,59 +2007,132 @@ async function save(filename, data) {
 const safeName = () => (S.exp.name || "sprite").replace(/[^\w-]+/g, "_").replace(/^_+|_+$/g, "") || "sprite";
 const toBlob = img => new Promise(res => { const c = document.createElement("canvas"); c.width = img.width; c.height = img.height; c.getContext("2d").putImageData(img, 0, 0); c.toBlob(res, "image/png"); });
 function playSeq() { const sel = selected(); return S.play.mode === "pingpong" && sel.length > 2 ? sel.concat(sel.slice(1, -1).reverse()) : sel; }
-function sheetLayout(n, scale) {
-  const fw = S.outW * scale, fh = S.outH * scale, pad = S.exp.pad;
-  const cols = S.exp.cols > 0 ? Math.min(S.exp.cols, n) : Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
+const fileSlug = s => (s || "anim").toString().trim().replace(/[^\w-]+/g, "_").replace(/^_+|_+$/g, "").toLowerCase() || "anim";
+function baseName(info) { const set = safeName(), an = fileSlug(info.name); return an === set.toLowerCase() ? set : set + "_" + an; }
+
+/* ---------- sprite frame: trim to content and a shared, anchored layout ---------- */
+// Everything an export needs about one animation, rendered with the current shared settings.
+function animInfo(a) {
+  const isCur = a === curAnim(), w = S.outW, h = S.outH, sel = selected();
+  const ms = sel.map(fi => measureIdx(S.idx[fi], w, h)).filter(Boolean);
+  let bbox, ax, ay;
+  if (!ms.length) { bbox = { minX: 0, minY: 0, maxX: w - 1, maxY: h - 1 }; ax = Math.round(w / 2); ay = h; }
+  else {
+    bbox = { minX: Math.min(...ms.map(m => m.minX)), minY: Math.min(...ms.map(m => m.minY)), maxX: Math.max(...ms.map(m => m.maxX)), maxY: Math.max(...ms.map(m => m.maxY)) };
+    ax = Math.round(median(ms.map(m => m.cx + 0.5))); // horizontal center of mass, on a pixel boundary
+    ay = Math.max(...ms.map(m => m.feet));             // the ground line: the lowest the feet reach
+  }
+  return { anim: a, name: a.name, w, h, idx: S.idx, sel, seq: playSeq(), fps: S.play.fps, mode: S.play.mode, times: S.frames.map(f => f.t),
+    painted: sel.map((fi, k) => hasEdits(fi) ? k : -1).filter(k => k >= 0), shifts: (S.shifts || []).slice(), stab: { ...(S.stab || { x: false, y: "off" }) },
+    A: { x: ax, y: ay }, bbox, transparent: ms.length > 0, native: S.native, grid: { ...S.grid }, source: isCur ? liveSource(a) : (a.source || null) };
+}
+function infoFor(a) { return a === curAnim() ? animInfo(a) : withAnim(a, () => animInfo(a)); }
+// Cell size, where the cell sits in each animation's frame (ox, oy) and the anchor inside the cell (ax, ay).
+function layoutsFor(infos) {
+  const mg = S.exp.margin | 0;
+  if (!S.exp.trim) return infos.map(i => ({ cw: i.w, ch: i.h, ox: 0, oy: 0, ax: i.A.x, ay: i.A.y }));
+  if (S.exp.same) {
+    // one frame size for the whole set, every animation placed so its anchor lands on the same pixel
+    let L = Infinity, R = -Infinity, T = Infinity, B = -Infinity;
+    infos.forEach(i => { L = Math.min(L, i.bbox.minX - i.A.x); R = Math.max(R, i.bbox.maxX + 1 - i.A.x); T = Math.min(T, i.bbox.minY - i.A.y); B = Math.max(B, i.bbox.maxY + 1 - i.A.y); });
+    const el = Math.max(0, -L) + mg, er = Math.max(1, R) + mg, et = Math.max(1, -T) + mg, eb = Math.max(0, B) + mg;
+    return infos.map(i => ({ cw: el + er, ch: et + eb, ox: i.A.x - el, oy: i.A.y - et, ax: el, ay: et }));
+  }
+  return infos.map(i => { const b = i.bbox, ox = b.minX - mg, oy = b.minY - mg; return { cw: b.maxX - b.minX + 1 + 2 * mg, ch: b.maxY - b.minY + 1 + 2 * mg, ox, oy, ax: i.A.x - ox, ay: i.A.y - oy }; });
+}
+function exportPlan(scope) {
+  stashAnim(curAnim());
+  const anims = (scope === "all" ? A.list : [curAnim()]).filter(hasFrames);
+  const pool = S.exp.trim && S.exp.same ? A.list.filter(hasFrames) : anims;
+  const infos = pool.map(infoFor), lays = layoutsFor(infos);
+  return anims.map(a => { const k = pool.indexOf(a); return { info: infos[k], L: lays[k] }; });
+}
+// Unity pivot, normalized with a bottom-left origin
+function pivotOf(L) { if (S.exp.pivot === "anchor") return [L.ax / L.cw, (L.ch - L.ay) / L.ch]; return S.exp.pivot.split(",").map(Number); }
+function cellIdx(info, L, fi) {
+  const q = info.idx[fi], w = info.w, h = info.h, o = new Uint8Array(L.cw * L.ch).fill(TRANSP);
+  for (let y = 0; y < L.ch; y++) {
+    const sy = L.oy + y; if (sy < 0 || sy >= h) continue;
+    for (let x = 0; x < L.cw; x++) { const sx = L.ox + x; if (sx >= 0 && sx < w) o[y * L.cw + x] = q[sy * w + sx]; }
+  }
+  return o;
+}
+function scaleIdx(q, w, h, sc) {
+  if (sc === 1) return q;
+  const W = w * sc, H = h * sc, o = new Uint8Array(W * H);
+  for (let y = 0; y < H; y++) { const sy = (y / sc | 0) * w; for (let x = 0; x < W; x++) o[y * W + x] = q[sy + (x / sc | 0)]; }
+  return o;
+}
+function sheetLayout(n, fw, fh) {
+  const pad = S.exp.pad, cols = S.exp.cols > 0 ? Math.min(S.exp.cols, n) : Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
   return { fw, fh, pad, cols, rows, W: cols * fw + (cols - 1) * pad, H: rows * fh + (rows - 1) * pad };
 }
-function buildSheet(frames, scale) {
-  const L = sheetLayout(frames.length, scale), data = new Uint8ClampedArray(L.W * L.H * 4), rects = [];
-  frames.forEach((fi, k) => {
-    const img = rgbaOf(S.idx[fi], S.outW, S.outH, scale), cx = (k % L.cols) * (L.fw + L.pad), cy = Math.floor(k / L.cols) * (L.fh + L.pad);
+function buildSheetCells(cells, cw, ch, scale, fps) {
+  const L = sheetLayout(cells.length, cw * scale, ch * scale), data = new Uint8ClampedArray(L.W * L.H * 4), rects = [];
+  cells.forEach((q, k) => {
+    const img = rgbaOf(q, cw, ch, scale), cx = (k % L.cols) * (L.fw + L.pad), cy = Math.floor(k / L.cols) * (L.fh + L.pad);
     for (let y = 0; y < L.fh; y++) data.set(img.data.subarray(y * L.fw * 4, (y + 1) * L.fw * 4), ((cy + y) * L.W + cx) * 4);
-    rects.push({ index: k, x: cx, y: cy, w: L.fw, h: L.fh, time: +(k / S.play.fps).toFixed(4), sourceFrame: fi, sourceTime: +S.frames[fi].t.toFixed(3) });
+    rects.push({ index: k, x: cx, y: cy, w: L.fw, h: L.fh, time: +(k / fps).toFixed(4) });
   });
   return { img: new ImageData(data, L.W, L.H), rects, L };
 }
 function updateExpMeta() {
-  const n = selected().length;
-  if (!n || !S.outW) { $("#expMeta").textContent = ""; ["#xUnity", "#xSheet", "#xFrames", "#xGif", "#xVid"].forEach(s => $(s).disabled = true); return; }
-  const L = sheetLayout(n, 1);
-  $("#expMeta").textContent = n + " fr · sheet " + L.cols + "×" + L.rows + " · " + L.W + "×" + L.H;
+  const n = selected().length, cur = curAnim(), k = A.list.filter(hasFrames).length;
+  $("#expMeta").textContent = n && cur ? n + " fr · " + cur.name : "";
   $("#vidFmt").textContent = videoMime() ? (/mp4/.test(videoMime()) ? "MP4" : "WebM") + " · real-time" : "not supported here";
-  const off = !dl; ["#xUnity", "#xSheet", "#xFrames", "#xGif", "#xVid"].forEach(s => $(s).disabled = off || !n);
-  if (off) $("#expNote").textContent = "Exports save through the published page in Claude. The Unity package holds a sprite sheet, a JSON manifest, single frames, the palette and an editor importer.";
-  else $("#expNote").textContent = "The Unity package holds a sprite sheet, a JSON manifest, single frames, the palette and an editor importer that slices the sheet and builds a looping animation clip.";
+  ["#xSheet", "#xFrames", "#xGif", "#xVid"].forEach(s => $(s).disabled = !n);
+  $("#xUnity").disabled = S.exp.which === "this" ? !n : !k;
+  const opt = $('#eWhich option[value="all"]'); if (opt) opt.textContent = "All animations (" + k + ")";
+  $("#expNote").textContent = "Each animation gets a sprite sheet and a JSON manifest, plus the palette and an editor importer that slices the sheets and builds one looping clip per animation in a single Animator Controller.";
 }
-["eName", "eScale", "ePPU", "ePivot", "eCols", "ePad", "eLoops"].forEach(id => $("#" + id).addEventListener("change", e => {
-  const v = e.target.value, key = { eName: "name", eScale: "scale", ePPU: "ppu", ePivot: "pivot", eCols: "cols", ePad: "pad", eLoops: "loops" }[id];
-  S.exp[key] = id === "eName" || id === "ePivot" ? v : clamp(+v || 0, 0, 4096); savePrefs(); updateExpMeta();
+let planTimer = 0;
+function updatePlanPreviewSoon() { clearTimeout(planTimer); planTimer = setTimeout(updatePlanPreview, 160); }
+function updatePlanPreview() {
+  const el = $("#eCell"), pane = document.querySelector('[data-pane="export"]'); if (!el || !pane || pane.hidden) return;
+  if (!S.frames.length) { el.textContent = ""; return; }
+  try {
+    const [p] = exportPlan("current"); if (!p) { el.textContent = ""; return; }
+    const [px, py] = pivotOf(p.L), shared = S.exp.trim && S.exp.same && A.list.filter(hasFrames).length > 1;
+    el.textContent = p.L.cw + " × " + p.L.ch + (shared ? " shared" : "") + " · pivot " + px.toFixed(2) + ", " + py.toFixed(2) + (p.info.transparent || !S.exp.trim ? "" : " · no transparency, not trimmed");
+  } catch (e) { el.textContent = ""; }
+}
+["eName", "eScale", "ePPU", "ePivot", "eCols", "ePad", "eLoops", "eMargin", "eWhich"].forEach(id => $("#" + id).addEventListener("change", e => {
+  const v = e.target.value, key = { eName: "name", eScale: "scale", ePPU: "ppu", ePivot: "pivot", eCols: "cols", ePad: "pad", eLoops: "loops", eMargin: "margin", eWhich: "which" }[id];
+  S.exp[key] = id === "eName" || id === "ePivot" || id === "eWhich" ? v : clamp(+v || 0, 0, 4096);
+  if (id === "eName") S.exp.nameAuto = false;
+  savePrefs(); updateExpMeta(); updatePlanPreview(); markDirty(true);
+}));
+["eTrim", "eSame"].forEach(id => $("#" + id).addEventListener("change", e => {
+  S.exp[id === "eTrim" ? "trim" : "same"] = e.target.checked; $("#eSame").disabled = !S.exp.trim;
+  savePrefs(); updatePlanPreview(); markDirty(true);
 }));
 async function busy(btn, label, fn) { const t = btn.textContent; btn.disabled = true; btn.textContent = label; try { await fn(); } catch (e) { status("Export failed: " + (e && e.message || e), "err"); } finally { btn.textContent = t; btn.disabled = false; updateExpMeta(); } }
+function planCurrent() { const plan = exportPlan("current"); if (!plan.length) { status("Extract frames first.", "err"); return null; } return plan[0]; }
 
 $("#xSheet").addEventListener("click", e => busy(e.currentTarget, "Building…", async () => {
-  const { img } = buildSheet(selected(), S.exp.scale); await save(safeName() + "_sheet_x" + S.exp.scale + ".png", await toBlob(img));
+  const p = planCurrent(); if (!p) return; const { info, L } = p, sc = S.exp.scale;
+  const { img } = buildSheetCells(info.sel.map(fi => cellIdx(info, L, fi)), L.cw, L.ch, sc, info.fps);
+  await save(baseName(info) + "_sheet_x" + sc + ".png", await toBlob(img));
 }));
 $("#xFrames").addEventListener("click", e => busy(e.currentTarget, "Zipping…", async () => {
   if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
-  const z = new JSZip(), nm = safeName(), sc = S.exp.scale;
-  const sel = selected();
-  for (let k = 0; k < sel.length; k++) z.file(nm + "_" + String(k).padStart(3, "0") + ".png", await toBlob(rgbaOf(S.idx[sel[k]], S.outW, S.outH, sc)));
+  const p = planCurrent(); if (!p) return; const { info, L } = p, sc = S.exp.scale, z = new JSZip(), nm = baseName(info);
+  for (let k = 0; k < info.sel.length; k++) z.file(nm + "_" + String(k).padStart(3, "0") + ".png", await toBlob(rgbaOf(cellIdx(info, L, info.sel[k]), L.cw, L.ch, sc)));
   await save(nm + "_frames_x" + sc + ".zip", await z.generateAsync({ type: "blob" }));
 }));
 $("#xGif").addEventListener("click", e => busy(e.currentTarget, "Encoding…", async () => {
-  const seq = playSeq(), sc = S.exp.scale, w = S.outW * sc, h = S.outH * sc;
-  const frames = seq.map(fi => { if (sc === 1) return S.idx[fi]; const src = S.idx[fi], o = new Uint8Array(w * h); for (let y = 0; y < h; y++) { const sy = (y / sc | 0) * S.outW; for (let x = 0; x < w; x++) o[y * w + x] = src[sy + (x / sc | 0)]; } return o; });
+  const p = planCurrent(); if (!p) return; const { info, L } = p, sc = S.exp.scale, w = L.cw * sc, h = L.ch * sc;
+  const frames = info.seq.map(fi => scaleIdx(cellIdx(info, L, fi), L.cw, L.ch, sc));
   // keyed or erased pixels (index 255) need a real palette slot in the GIF
   let pal = S.pal, tIdx = S.trans, gf = frames;
   if (frames.some(f => f.includes(TRANSP))) {
     if (tIdx < 0) { tIdx = S.pal.length; pal = S.pal.concat([[0, 0, 0]]); }
     gf = frames.map(f => { if (!f.includes(TRANSP)) return f; const o = f.slice(); for (let i = 0; i < o.length; i++) if (o[i] === TRANSP) o[i] = tIdx; return o; });
   }
-  const delay = Math.max(2, Math.round(100 / S.play.fps)); // GIF timing is in 1/100 s; under 2 browsers slow it down
+  const delay = Math.max(2, Math.round(100 / info.fps)); // GIF timing is in 1/100 s; under 2 browsers slow it down
   const bytes = encodeGIF(w, h, gf, pal, delay, tIdx);
-  const ok = await save(safeName() + "_x" + sc + ".gif", new Blob([bytes], { type: "image/gif" }));
-  if (ok && S.play.fps > 50) status("Saved. GIF timing tops out at 50 fps, so it plays at " + Math.round(100 / delay) + " fps. Video and Unity exports keep " + S.play.fps + " fps.");
+  const ok = await save(baseName(info) + "_x" + sc + ".gif", new Blob([bytes], { type: "image/gif" }));
+  if (ok && info.fps > 50) status("Saved. GIF timing tops out at 50 fps, so it plays at " + Math.round(100 / delay) + " fps. Video and Unity exports keep " + info.fps + " fps.");
 }));
 function videoMime() {
   if (!window.MediaRecorder) return "";
@@ -1867,14 +2140,15 @@ function videoMime() {
 }
 $("#xVid").addEventListener("click", e => busy(e.currentTarget, "Recording…", async () => {
   const mime = videoMime(); if (!mime) { status("This browser can't record video. Use the GIF or PNG exports.", "err"); return; }
-  const sc = S.exp.scale, w = S.outW * sc, h = S.outH * sc, W = w + (w & 1), H = h + (h & 1);
+  const p = planCurrent(); if (!p) return; const { info, L } = p;
+  const sc = S.exp.scale, w = L.cw * sc, h = L.ch * sc, W = w + (w & 1), H = h + (h & 1);
   const cv = document.createElement("canvas"); cv.width = W; cv.height = H; const ctx = cv.getContext("2d");
   const stream = cv.captureStream(0), track = stream.getVideoTracks()[0];
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 12e6 }), chunks = [];
   rec.ondataavailable = ev => { if (ev.data.size) chunks.push(ev.data); };
   const stopped = new Promise(r => rec.onstop = r);
-  const seq = playSeq(), loops = S.exp.loops || 1, per = 1000 / S.play.fps, total = seq.length * loops;
-  const imgs = seq.map(fi => rgbaOf(S.idx[fi], S.outW, S.outH, sc));
+  const seq = info.seq, loops = S.exp.loops || 1, per = 1000 / info.fps, total = seq.length * loops;
+  const imgs = seq.map(fi => rgbaOf(cellIdx(info, L, fi), L.cw, L.ch, sc));
   const tmp = document.createElement("canvas"); tmp.width = w; tmp.height = h; const tctx = tmp.getContext("2d");
   rec.start();
   const t0 = performance.now();
@@ -1887,56 +2161,76 @@ $("#xVid").addEventListener("click", e => busy(e.currentTarget, "Recording…", 
   }
   rec.stop(); await stopped;
   const ext = /mp4/.test(mime) ? "mp4" : "webm";
-  await save(safeName() + "_x" + sc + "." + ext, new Blob(chunks, { type: mime.split(";")[0] }));
+  await save(baseName(info) + "_x" + sc + "." + ext, new Blob(chunks, { type: mime.split(";")[0] }));
 }));
+async function buildUnityZip(scope) {
+  const plan = exportPlan(scope); if (!plan.length) throw new Error("there are no extracted frames to export");
+  const set = safeName(), z = new JSZip(), dir = z.folder(set), manifests = [];
+  for (const { info, L } of plan) {
+    const base = baseName(info), an = fileSlug(info.name);
+    const cells = info.sel.map(fi => cellIdx(info, L, fi));
+    const { img, rects, L: SL } = buildSheetCells(cells, L.cw, L.ch, 1, info.fps);
+    rects.forEach((r, j) => {
+      const fi = info.sel[j], sh = info.shifts[fi];
+      r.sourceFrame = fi; r.sourceTime = +(info.times[fi] || 0).toFixed(3);
+      if (sh && (sh[0] || sh[1])) r.stabilizeOffset = { x: sh[0], y: sh[1] };
+    });
+    const [pvx, pvy] = pivotOf(L), st = info.stab;
+    const m = {
+      format: "bitreel.pixelsheet", version: 2, name: base, stateName: info.name, controller: set, isDefaultState: info.anim === A.list[0],
+      image: base + "_sheet.png", sheetWidth: SL.W, sheetHeight: SL.H, frameWidth: SL.fw, frameHeight: SL.fh, columns: SL.cols, rows: SL.rows, padding: SL.pad,
+      frameCount: rects.length, fps: info.fps, loopMode: info.anim.oneShot ? "once" : info.mode === "pingpong" ? "pingpong" : "loop",
+      pixelsPerUnit: S.exp.ppu || 16, pivotX: +pvx.toFixed(5), pivotY: +pvy.toFixed(5), anchor: { x: L.ax, y: L.ay },
+      trimmed: !!S.exp.trim, sharedFrame: !!(S.exp.trim && S.exp.same), filterMode: "Point", compression: "None",
+      createAnimator: true, transparentIndex: S.trans, palette: S.pal.map(rgb2hex),
+      key: S.key.on && S.key.rgb ? { color: rgb2hex(S.key.rgb), tolerance: S.key.tol, choke: S.key.choke } : null,
+      stabilize: st && (st.x || st.y !== "off") ? { horizontal: !!st.x, vertical: st.y } : null,
+      paintedFrames: info.painted, coordinateOrigin: "top-left", frames: rects, source: info.source,
+      conversion: info.native ? { mode: "grid-snap", cellWidth: +info.grid.w.toFixed(3), cellHeight: +info.grid.h.toFixed(3), offsetX: +info.grid.x.toFixed(2), offsetY: +info.grid.y.toFixed(2) } : { mode: "downscale" },
+      settings: { ...S.out }, createdWith: "BitReel"
+    };
+    manifests.push(m);
+    dir.file(m.image, await toBlob(img));
+    dir.file(base + ".pixelsheet.json", JSON.stringify(m, null, 2));
+    for (let j = 0; j < cells.length; j++) dir.file("frames/" + an + "/" + base + "_" + String(j).padStart(3, "0") + ".png", await toBlob(rgbaOf(cells[j], L.cw, L.ch, 1)));
+  }
+  const palImg = new ImageData(S.pal.length, 1); S.pal.forEach((c, i) => { palImg.data.set([c[0], c[1], c[2], i === S.trans ? 0 : 255], i * 4); });
+  dir.file(set + "_palette.png", await toBlob(palImg));
+  dir.file(set + ".hex", S.pal.map(c => rgb2hex(c).slice(1)).join("\n") + "\n");
+  z.file("Editor/PixelSheetImporter.cs", $("#csImporter").textContent);
+  z.file("README.md", readmeSet(set, manifests));
+  return { blob: await z.generateAsync({ type: "blob", compression: "DEFLATE" }), set, manifests };
+}
 $("#xUnity").addEventListener("click", e => busy(e.currentTarget, "Packing…", async () => {
   if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
-  const nm = safeName(), sel = selected(), z = new JSZip(), dir = z.folder(nm);
-  const { img, rects, L } = buildSheet(sel, 1);
-  const [px, py] = S.exp.pivot.split(",").map(Number);
-  const manifest = {
-    format: "bitreel.pixelsheet", version: 1, name: nm, image: nm + "_sheet.png",
-    sheetWidth: L.W, sheetHeight: L.H, frameWidth: L.fw, frameHeight: L.fh, columns: L.cols, rows: L.rows, padding: L.pad,
-    frameCount: rects.length, fps: S.play.fps, loopMode: S.play.mode === "pingpong" ? "pingpong" : "loop",
-    pixelsPerUnit: S.exp.ppu || 16, pivotX: px, pivotY: py, filterMode: "Point", compression: "None",
-    createAnimator: true, transparentIndex: S.trans, palette: S.pal.map(rgb2hex),
-    key: S.key.on && S.key.rgb ? { color: rgb2hex(S.key.rgb), tolerance: S.key.tol, choke: S.key.choke } : null,
-    paintedFrames: sel.map((fi, k) => hasEdits(fi) ? k : -1).filter(k => k >= 0),
-    coordinateOrigin: "top-left", frames: rects,
-    source: { file: S.src ? S.src.name : "procedural sample", crop: S.src ? { ...S.crop } : null, in: S.src ? +S.tIn.toFixed(3) : 0, out: S.src ? +S.tOut.toFixed(3) : 0, sampleFps: S.src ? S.sampleFps : 12 },
-    conversion: S.native ? { mode: "grid-snap", cellWidth: +S.grid.w.toFixed(3), cellHeight: +S.grid.h.toFixed(3), offsetX: +S.grid.x.toFixed(2), offsetY: +S.grid.y.toFixed(2) } : { mode: "downscale" },
-    settings: { ...S.out }, createdWith: "BitReel"
-  };
-  dir.file(nm + "_sheet.png", await toBlob(img));
-  dir.file(nm + ".pixelsheet.json", JSON.stringify(manifest, null, 2));
-  for (let k = 0; k < sel.length; k++) dir.file("frames/" + nm + "_" + String(k).padStart(3, "0") + ".png", await toBlob(rgbaOf(S.idx[sel[k]], S.outW, S.outH, 1)));
-  const palImg = new ImageData(S.pal.length, 1); S.pal.forEach((c, i) => { palImg.data.set([c[0], c[1], c[2], i === S.trans ? 0 : 255], i * 4); });
-  dir.file(nm + "_palette.png", await toBlob(palImg));
-  dir.file(nm + ".hex", S.pal.map(c => rgb2hex(c).slice(1)).join("\n") + "\n");
-  z.file("Editor/PixelSheetImporter.cs", $("#csImporter").textContent);
-  z.file("README.md", readme(nm, manifest));
-  await save(nm + "_unity.zip", await z.generateAsync({ type: "blob", compression: "DEFLATE" }));
+  const { blob, set, manifests } = await buildUnityZip(S.exp.which === "this" ? "current" : "all");
+  if (await save(set + "_unity.zip", blob)) status("Saved " + set + "_unity.zip with " + manifests.length + " animation" + (manifests.length > 1 ? "s" : "") + " (" + manifests.map(m => m.stateName).join(", ") + ").", "good");
 }));
-function readme(nm, m) {
+function readmeSet(set, ms) {
+  const m0 = ms[0], shared = m0.sharedFrame;
+  const rows = ms.map(m => "| " + m.stateName + (m.isDefaultState ? " (default)" : "") + " | " + m.frameCount + " | " + m.fps + " | " + m.loopMode + " | " + m.frameWidth + " x " + m.frameHeight + " | `" + m.image + "` |");
   return [
-    "# " + nm + " (BitReel export)", "",
-    m.frameCount + " frames, " + m.frameWidth + "x" + m.frameHeight + " px, " + m.fps + " fps, " + m.loopMode + ", " + m.palette.length + "-color palette, " + m.pixelsPerUnit + " pixels per unit.", "",
+    "# " + set + " (BitReel export)", "",
+    ms.length + " animation" + (ms.length > 1 ? "s" : "") + ", " + m0.palette.length + "-color palette, " + m0.pixelsPerUnit + " pixels per unit." +
+      (shared ? " All animations share one " + m0.frameWidth + " x " + m0.frameHeight + " frame with the pivot on the same anchor, so switching between them doesn't make the sprite jump." : ""), "",
+    "| Animation | Frames | FPS | Loop | Frame | Sheet |", "|---|---|---|---|---|---|", ...rows, "",
     "## Contents", "",
-    "- `" + nm + "/" + nm + "_sheet.png`: sprite sheet, " + m.columns + " x " + m.rows + " grid, " + m.padding + " px padding, 1:1 pixels",
-    "- `" + nm + "/" + nm + ".pixelsheet.json`: manifest (frame rects with top-left origin, fps, loop mode, pivot, PPU, palette)",
-    "- `" + nm + "/frames/`: one PNG per frame, same order as the sheet",
-    "- `" + nm + "/" + nm + "_palette.png` and `" + nm + ".hex`: the palette",
+    "- `" + set + "/<name>_sheet.png`: one sprite sheet per animation, 1:1 pixels",
+    "- `" + set + "/<name>.pixelsheet.json`: one manifest per animation (frame rects with top-left origin, fps, loop mode, pivot, PPU, palette, stabilization offsets)",
+    "- `" + set + "/frames/<animation>/`: single PNG frames, same order as the sheets",
+    "- `" + set + "/" + set + "_palette.png` and `" + set + ".hex`: the shared palette",
     "- `Editor/PixelSheetImporter.cs`: Unity editor importer", "",
     "## Import into Unity", "",
     "1. Install the importer once: copy `Editor/PixelSheetImporter.cs` to `Assets/Editor/PixelSheetImporter.cs`. Skip this if it is already in the project (two copies will not compile). It needs the 2D Sprite package (`com.unity.2d.sprite`).",
-    "2. Copy the `" + nm + "/` folder anywhere under `Assets/`, for example `Assets/Art/Animations/" + nm + "/`.",
-    "3. The importer runs on its own when the `.pixelsheet.json` file is imported. It sets the sheet to Sprite (Multiple), Point filter, no compression, no mipmaps, PPU " + m.pixelsPerUnit + ", slices " + m.frameCount + " sprites named `" + nm + "_000`..., creates `" + nm + ".anim` (looping, SpriteRenderer sprite curve) and `" + nm + ".controller`.",
-    "4. To re-run it: select the JSON and use Tools > BitReel > Import Selected Sheet, or call `PixelSheetImporter.Import(\"Assets/.../" + nm + ".pixelsheet.json\")`.", "",
+    "2. Copy the `" + set + "/` folder anywhere under `Assets/`, for example `Assets/Art/Characters/" + set + "/`.",
+    "3. The importer runs on its own for each `.pixelsheet.json`. It sets every sheet to Sprite (Multiple), Point filter, no compression, no mipmaps, PPU " + m0.pixelsPerUnit + ", slices the sprites with the manifest pivot, creates one looping `.anim` per animation, and adds each one as a state of `" + set + ".controller`. The default state is `" + (ms.find(m => m.isDefaultState) || m0).stateName + "`.",
+    "4. To re-run it: select a JSON and use Tools > BitReel > Import Selected Sheet, or call `PixelSheetImporter.Import(\"Assets/.../<name>.pixelsheet.json\")`. Exporting a single animation later into the same folder adds or updates just that state.", "",
     "## Notes for an assistant using the Unity MCP", "",
     "- Check for an existing `PixelSheetImporter` class before adding the script, then refresh and wait for compilation.",
-    "- After copying the folder, refresh the AssetDatabase. If the clip does not appear, call `PixelSheetImporter.Import(path)` through code execution and read the console for the `[BitReel] Imported` line.",
-    "- To place it in a scene: create a GameObject with a SpriteRenderer (sprite = `" + nm + "_000`) and an Animator using `" + nm + ".controller`.",
-    "- Manual fallback without the importer: Texture Type Sprite (2D and UI), Sprite Mode Multiple, Filter Point, Compression None, Generate Mip Maps off; slice by Cell Size " + m.frameWidth + " x " + m.frameHeight + " with offset 0 and padding " + m.padding + "; build an AnimationClip at " + m.fps + " fps from the sliced sprites in order" + (m.loopMode === "pingpong" ? ", then the same sprites in reverse without the first and last" : "") + ".", ""
+    "- After copying the folder, refresh the AssetDatabase. If clips do not appear, call `PixelSheetImporter.Import(path)` for each JSON through code execution and read the console for `[BitReel] Imported` lines.",
+    "- To place the character in a scene: create a GameObject with a SpriteRenderer (sprite = `" + m0.name + "_000`) and an Animator using `" + set + ".controller`. Switch animations with `animator.Play(\"" + (ms[1] || m0).stateName + "\")` or add transitions.",
+    "- Frames carry `stabilizeOffset` where stabilization moved the picture; the negated values describe the motion that was removed, if you want to drive root motion from code.",
+    "- Manual fallback without the importer, per animation: Texture Type Sprite (2D and UI), Sprite Mode Multiple, Filter Point, Compression None, Generate Mip Maps off; slice by Cell Size (frame size from the table) with padding " + m0.padding + " and the pivot from the manifest; build an AnimationClip at the animation's fps from the sprites in order (for ping-pong, follow with the same sprites in reverse without the first and last).", ""
   ].join("\n");
 }
 
@@ -2125,7 +2419,9 @@ function applyGrid(m) {
   g.x = ((ax.off % g.w) + g.w) % g.w; g.y = ((ay.off % g.h) + g.h) % g.h; g.set = true; g.conf = Math.min(ax.conf, ay.conf);
   syncGridUI(); drawSource(); updateEst(); savePrefs();
 }
-const looksLikePixelArt = m => m && Math.min(m.ax.conf, m.ay.conf) >= 0.45 && m.ax.p >= 3 && m.ay.p >= 3 && m.ax.p <= 48 && m.ay.p <= 48;
+// a clear, regular grid that also gives a plausible sprite size (flat-colored footage can look regular at huge cell sizes)
+const looksLikePixelArt = m => m && Math.min(m.ax.conf, m.ay.conf) >= 0.45 && m.ax.p >= 3 && m.ay.p >= 3 && m.ax.p <= 48 && m.ay.p <= 48 &&
+  S.crop.w / m.ax.p >= 24 && S.crop.h / m.ay.p >= 24;
 $("#gDetect").addEventListener("click", async () => {
   if (!S.src) { status("Load a video first. Grid snap works on the source footage.", "err"); return; }
   if (extracting || loopSearch) return;
@@ -2406,7 +2702,7 @@ function fill(fi, x, y, v) {
 }
 let stroke = null;
 function targetsNow() { if (S.paint.all) { const s = selected(); return s.length ? s : [pv.fi]; } return [pv.fi]; }
-function finishStroke(targets) { targets.forEach(paintThumb); paintThumbs(); renderPV(); S.redo = []; updateUndo(); }
+function finishStroke(targets) { markDirty(true); targets.forEach(paintThumb); paintThumbs(); renderPV(); S.redo = []; updateUndo(); }
 pvCv.addEventListener("pointerdown", e => {
   if (!pv.open) return;
   e.preventDefault(); pvCv.setPointerCapture(e.pointerId);
@@ -2501,7 +2797,9 @@ function setTab(t) {
   $$("[data-pane]").forEach(p => p.hidden = p.dataset.pane !== t);
   setView(t === "source" ? "source" : "output");
   try { localStorage.setItem(LS + ":tab", t); } catch (e) {}
-  if (t === "versions") refreshVersions();
+  if (t === "project") renderVersions();
+  if (t === "export") updatePlanPreview();
+  if (t === "anim") renderAnims();
 }
 $$("[data-tab]").forEach(b => b.addEventListener("click", () => setTab(b.dataset.tab)));
 $(".tabs").addEventListener("keydown", e => {
@@ -2511,202 +2809,894 @@ $(".tabs").addEventListener("keydown", e => {
 });
 $$("[data-view]").forEach(b => b.addEventListener("click", () => setView(b.dataset.view)));
 
-/* ---------- versions ---------- */
-const store = { kind: "pending", db: null, assets: null, idb: null };
-function openIDB() {
-  return new Promise((res, rej) => {
-    if (!window.indexedDB) return rej(new Error("no IndexedDB"));
-    const r = indexedDB.open("bitreel", 1);
-    r.onupgradeneeded = () => r.result.createObjectStore("versions", { keyPath: "id" });
-    r.onsuccess = () => res(r.result); r.onerror = () => rej(r.error);
-  });
-}
-const idbReq = (mode, fn) => new Promise((res, rej) => { const tx = store.idb.transaction("versions", mode), st = tx.objectStore("versions"), q = fn(st); tx.oncomplete = () => res(q && q.result); tx.onerror = () => rej(tx.error); });
-async function initStore() {
-  for (let i = 0; i < 20 && !(window.claude && window.claude.use); i++) await new Promise(r => setTimeout(r, 100));
-  try {
-    if (window.claude && window.claude.use) {
-      const [d, db, as] = await Promise.all([window.claude.use("downloads"), window.claude.use("db"), window.claude.use("assets")]);
-      dl = d; if (db && as) { store.kind = "cloud"; store.db = db; store.assets = as; }
-    }
-  } catch (e) {}
-  if (store.kind !== "cloud") { try { store.idb = await openIDB(); store.kind = "local"; } catch (e) { store.kind = "none"; } }
-  updateExpMeta();
-  $("#vWhere").textContent = store.kind === "cloud" ? "Versions are stored with this artifact, so they're there on any device you open it from."
-    : store.kind === "local" ? "Versions are stored in this browser only. Download the project file to move work between devices."
-    : "Saving versions isn't available in this view. Use Download project to keep your work.";
-  $("#vSave").disabled = store.kind === "none";
-  refreshVersions();
-}
+/* ---------- project files (.bitreel) ---------- */
+// A .bitreel file is a ZIP container, BitReel's own format:
+//   mimetype                "application/x-bitreel" (first entry, uncompressed, so the type can be sniffed)
+//   project.json            project name, dates, the current set state and every saved version
+//   frames/<id>.png|webp    frame atlases, one per extraction; animations and versions with the same frames share one
+//   thumbs/<id>.png         thumbnails for the current state and each version
+// A set state (format 2) = shared settings + a list of animations. The source video is never stored.
+const BITREEL_MIME = "application/x-bitreel", FORMAT_VERSION = 2;
+const P = { name: "", handle: null, versions: [], atlases: new Map(), dirty: false, created: null, ready: false };
 const canvasBlob = (cv, type, q) => new Promise(r => cv.toBlob(r, type, q));
-async function buildProject(name) {
-  const n = S.frames.length, W = S.workW, H = S.workH, cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
+function framesKey(a) {
+  // FNV-1a over the frame data (sampled) and timing: identical extractions get the same atlas id
+  let h = 0x811c9dc5 >>> 0; const mix = v => { h ^= v & 255; h = Math.imul(h, 16777619) >>> 0; };
+  [a.workW, a.workH, a.frames.length].forEach(v => { mix(v); mix(v >> 8); });
+  for (const f of a.frames) { const d = f.data; for (let i = 0; i < d.length; i += 97) mix(d[i]); mix(Math.round(f.t * 1000)); }
+  return h.toString(16).padStart(8, "0") + "-" + a.workW + "x" + a.workH + "x" + a.frames.length;
+}
+async function atlasFor(a) {
+  const id = framesKey(a); if (P.atlases.has(id)) return id;
+  const n = a.frames.length, W = a.workW, H = a.workH, cols = Math.ceil(Math.sqrt(n)), rows = Math.ceil(n / cols);
   const cv = document.createElement("canvas"); cv.width = cols * W; cv.height = rows * H;
   const ctx = cv.getContext("2d");
-  S.frames.forEach((f, i) => ctx.putImageData(new ImageData(new Uint8ClampedArray(f.data), W, H), (i % cols) * W, Math.floor(i / cols) * H));
-  let atlas = await canvasBlob(cv, "image/webp", 0.95);
-  if (!atlas || atlas.type !== "image/webp") atlas = await canvasBlob(cv, "image/jpeg", 0.94);
-  for (const q of [0.85, 0.75]) if (atlas.size > 19.5 * 1048576) atlas = await canvasBlob(cv, atlas.type, q);
-  const edits = {};
-  for (const k in S.edits) for (const fi in S.edits[k]) {
-    const a = S.edits[k][fi], sp = []; for (let i = 0; i < a.length; i++) if (a[i] !== -1) sp.push(i, a[i]);
-    if (sp.length) { (edits[k] = edits[k] || {})[fi] = sp; }
-  }
-  const state = {
-    app: "bitreel", v: 1, name, savedAt: new Date().toISOString(),
-    frameCount: n, workW: W, workH: H, cols, atlasType: atlas.type,
-    times: S.frames.map(f => +f.t.toFixed(4)), on: S.frames.map(f => f.on ? 1 : 0),
-    out: { ...S.out }, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
-    key: { on: S.key.on, rgb: S.key.rgb, tol: S.key.tol, choke: S.key.choke },
-    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode }, exp: { ...S.exp },
-    native: S.native, conv: S.conv, grid: { ...S.grid },
-    source: { label: $("#srcName").textContent, file: S.src ? S.src.name : null, crop: S.src ? { ...S.crop } : null, tIn: S.tIn, tOut: S.tOut, sampleFps: S.sampleFps },
-    edits
-  };
-  const sel = selected(), fi = sel.length ? sel[0] : 0, tw = Math.min(96, S.outW * 2), th = Math.round(tw * S.outH / S.outW);
-  const tc = document.createElement("canvas"); tc.width = S.outW; tc.height = S.outH; tc.getContext("2d").putImageData(rgbaOf(S.idx[fi], S.outW, S.outH), 0, 0);
-  const t2 = document.createElement("canvas"); t2.width = tw; t2.height = th; const t2x = t2.getContext("2d"); t2x.imageSmoothingEnabled = false; t2x.drawImage(tc, 0, 0, tw, th);
-  return { atlas, state, thumb: t2.toDataURL("image/png") };
+  a.frames.forEach((f, i) => ctx.putImageData(new ImageData(new Uint8ClampedArray(f.data), W, H), (i % cols) * W, Math.floor(i / cols) * H));
+  // lossless for native pixel art and small sets; high-quality WebP for big downscale sets
+  let blob = null;
+  if (a.native || cv.width * cv.height <= 6e6) blob = await canvasBlob(cv, "image/png");
+  else { blob = await canvasBlob(cv, "image/webp", 0.95); if (!blob || blob.type !== "image/webp") blob = await canvasBlob(cv, "image/png"); }
+  P.atlases.set(id, { blob, type: blob.type, cols });
+  return id;
 }
-async function applyProject(atlasBlob, state) {
-  if (!state || (state.app !== "bitreel" && state.app !== "pixelbench")) throw new Error("This isn't a BitReel project.");
-  const bmp = await createImageBitmap(atlasBlob), W = state.workW, H = state.workH, cols = state.cols;
+function encEdits(edits) {
+  const out = {};
+  for (const k in edits || {}) for (const fi in edits[k]) {
+    const a = edits[k][fi], sp = []; for (let i = 0; i < a.length; i++) if (a[i] !== -1) sp.push(i, a[i]);
+    if (sp.length) (out[k] = out[k] || {})[fi] = sp;
+  }
+  return out;
+}
+function decEdits(e) {
+  const out = {};
+  for (const k in e || {}) {
+    const [w, h] = k.split("x").map(Number); out[k] = {};
+    for (const fi in e[k]) { const a = new Int32Array(w * h).fill(-1), sp = e[k][fi]; for (let i = 0; i < sp.length; i += 2) a[sp[i]] = sp[i + 1]; out[k][fi] = a; }
+  }
+  return out;
+}
+function animState(a, atlasId) {
+  const at = atlasId ? P.atlases.get(atlasId) : null;
+  return { id: a.id, name: a.name, atlasId: atlasId || null, atlasType: at ? at.type : null, cols: at ? at.cols : 0,
+    frameCount: a.frames.length, workW: a.workW, workH: a.workH,
+    times: a.frames.map(f => +f.t.toFixed(4)), on: a.frames.map(f => f.on ? 1 : 0),
+    native: a.native, conv: a.conv, grid: { ...a.grid }, play: { fps: a.fps, mode: a.mode === "seam" ? "loop" : a.mode },
+    source: a.source ? JSON.parse(JSON.stringify(a.source)) : null, stab: { ...a.stab }, oneShot: !!a.oneShot, edits: encEdits(a.edits) };
+}
+async function setState() {
+  stashAnim(curAnim());
+  const animations = [];
+  for (const a of A.list) animations.push(animState(a, a.frames.length ? await atlasFor(a) : null));
+  return { app: "bitreel", v: 2,
+    shared: { out: { ...S.out }, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
+      key: { on: S.key.on, rgb: S.key.rgb, tol: S.key.tol, choke: S.key.choke }, exp: { ...S.exp } },
+    animations, current: A.cur };
+}
+// format 1 (and the older .zip projects) held a single animation at the top level
+function legacyToSet(st) {
+  const file = st.source && st.source.file;
+  return { app: "bitreel", v: 2, shared: { out: st.out, pal: st.pal, presetName: st.presetName, trans: st.trans, key: st.key, exp: st.exp },
+    animations: [{ id: null, name: file ? file.replace(/\.[^.]+$/, "").slice(0, 40) : "anim 1", atlasId: st.atlasId, atlasType: st.atlasType, cols: st.cols,
+      frameCount: st.frameCount, workW: st.workW, workH: st.workH, times: st.times, on: st.on, native: st.native, conv: st.conv, grid: st.grid,
+      play: st.play, source: st.source, stab: null, edits: st.edits }], current: 0 };
+}
+const stateAtlasIds = st => (st && st.animations ? st.animations.map(a => a.atlasId) : [st && st.atlasId]).filter(Boolean);
+async function decodeAtlas(at, as) {
+  const bmp = await createImageBitmap(at.blob), W = as.workW, H = as.workH, cols = as.cols || at.cols || Math.ceil(Math.sqrt(as.frameCount));
   const cv = document.createElement("canvas"); cv.width = bmp.width; cv.height = bmp.height;
   const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.drawImage(bmp, 0, 0);
   const frames = [];
-  for (let i = 0; i < state.frameCount; i++) frames.push({ data: ctx.getImageData((i % cols) * W, Math.floor(i / cols) * H, W, H).data, t: state.times[i] || 0, on: state.on ? !!state.on[i] : true });
-  S.frames = frames; S.workW = W; S.workH = H;
-  S.native = !!state.native; if (state.grid) Object.assign(S.grid, state.grid); if (state.conv) setConv(state.conv);
-  Object.assign(S.out, state.out || {});
-  S.pal = (state.pal || []).map(hex2rgb).slice(0, MAX_PAL); if (S.pal.length < 2) S.pal = parseHexList(PRESETS["PICO-8"]);
-  S.presetName = state.presetName || "Custom"; S.trans = Number.isInteger(state.trans) && state.trans < S.pal.length ? state.trans : -1; S.selSw = 0;
-  Object.assign(S.key, state.key || {});
-  if (state.play) { S.play.fps = state.play.fps || 12; S.play.mode = state.play.mode || "loop"; }
-  if (state.exp) Object.assign(S.exp, state.exp);
-  S.edits = {};
-  for (const k in state.edits || {}) {
-    const [w, h] = k.split("x").map(Number); S.edits[k] = {};
-    for (const fi in state.edits[k]) { const a = new Int32Array(w * h).fill(-1), sp = state.edits[k][fi]; for (let i = 0; i < sp.length; i += 2) a[sp[i]] = sp[i + 1]; S.edits[k][fi] = a; }
-  }
-  S.undo = []; S.redo = []; S.play.pos = 0; S.lastClick = -1;
-  const src = state.source || {};
-  if (S.src && src.file && S.src.name === src.file && src.crop) { S.crop = { ...src.crop }; S.tIn = src.tIn; S.tOut = src.tOut; S.sampleFps = src.sampleFps || S.sampleFps; $("#sFps").value = S.sampleFps; syncTrim(); }
-  else if (!S.src) { $("#srcName").textContent = (src.label || "Restored frames") + " · " + (state.name || "version"); }
-  sampleThumb = document.createElement("canvas"); sampleThumb.width = W; sampleThumb.height = H; sampleThumb.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(frames[0].data), W, H), 0, 0);
-  if (!S.src) { $("#srcMeta").textContent = W + " × " + H + " · restored"; $("#dropText").textContent = src.file ? "Load " + src.file + " again to re-crop, or" : "Drop a video here, or"; }
-  syncControls(); buildThumbs(); prepDirty = true; runProcess(); drawSource();
+  for (let i = 0; i < as.frameCount; i++) frames.push({ data: ctx.getImageData((i % cols) * W, Math.floor(i / cols) * H, W, H).data, t: (as.times && as.times[i]) || 0, on: as.on ? !!as.on[i] : true });
+  return frames;
 }
+async function applySetState(st) {
+  if (!st || (st.app !== "bitreel" && st.app !== "pixelbench")) throw new Error("This isn't a BitReel project.");
+  if (!st.animations) st = legacyToSet(st);
+  P.loading = true;
+  try {
+    // decode everything first, so a broken file leaves the current work untouched
+    const list = [];
+    for (const as of st.animations) {
+      let frames = [];
+      if (as.frameCount && as.atlasId) {
+        const at = P.atlases.get(as.atlasId); if (!at) throw new Error("the frames of “" + (as.name || "an animation") + "” are missing");
+        frames = await decodeAtlas(at, as);
+      }
+      list.push(makeAnim({ id: as.id || newAnimId(), name: as.name || "anim " + (list.length + 1), frames, workW: as.workW || 0, workH: as.workH || 0,
+        native: !!as.native, conv: as.conv || "downscale", grid: Object.assign(defaultGrid(), as.grid || {}), edits: decEdits(as.edits), undo: [], redo: [],
+        fps: (as.play && as.play.fps) || 12, mode: (as.play && as.play.mode) || "loop", source: as.source || null,
+        stab: Object.assign({ x: false, y: "off" }, as.stab || {}), oneShot: !!as.oneShot }));
+    }
+    if (!list.length) list.push(makeAnim({ name: "anim 1" }));
+    const sh = st.shared || {};
+    Object.assign(S.out, sh.out || {});
+    S.pal = (sh.pal || []).map(hex2rgb).slice(0, MAX_PAL); if (S.pal.length < 2) S.pal = parseHexList(PRESETS["PICO-8"]);
+    S.presetName = sh.presetName || "Custom"; S.trans = Number.isInteger(sh.trans) && sh.trans < S.pal.length ? sh.trans : -1; S.selSw = 0;
+    Object.assign(S.key, sh.key || {});
+    if (sh.exp) Object.assign(S.exp, sh.exp);
+    S.exp.nameAuto = false;
+    if (pv.open) setPaint(false);
+    stopSource();
+    A.list = list; A.cur = clamp(st.current | 0, 0, list.length - 1);
+    applyAnimFields(curAnim());
+    if (!S.src) { const src = curAnim().source || {}; $("#srcName").textContent = src.label || "Restored frames"; }
+    syncControls(); refreshAnimUI();
+  } finally { P.loading = false; }
+}
+function markDirty(v) { if (v && (!P.ready || P.loading)) return; P.dirty = v !== false; updateProjectUI(); }
+function projFileName() { return (P.name || (S.src ? S.src.name.replace(/\.[^.]+$/, "") : "untitled")).replace(/[\\/:*?"<>|]+/g, "_") + ".bitreel"; }
+function updateProjectUI() {
+  const b = $("#projBadge"); if (b) { b.textContent = projFileName() + (P.dirty ? " ●" : ""); b.title = P.dirty ? "Unsaved changes. Save with Ctrl/⌘ + S." : "All changes saved"; }
+  const n = $("#pName"); if (n && document.activeElement !== n) n.value = P.name;
+}
+function thumbNow() {
+  const sel = selected(), fi = sel.length ? sel[0] : 0, tw = Math.min(96, S.outW * 2), th = Math.max(1, Math.round(tw * S.outH / S.outW));
+  const tc = document.createElement("canvas"); tc.width = S.outW; tc.height = S.outH; tc.getContext("2d").putImageData(rgbaOf(S.idx[fi], S.outW, S.outH), 0, 0);
+  const t2 = document.createElement("canvas"); t2.width = tw; t2.height = th; const x = t2.getContext("2d"); x.imageSmoothingEnabled = false; x.drawImage(tc, 0, 0, tw, th);
+  return t2.toDataURL("image/png");
+}
+function setThumb() {
+  if (S.idx.length) return thumbNow();
+  const a = A.list.find(x => x !== curAnim() && x.frames.length);
+  return a ? withAnim(a, thumbNow) : "";
+}
+async function snapshotVersion(name) { return { id: "v" + Date.now().toString(36), name, createdAt: Date.now(), state: await setState(), thumb: setThumb() }; }
+const dataUrlB64 = u => u.slice(u.indexOf(",") + 1);
+async function packProject() {
+  if (!window.JSZip) throw new Error("the zip library didn't load");
+  const current = A.list.some(hasFrames) ? await snapshotVersion("current") : null;
+  const used = new Set(); P.versions.forEach(v => stateAtlasIds(v.state).forEach(id => used.add(id))); if (current) stateAtlasIds(current.state).forEach(id => used.add(id));
+  const z = new JSZip();
+  z.file("mimetype", BITREEL_MIME, { compression: "STORE" });
+  const now = new Date().toISOString(); if (!P.created) P.created = now;
+  const pj = {
+    format: "bitreel", formatVersion: FORMAT_VERSION, app: "BitReel", name: P.name || projFileName().replace(/\.bitreel$/, ""),
+    created: P.created, modified: now,
+    current: current ? { thumb: current.thumb ? "thumbs/current.png" : null, state: current.state } : null,
+    versions: P.versions.map(v => ({ id: v.id, name: v.name, createdAt: new Date(v.createdAt).toISOString(), thumb: v.thumb ? "thumbs/" + v.id + ".png" : null, state: v.state }))
+  };
+  z.file("project.json", JSON.stringify(pj, null, 1));
+  if (current && current.thumb) z.file("thumbs/current.png", dataUrlB64(current.thumb), { base64: true });
+  P.versions.forEach(v => { if (v.thumb) z.file("thumbs/" + v.id + ".png", dataUrlB64(v.thumb), { base64: true }); });
+  for (const id of used) { const a = P.atlases.get(id); if (a) z.file("frames/" + id + "." + (a.type === "image/webp" ? "webp" : a.type === "image/jpeg" ? "jpg" : "png"), a.blob); }
+  return z.generateAsync({ type: "blob", compression: "DEFLATE", mimeType: BITREEL_MIME });
+}
+async function saveProject(as) {
+  if (!A.list.some(hasFrames) && !P.versions.length) { status("Nothing to save yet. Extract frames first.", "err"); return; }
+  const btn = $("#pSave"); btn.disabled = true;
+  try {
+    const nm = $("#pName").value.trim(); if (nm) P.name = nm;
+    const blob = await packProject(), fname = projFileName();
+    // Chrome and Edge: write straight to a file on disk and keep it for the next Save
+    if (window.showSaveFilePicker) {
+      try {
+        if (!P.handle || as) P.handle = await window.showSaveFilePicker({ suggestedName: fname, types: [{ description: "BitReel project", accept: { "application/x-bitreel": [".bitreel"] } }] });
+        const w = await P.handle.createWritable(); await w.write(blob); await w.close();
+        P.name = P.handle.name.replace(/\.bitreel$/i, ""); markDirty(false);
+        status("Saved " + P.handle.name + " (" + fmtBytes(blob.size) + ").", "good"); return;
+      } catch (e) { if (e && e.name === "AbortError") { status("Save cancelled."); return; } P.handle = null; /* blocked here: fall back to a download */ }
+    }
+    if (await save(fname, blob)) markDirty(false);
+  } catch (e) { status("Couldn't save the project: " + (e && e.message || e), "err"); }
+  finally { btn.disabled = false; }
+}
+async function readProject(file, handle) {
+  if (!window.JSZip) throw new Error("the zip library didn't load");
+  const z = await JSZip.loadAsync(file);
+  const atlases = new Map(), versions = [];
+  const pjFile = z.file("project.json");
+  let state = null, name = "", created = null;
+  if (pjFile) {
+    const pj = JSON.parse(await pjFile.async("string"));
+    if (pj.format !== "bitreel") throw new Error("it isn't a BitReel project");
+    if (pj.formatVersion > FORMAT_VERSION) status("This project was made with a newer BitReel. Opening it anyway.");
+    for (const f of z.file(/^frames\//)) {
+      const id = f.name.slice(7).replace(/\.[^.]+$/, ""), ext = f.name.split(".").pop();
+      const type = ext === "webp" ? "image/webp" : ext === "jpg" ? "image/jpeg" : "image/png";
+      atlases.set(id, { blob: new Blob([await f.async("arraybuffer")], { type }), type, cols: 0 });
+    }
+    const states = [pj.current && pj.current.state].concat((pj.versions || []).map(v => v.state)).filter(Boolean);
+    states.forEach(s => (s.animations || [s]).forEach(a => { const at = atlases.get(a.atlasId); if (at && a.cols) at.cols = a.cols; }));
+    for (const v of pj.versions || []) {
+      const tf = v.thumb && z.file(v.thumb);
+      versions.push({ id: v.id, name: v.name, createdAt: Date.parse(v.createdAt) || Date.now(), state: v.state, thumb: tf ? "data:image/png;base64," + await tf.async("base64") : "" });
+    }
+    name = pj.name || file.name.replace(/\.bitreel$/i, ""); created = pj.created || null;
+    state = pj.current ? pj.current.state : null;
+  } else {
+    // older project files: a single state plus one atlas
+    const sj = z.file("bitreel.json") || z.file("pixelbench.json"), fr = z.file(/^frames\.(webp|jpg|png)$/)[0];
+    if (!sj || !fr) throw new Error("it isn't a BitReel project");
+    state = JSON.parse(await sj.async("string")); const ext = fr.name.split(".").pop();
+    atlases.set("legacy", { blob: new Blob([await fr.async("arraybuffer")], { type: ext === "webp" ? "image/webp" : ext === "png" ? "image/png" : "image/jpeg" }), type: "", cols: state.cols });
+    state.atlasId = "legacy";
+    name = (state.name || file.name).replace(/\.(bitreel|pixelbench)?\.?zip$/i, "").replace(/\.bitreel$/i, "");
+  }
+  const prev = P.atlases; P.atlases = atlases;
+  try { if (state) await applySetState(state); } catch (e) { P.atlases = prev; throw e; }
+  P.versions = versions; P.name = name; P.created = created;
+  P.handle = handle || null; markDirty(false); renderVersions();
+  status("Opened " + projFileName() + " · " + A.list.length + " animation" + (A.list.length > 1 ? "s" : "") + (P.versions.length ? " · " + P.versions.length + " version" + (P.versions.length > 1 ? "s" : "") : "") + ".", "good");
+}
+async function openProject() {
+  if (P.dirty && !confirmDiscard("#pOpenBtn")) return;
+  if (window.showOpenFilePicker) {
+    try {
+      const [h] = await window.showOpenFilePicker({ types: [{ description: "BitReel project", accept: { "application/x-bitreel": [".bitreel"], "application/zip": [".zip"] } }] });
+      const f = await h.getFile(); await readProject(f, h.name.endsWith(".bitreel") ? h : null); return;
+    } catch (e) { if (e && e.name === "AbortError") return; if (!(e && (e.name === "SecurityError" || e.name === "NotAllowedError"))) { status("Couldn't open the project: " + (e && e.message || e), "err"); return; } }
+  }
+  $("#pOpen").click();
+}
+// two-click guard for actions that throw away unsaved work
+const pendingDiscard = new Set();
+function confirmDiscard(sel) {
+  if (pendingDiscard.has(sel)) { pendingDiscard.delete(sel); return true; }
+  pendingDiscard.add(sel); const b = $(sel), label = b.textContent; b.textContent = "Discard changes?"; b.classList.add("on");
+  setTimeout(() => { pendingDiscard.delete(sel); b.textContent = label; b.classList.remove("on"); }, 3500);
+  status("You have unsaved changes. Click again to continue without saving, or save first (Ctrl/⌘ + S).");
+  return false;
+}
+$("#pSave").addEventListener("click", () => saveProject(false));
+$("#pSaveAs").addEventListener("click", () => saveProject(true));
+$("#pOpenBtn").addEventListener("click", openProject);
+$("#pOpen").addEventListener("change", async e => {
+  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+  try { await readProject(f, null); } catch (err) { status("Couldn't open " + f.name + ": " + (err && err.message || err), "err"); }
+});
+$("#pNew").addEventListener("click", () => {
+  if (P.dirty && !confirmDiscard("#pNew")) return;
+  P.dirty = false; location.reload();
+});
+$("#pName").addEventListener("input", e => { P.name = e.target.value.trim(); markDirty(true); });
+window.addEventListener("beforeunload", e => { if (P.dirty) { e.preventDefault(); e.returnValue = ""; } });
+document.addEventListener("keydown", e => {
+  if (!(e.ctrlKey || e.metaKey) || e.altKey) return;
+  const k = e.key.toLowerCase();
+  if (k === "s") { e.preventDefault(); saveProject(e.shiftKey); }
+  else if (k === "o") { e.preventDefault(); openProject(); }
+});
+// dropping a .bitreel file anywhere opens it
+document.addEventListener("drop", e => {
+  const f = e.dataTransfer && e.dataTransfer.files[0]; if (!f || !/\.bitreel$/i.test(f.name)) return;
+  e.preventDefault(); e.stopImmediatePropagation();
+  readProject(f, null).catch(err => status("Couldn't open " + f.name + ": " + (err && err.message || err), "err"));
+}, true);
+
+/* versions: named snapshots of the whole set, kept inside the project file */
 async function saveVersion() {
-  if (!S.frames.length) { status("Nothing to save yet.", "err"); return; }
+  if (!A.list.some(hasFrames)) { status("Nothing to save yet. Extract frames first.", "err"); return; }
   const btn = $("#vSave"), label = btn.textContent;
-  const name = ($("#vName").value.trim() || ((S.src ? S.src.name.replace(/\.[^.]+$/, "") : "sample") + " " + new Date().toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }))).slice(0, 80);
+  const name = ($("#vName").value.trim() || "Version " + (P.versions.length + 1) + " · " + new Date().toLocaleString([], { hour: "2-digit", minute: "2-digit" })).slice(0, 80);
   btn.disabled = true; btn.textContent = "Saving…";
   try {
-    const { atlas, state, thumb } = await buildProject(name);
-    const json = new Blob([JSON.stringify(state)], { type: "application/json" });
-    const meta = { name, createdAt: Date.now(), frames: S.frames.length, size: S.outW + "×" + S.outH, colors: S.pal.length, painted: S.frames.filter((_, i) => hasEdits(i)).length, source: state.source.label, thumb, bytes: atlas.size + json.size };
-    if (store.kind === "cloud") {
-      if (atlas.size > 20 * 1048576) throw { message: "The frames are too large to store (over 20 MB). Trim or crop smaller." };
-      const a = await store.assets.upload(atlas, { type: atlas.type });
-      const j = await store.assets.upload(json, { type: "application/json" });
-      await store.db.collection("versions").doc().set({ ...meta, atlas: a.id, state: j.id });
-    } else if (store.kind === "local") {
-      const stateText = await json.text();
-      await idbReq("readwrite", st => st.put({ id: "v" + Date.now(), ...meta, atlasBlob: atlas, stateText }));
-    }
-    $("#vName").value = "";
-    status("Saved version “" + name + "”.", "good");
-    refreshVersions();
-  } catch (e) {
-    const c = e && e.code;
-    status(c === "quota_or_state" || c === "quota_exceeded" ? "Storage is full. Delete an older version and try again." : c === "too_large" ? "The frames are too large to store. Trim or crop smaller." : "Couldn't save the version" + (e && e.message ? ": " + e.message : "."), "err");
-  } finally { btn.disabled = store.kind === "none"; btn.textContent = label; }
+    const v = await snapshotVersion(name); P.versions.unshift(v); $("#vName").value = "";
+    markDirty(true); renderVersions();
+    status("Version “" + name + "” added to the project. Save the project (Ctrl/⌘ + S) to write it to disk.", "good");
+  } catch (e) { status("Couldn't save the version: " + (e && e.message || e), "err"); }
+  finally { btn.disabled = false; btn.textContent = label; }
 }
 $("#vSave").addEventListener("click", saveVersion);
 $("#vName").addEventListener("keydown", e => { if (e.key === "Enter") saveVersion(); });
-async function listVersions() {
-  if (store.kind === "cloud") { const snap = await store.db.collection("versions").orderBy("createdAt", "desc").limit(200).get(); return snap.docs.map(d => ({ id: d.id, ...d.data() })); }
-  if (store.kind === "local") { const all = await idbReq("readonly", st => st.getAll()); return (all || []).sort((a, b) => b.createdAt - a.createdAt); }
-  return [];
-}
-async function fetchVersion(v) {
-  if (store.kind === "cloud") {
-    const [a, j] = await Promise.all([fetch("/_blob/" + v.atlas), fetch("/_blob/" + v.state)]);
-    if (!a.ok || !j.ok) throw new Error("the stored files couldn't be read");
-    return { atlas: await a.blob(), state: await j.json() };
-  }
-  const rec = await idbReq("readonly", st => st.get(v.id));
-  return { atlas: rec.atlasBlob, state: JSON.parse(rec.stateText) };
-}
-async function removeVersion(v) {
-  if (store.kind === "cloud") {
-    await store.db.collection("versions").doc(v.id).delete();
-    for (const id of [v.atlas, v.state]) { try { await store.assets.delete(id); } catch (e) {} }
-  } else await idbReq("readwrite", st => st.delete(v.id));
+function pruneAtlases() {
+  stashAnim(curAnim());
+  const keep = new Set(); P.versions.forEach(v => stateAtlasIds(v.state).forEach(id => keep.add(id)));
+  A.list.forEach(a => { if (a.frames.length) { const id = framesKey(a); if (P.atlases.has(id)) keep.add(id); } });
+  for (const id of [...P.atlases.keys()]) if (!keep.has(id)) P.atlases.delete(id);
 }
 const fmtBytes = b => b > 1048576 ? (b / 1048576).toFixed(1) + " MB" : Math.max(1, Math.round(b / 1024)) + " KB";
-async function refreshVersions() {
-  const ul = $("#vList"); if (!ul || store.kind === "pending") return;
-  let list = [];
-  try { list = await listVersions(); } catch (e) { ul.innerHTML = ""; const li = document.createElement("li"); li.className = "vempty"; li.textContent = "Couldn't load saved versions."; ul.append(li); return; }
-  $("#vCount").textContent = list.length ? list.length + " saved" : "";
+function renderVersions() {
+  const ul = $("#vList"); if (!ul) return;
+  $("#vCount").textContent = P.versions.length ? P.versions.length + " in project" : "";
   ul.textContent = "";
-  if (!list.length) { const li = document.createElement("li"); li.className = "vempty"; li.textContent = "No versions yet. Save one to come back to this exact state later."; ul.append(li); return; }
-  list.forEach(v => {
-    const li = document.createElement("li"); li.className = "vitem";
+  if (!P.versions.length) { const li = document.createElement("li"); li.className = "vempty"; li.textContent = "No versions yet. A version is a named snapshot of every animation, kept inside the project file."; ul.append(li); return; }
+  P.versions.forEach(v => {
+    const s = v.state, anims = s.animations || [s], li = document.createElement("li"); li.className = "vitem";
     const img = document.createElement("img"); img.alt = ""; if (v.thumb) img.src = v.thumb;
     const body = document.createElement("div"); body.style.minWidth = "0";
     const nm = document.createElement("div"); nm.className = "vname"; nm.textContent = v.name;
     const meta = document.createElement("div"); meta.className = "vmeta";
-    meta.textContent = new Date(v.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " · " + v.frames + " fr · " + v.size + " · " + v.colors + " col" + (v.painted ? " · " + v.painted + " painted" : "") + " · " + fmtBytes(v.bytes || 0);
+    const frames = anims.reduce((a, x) => a + (x.frameCount || 0), 0), pal = (s.shared ? s.shared.pal : s.pal) || [];
+    const painted = anims.reduce((a, x) => a + Object.values(x.edits || {}).reduce((b, set) => b + Object.keys(set).length, 0), 0);
+    meta.textContent = new Date(v.createdAt).toLocaleString([], { month: "short", day: "numeric", hour: "2-digit", minute: "2-digit" }) + " · " +
+      (anims.length > 1 ? anims.length + " animations · " : "") + frames + " fr · " + pal.length + " col" + (painted ? " · " + painted + " painted" : "");
     const row = document.createElement("div"); row.className = "row";
     const bLoad = document.createElement("button"); bLoad.className = "btn sm"; bLoad.textContent = "Load";
-    const bDown = document.createElement("button"); bDown.className = "btn sm"; bDown.textContent = "Download";
     const bDel = document.createElement("button"); bDel.className = "btn sm"; bDel.textContent = "Delete";
     armConfirm(bLoad, "Replace current work?", async () => {
       bLoad.disabled = true; bLoad.textContent = "Loading…";
-      try { const { atlas, state } = await fetchVersion(v); await applyProject(atlas, state); status("Loaded version “" + v.name + "”.", "good"); }
+      try { await applySetState(s); markDirty(true); status("Loaded version “" + v.name + "”.", "good"); }
       catch (e) { status("Couldn't load that version: " + (e && e.message || e), "err"); }
       finally { bLoad.disabled = false; bLoad.textContent = "Load"; }
     });
-    bDown.addEventListener("click", async () => { try { const { atlas, state } = await fetchVersion(v); await downloadProject(atlas, state); } catch (e) { status("Couldn't read that version: " + (e && e.message || e), "err"); } });
-    armConfirm(bDel, "Delete for good?", async () => { try { await removeVersion(v); status("Deleted “" + v.name + "”."); refreshVersions(); } catch (e) { status("Couldn't delete: " + (e && e.message || e), "err"); } });
-    row.append(bLoad, bDown, bDel); body.append(nm, meta, row); li.append(img, body); ul.append(li);
+    armConfirm(bDel, "Delete version?", () => { P.versions = P.versions.filter(x => x !== v); pruneAtlases(); markDirty(true); renderVersions(); status("Deleted “" + v.name + "” from the project. Save to make it permanent."); });
+    row.append(bLoad, bDel); body.append(nm, meta, row); li.append(img, body); ul.append(li);
   });
 }
 function armConfirm(btn, ask, fn) {
   let armed = false, timer;
   const label = btn.textContent;
   btn.addEventListener("click", () => {
+    if (btn.disabled) return;
     if (!armed) { armed = true; btn.textContent = ask; btn.classList.add("on"); timer = setTimeout(() => { armed = false; btn.textContent = label; btn.classList.remove("on"); }, 3500); return; }
     clearTimeout(timer); armed = false; btn.classList.remove("on"); btn.textContent = label; fn();
   });
 }
-async function downloadProject(atlas, state) {
-  if (!window.JSZip) { status("The zip library didn't load. Check the connection and reload.", "err"); return; }
-  const z = new JSZip(), ext = atlas.type === "image/webp" ? "webp" : "jpg";
-  z.file("bitreel.json", JSON.stringify(state, null, 1)); z.file("frames." + ext, atlas);
-  const nm = (state.name || "project").replace(/[^\w-]+/g, "_").slice(0, 60);
-  await save(nm + ".bitreel.zip", await z.generateAsync({ type: "blob" }));
+async function initTransport() {
+  // Only used inside Claude's sandbox, where the browser blocks a page's own downloads (see save()).
+  for (let i = 0; i < 10 && !(window.claude && window.claude.use); i++) await new Promise(r => setTimeout(r, 100));
+  try { dl = window.claude && window.claude.use ? await window.claude.use("downloads") : null; } catch (e) { dl = null; }
 }
-$("#pDown").addEventListener("click", async e => {
-  const b = e.currentTarget; b.disabled = true;
-  if (!S.frames.length) { status("Nothing to save yet. Extract frames first.", "err"); b.disabled = false; return; }
-  try { const { atlas, state } = await buildProject($("#vName").value.trim() || safeName()); await downloadProject(atlas, state); }
-  catch (err) { status("Couldn't build the project file: " + (err && err.message || err), "err"); }
-  finally { b.disabled = false; }
-});
-$("#pOpen").addEventListener("change", async e => {
-  const f = e.target.files[0]; e.target.value = ""; if (!f) return;
+
+/* ---------- animation sets ---------- */
+// A project holds several animations (idle, run, jump...). They share the palette, key, pixel and export settings;
+// each keeps its own frames, grid, frame rate, loop mode, selection, paint edits, stabilization and source trim.
+// The current animation's fields live in S while it is active and are stashed back into its entry on switch.
+let animSeq = 0;
+const newAnimId = () => "a" + Date.now().toString(36) + (animSeq++).toString(36);
+const defaultGrid = () => ({ w: 8, h: 8, x: 0, y: 0, sq: true, show: true, set: false, conf: 0, track: true });
+function curAnim() { return A.list[A.cur]; }
+function hasFrames(a) { return a === curAnim() ? S.frames.length > 0 : !!(a && a.frames.length); }
+function makeAnim(o) {
+  return Object.assign({ id: newAnimId(), name: "anim " + (A.list.length + 1), frames: [], workW: 0, workH: 0, native: false,
+    conv: S.conv, grid: { ...S.grid }, edits: {}, undo: [], redo: [], fps: S.sampleFps || 12, mode: "loop", lastClick: -1, pos: 0,
+    stab: { x: false, y: "off" }, source: null, isSample: false, oneShot: false }, o || {});
+}
+function uniqueAnimName(n, except) {
+  n = (n || "anim").toString().trim().slice(0, 40) || "anim";
+  const names = new Set(A.list.filter(a => a !== except).map(a => a.name));
+  if (!names.has(n)) return n;
+  let k = 2; while (names.has(n + " " + k)) k++; return n + " " + k;
+}
+function liveSource(a) {
+  if (!S.src) return a && a.source ? { ...a.source } : null;
+  return { file: S.src.name, label: S.src.name, crop: { ...S.crop }, tIn: +S.tIn.toFixed(3), tOut: +S.tOut.toFixed(3), sampleFps: S.sampleFps };
+}
+function stashAnim(a) {
+  if (!a) return;
+  a.frames = S.frames; a.workW = S.workW; a.workH = S.workH; a.native = S.native; a.conv = S.conv; a.grid = S.grid;
+  a.edits = S.edits; a.undo = S.undo; a.redo = S.redo; a.fps = S.play.fps; a.mode = S.play.mode;
+  a.lastClick = S.lastClick; a.pos = S.play.pos; a.stab = S.stab;
+  // the trim belongs to the video it was set on: only record it when this animation came from the loaded video
+  if (S.src && (!a.source || !a.source.file || a.source.file === S.src.name)) a.source = liveSource(a);
+}
+function applyAnimFields(a) {
+  S.frames = a.frames; S.workW = a.workW; S.workH = a.workH; S.native = a.native; S.conv = a.conv; S.grid = a.grid;
+  S.edits = a.edits; S.undo = a.undo; S.redo = a.redo; S.play.fps = a.fps; S.play.mode = a.mode;
+  S.lastClick = a.lastClick; S.play.pos = a.pos || 0; S.stab = a.stab;
+  const s = a.source;
+  if (S.src && s && s.file === S.src.name && s.crop) { S.crop = { ...s.crop }; S.tIn = s.tIn; S.tOut = s.tOut; S.sampleFps = s.sampleFps || S.sampleFps; }
+}
+// Run fn with another animation's frames processed through the current shared settings, then put everything back.
+function withAnim(a, fn) {
+  const cur = curAnim(); if (a === cur) return fn();
+  stashAnim(cur);
+  const saved = { prep: S.prep, base: S.base, idx: S.idx, outW: S.outW, outH: S.outH, flickRaw: S.flickRaw, shifts: S.shifts, stabInfo: S.stabInfo,
+    crop: { ...S.crop }, tIn: S.tIn, tOut: S.tOut, sampleFps: S.sampleFps, prepDirty };
   try {
-    if (!window.JSZip) throw new Error("the zip library didn't load");
-    const z = await JSZip.loadAsync(f), sj = z.file("bitreel.json") || z.file("pixelbench.json"), fr = z.file(/^frames\.(webp|jpg|png)$/)[0];
-    if (!sj || !fr) throw new Error("it doesn't contain a BitReel project");
-    const state = JSON.parse(await sj.async("string")), ext = fr.name.split(".").pop();
-    const atlas = new Blob([await fr.async("arraybuffer")], { type: ext === "webp" ? "image/webp" : ext === "png" ? "image/png" : "image/jpeg" });
-    await applyProject(atlas, state); status("Opened project “" + (state.name || f.name) + "”.", "good");
-  } catch (err) { status("Couldn't open " + f.name + ": " + (err && err.message || err), "err"); }
+    applyAnimFields(a); S.outW = 0; S.outH = 0; prepDirty = true;
+    if (S.frames.length) computeCore(); else { S.idx = []; S.base = []; S.shifts = []; }
+    return fn();
+  } finally {
+    applyAnimFields(cur);
+    Object.assign(S, { prep: saved.prep, base: saved.base, idx: saved.idx, outW: saved.outW, outH: saved.outH, flickRaw: saved.flickRaw,
+      shifts: saved.shifts, stabInfo: saved.stabInfo, crop: saved.crop, tIn: saved.tIn, tOut: saved.tOut, sampleFps: saved.sampleFps });
+    prepDirty = saved.prepDirty;
+  }
+}
+function refreshAnimUI() {
+  $("#pFps").value = S.play.fps;
+  $$(".seg [data-mode]").forEach(x => x.setAttribute("aria-pressed", x.dataset.mode === S.play.mode ? "true" : "false"));
+  setConv(S.conv); syncGridUI(); syncStabUI();
+  if (S.frames.length) { configWidth(); buildThumbs(); prepDirty = true; S.outW = 0; runProcess(); }
+  else clearOutput();
+  if (!S.src && S.frames.length) {
+    sampleThumb = document.createElement("canvas"); sampleThumb.width = S.workW; sampleThumb.height = S.workH;
+    sampleThumb.getContext("2d").putImageData(new ImageData(new Uint8ClampedArray(S.frames[0].data), S.workW, S.workH), 0, 0);
+    const s = curAnim().source;
+    $("#srcMeta").textContent = S.workW + " × " + S.workH + (curAnim().isSample ? " sample" : " · from project");
+    if (s && s.file) $("#dropText").textContent = "Load " + s.file + " again to re-crop, or";
+  }
+  if (S.src) syncTrim();
+  drawSource(); updateEst(); renderAnims(); updateUndo(); updatePlanPreviewSoon();
+}
+function switchAnim(i) {
+  if (i === A.cur || !A.list[i]) return;
+  if (pv.open) setPaint(false);
+  stopSource();
+  stashAnim(curAnim()); A.cur = i; applyAnimFields(curAnim());
+  refreshAnimUI();
+  status("Now editing “" + curAnim().name + "”.");
+}
+function newAnim(name) {
+  if (pv.open) setPaint(false);
+  stopSource();
+  stashAnim(curAnim());
+  const a = makeAnim({ name: uniqueAnimName(name || "anim " + (A.list.length + 1)), conv: S.conv, grid: { ...S.grid, set: S.grid.set }, fps: S.sampleFps || 12,
+    source: S.src ? liveSource(null) : null });
+  A.list.splice(A.cur + 1, 0, a); A.cur += 1;
+  applyAnimFields(a); refreshAnimUI(); markDirty(true);
+  return a;
+}
+function dupAnim() {
+  if (pv.open) setPaint(false);
+  stashAnim(curAnim()); const s = curAnim();
+  const edits = {}; for (const k in s.edits) { edits[k] = {}; for (const fi in s.edits[k]) edits[k][fi] = s.edits[k][fi].slice(); }
+  const a = makeAnim({ name: uniqueAnimName(s.name + " copy"), frames: s.frames.map(f => ({ data: f.data, t: f.t, on: f.on })), workW: s.workW, workH: s.workH,
+    native: s.native, conv: s.conv, grid: { ...s.grid }, edits, fps: s.fps, mode: s.mode, stab: { ...s.stab }, oneShot: !!s.oneShot, source: s.source ? JSON.parse(JSON.stringify(s.source)) : null });
+  A.list.splice(A.cur + 1, 0, a); A.cur += 1;
+  applyAnimFields(a); refreshAnimUI(); markDirty(true);
+  status("Duplicated as “" + a.name + "”.", "good");
+}
+function deleteAnim() {
+  if (A.list.length < 2) return;
+  if (pv.open) setPaint(false);
+  const gone = curAnim(); A.list.splice(A.cur, 1); A.cur = Math.min(A.cur, A.list.length - 1);
+  applyAnimFields(curAnim()); refreshAnimUI(); markDirty(true);
+  status("Deleted “" + gone.name + "”. Now editing “" + curAnim().name + "”.");
+}
+function moveAnim(i, d) {
+  const j = i + d; if (j < 0 || j >= A.list.length) return;
+  const cur = curAnim(); [A.list[i], A.list[j]] = [A.list[j], A.list[i]]; A.cur = A.list.indexOf(cur);
+  renderAnims(); markDirty(true);
+}
+function renderAnims() {
+  const bar = $("#animBar"); if (!bar || !A.list.length) return;
+  bar.textContent = "";
+  A.list.forEach((a, i) => {
+    const b = document.createElement("button"); b.type = "button";
+    b.textContent = a.name + " · " + (i === A.cur ? S.frames.length : a.frames.length) + " fr";
+    b.setAttribute("aria-pressed", i === A.cur ? "true" : "false");
+    b.title = i === A.cur ? "Current animation. Double-click to rename." : "Switch to " + a.name;
+    b.addEventListener("click", () => switchAnim(i));
+    b.addEventListener("dblclick", () => { setTab("anim"); const n = $("#aName"); n.focus(); n.select(); });
+    bar.append(b);
+  });
+  const add = document.createElement("button"); add.type = "button"; add.className = "addanim"; add.textContent = "+ New animation";
+  add.title = "Start an empty animation that keeps the loaded video"; add.addEventListener("click", () => newAnim()); bar.append(add);
+  const a = curAnim(), nm = $("#aName"); if (nm && document.activeElement !== nm) nm.value = a.name;
+  $("#aMeta").textContent = S.frames.length ? S.frames.length + " frames · " + S.play.fps + " fps" + (S.native ? " · grid snap" : "") : "no frames yet";
+  $("#aDel").disabled = A.list.length < 2; syncOneShotUI();
+  $("#aCount").textContent = A.list.length + (A.list.length > 1 ? " animations" : " animation");
+  const ul = $("#aList"); ul.textContent = "";
+  A.list.forEach((x, i) => {
+    const li = document.createElement("li"); li.className = "arow" + (i === A.cur ? " cur" : "");
+    const nb = document.createElement("button"); nb.type = "button"; nb.className = "aname"; nb.textContent = x.name; nb.addEventListener("click", () => switchAnim(i));
+    const meta = document.createElement("span"); meta.className = "kv";
+    const fr = i === A.cur ? S.frames.length : x.frames.length, fps = i === A.cur ? S.play.fps : x.fps;
+    meta.textContent = fr + " fr · " + fps + " fps" + (x.oneShot ? " · once" : "") + (i === 0 ? " · default" : "");
+    const up = document.createElement("button"); up.type = "button"; up.className = "btn sm"; up.textContent = "↑"; up.setAttribute("aria-label", "Move " + x.name + " up"); up.disabled = i === 0; up.addEventListener("click", () => moveAnim(i, -1));
+    const dn = document.createElement("button"); dn.type = "button"; dn.className = "btn sm"; dn.textContent = "↓"; dn.setAttribute("aria-label", "Move " + x.name + " down"); dn.disabled = i === A.list.length - 1; dn.addEventListener("click", () => moveAnim(i, 1));
+    li.append(nb, meta, up, dn); ul.append(li);
+  });
+}
+$("#aName").addEventListener("input", e => { curAnim().name = uniqueAnimName(e.target.value, curAnim()); curAnim().autoName = false; renderAnims(); markDirty(true); });
+$("#aName").addEventListener("blur", e => { e.target.value = curAnim().name; });
+$("#aNew").addEventListener("click", () => { const a = newAnim(); status("New animation “" + a.name + "”. Set in and out on the source, then Extract frames.", "good"); });
+$("#aDup").addEventListener("click", () => { if (!S.frames.length) { status("Nothing to duplicate yet.", "err"); return; } dupAnim(); });
+armConfirm($("#aDel"), "Delete animation?", deleteAnim);
+function syncStabUI() {
+  const st = S.stab || { x: false, y: "off" }, p = $("#stPill"), inf = S.stabInfo || {};
+  $("#stX").checked = !!st.x; $("#stY").value = st.y;
+  p.className = "pill";
+  if (!st.x && st.y === "off") p.textContent = "off";
+  else if (!S.frames.length) p.textContent = "on";
+  else if (inf.failed) { p.textContent = "needs transparency"; p.classList.add("warn"); }
+  else { p.textContent = "on · up to " + (inf.mx || 0) + " px across, " + (inf.my || 0) + " px up/down"; p.classList.add("ok"); }
+}
+$("#stX").addEventListener("change", e => { S.stab.x = e.target.checked; schedule(false); });
+$("#stY").addEventListener("change", e => { S.stab.y = e.target.value; schedule(false); });
+
+/* ---------- detect states and transitions ---------- */
+// Splits a clip that shows several actions (idle, run, jump, hit…) into states and the transitions between them:
+//  1. sample the crop, find the subject against the background, and describe each frame by a small image of the
+//     subject's region (position included, so jumps register)
+//  2. a frame-to-frame distance matrix; a checkerboard "novelty" score along its diagonal peaks where the kind of
+//     motion changes, which splits the clip into segments
+//  3. each segment gets its period (one clean cycle) or is marked one-shot, its steady extent, and a name guess;
+//     segments that show the same action are grouped, and the gaps between steady parts are the transitions
+const STATE_COLORS = ["#e4572e", "#2e86ab", "#5c9e31", "#a05195", "#e0a030", "#17a2a0", "#c2416b", "#6a6ad0"];
+let SD = null; // last detection: { lo, hi, r, N, states, transitions, sel }
+async function sampleForStates(lo, hi, r, onProg, cancel) {
+  const c = S.crop, TW = 192, TH = Math.max(8, Math.round(TW * c.h / c.w));
+  const cv = document.createElement("canvas"); cv.width = TW; cv.height = TH;
+  const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingQuality = "high";
+  const N = Math.floor((hi - lo) * r + 1e-6) + 1, thumbs = [];
+  for (let k = 0; k < N; k++) {
+    if (cancel()) return null;
+    await seek(lo + k / r);
+    ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, TW, TH);
+    thumbs.push(ctx.getImageData(0, 0, TW, TH).data);
+    onProg(k, N);
+  }
+  return { thumbs, TW, TH, N };
+}
+function stateFeatures(sm) {
+  const { thumbs, TW, TH, N } = sm;
+  // background: the key color, or the median of the border pixels
+  let bg;
+  if (S.key.on && S.key.rgb) bg = S.key.rgb;
+  else {
+    const ch = [[], [], []];
+    for (let k = 0; k < N; k += Math.max(1, Math.floor(N / 12))) {
+      const d = thumbs[k];
+      for (let x = 0; x < TW; x += 3) for (const y of [0, TH - 1]) { const i = (y * TW + x) * 4; ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
+      for (let y = 0; y < TH; y += 3) for (const x of [0, TW - 1]) { const i = (y * TW + x) * 4; ch[0].push(d[i]); ch[1].push(d[i + 1]); ch[2].push(d[i + 2]); }
+    }
+    bg = ch.map(a => median(a));
+  }
+  const isSub = (d, i) => (Math.abs(d[i] - bg[0]) + Math.abs(d[i + 1] - bg[1]) + Math.abs(d[i + 2] - bg[2])) > 120;
+  // union of the subject's bounding boxes across the clip
+  let x0 = TW, x1 = -1, y0 = TH, y1 = -1;
+  const per = thumbs.map(d => {
+    let n = 0, sx = 0, sy = 0, top = TH, bot = -1;
+    for (let y = 0; y < TH; y++) for (let x = 0; x < TW; x++) {
+      if (!isSub(d, (y * TW + x) * 4)) continue;
+      n++; sx += x; sy += y; if (y < top) top = y; bot = y;
+      if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y;
+    }
+    return { n, cx: n ? sx / n : TW / 2, cy: n ? sy / n : TH / 2, top, bot };
+  });
+  const hasSub = x1 > x0 && y1 > y0 && per.some(p => p.n > 20) && per.every(p => p.n < TW * TH * 0.9);
+  if (!hasSub) { x0 = 0; y0 = 0; x1 = TW - 1; y1 = TH - 1; }
+  else { const px = Math.round((x1 - x0) * 0.06) + 2, py = Math.round((y1 - y0) * 0.06) + 2; x0 = Math.max(0, x0 - px); y0 = Math.max(0, y0 - py); x1 = Math.min(TW - 1, x1 + px); y1 = Math.min(TH - 1, y1 + py); }
+  const RW = x1 - x0 + 1, RH = y1 - y0 + 1, FW = 32, FH = Math.max(8, Math.min(64, Math.round(32 * RH / RW)));
+  const feats = thumbs.map(d => {
+    const f = new Float32Array(FW * FH * 3);
+    for (let fy = 0; fy < FH; fy++) {
+      const ya = y0 + Math.floor(fy * RH / FH), yb = Math.max(ya + 1, y0 + Math.floor((fy + 1) * RH / FH));
+      for (let fx = 0; fx < FW; fx++) {
+        const xa = x0 + Math.floor(fx * RW / FW), xb = Math.max(xa + 1, x0 + Math.floor((fx + 1) * RW / FW));
+        let r = 0, g = 0, b = 0, n = 0;
+        for (let y = ya; y < yb; y++) for (let x = xa; x < xb; x++) { const i = (y * TW + x) * 4; r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; }
+        const j = (fy * FW + fx) * 3; f[j] = r / n; f[j + 1] = g / n; f[j + 2] = b / n;
+      }
+    }
+    return f;
+  });
+  const norm = per.map(p => ({ cx: (p.cx - x0) / RW, cy: (p.cy - y0) / RH, top: (p.top - y0) / RH, bot: (p.bot - y0) / RH, n: p.n }));
+  return { feats, per: norm, hasSub };
+}
+function distMatrix(feats) {
+  const N = feats.length, D = Array.from({ length: N }, () => new Float32Array(N)), L = feats[0].length;
+  for (let i = 0; i < N; i++) for (let j = i + 1; j < N; j++) {
+    const a = feats[i], b = feats[j]; let s = 0;
+    for (let k = 0; k < L; k++) s += Math.abs(a[k] - b[k]);
+    D[i][j] = D[j][i] = s / (L * 255);
+  }
+  return D;
+}
+function noveltyCurve(D, w) {
+  const N = D.length, nov = new Float32Array(N), g = [];
+  for (let a = -w; a < w; a++) g.push(Math.exp(-0.5 * Math.pow((a + 0.5) / (w * 0.55), 2)));
+  for (let t = 0; t < N; t++) {
+    let s = 0, ws = 0;
+    for (let a = -w; a < w; a++) for (let b = -w; b < w; b++) {
+      const i = t + a, j = t + b; if (i < 0 || j < 0 || i >= N || j >= N || i === j) continue;
+      const wt = g[a + w] * g[b + w]; s += ((a < 0) !== (b < 0) ? 1 : -1) * wt * D[i][j]; ws += wt;
+    }
+    nov[t] = ws ? Math.max(0, s / ws) : 0;
+  }
+  return nov;
+}
+// fundamental period of a stretch: the deepest dip of the mean lag distance, preferring the shortest lag that is
+// nearly as deep (so neither a half stride nor two strides gets picked)
+function periodOf(D, s, e, Lmin, Lmax) {
+  const n = e - s; if (n < Lmin * 2) return null;
+  const curve = [];
+  for (let L = 1; L <= Math.min(Lmax || n, Math.floor(n * 0.7)); L++) { let a = 0, c = 0; for (let i = s; i + L < e; i++) { a += D[i][i + L]; c++; } curve.push(c ? a / c : 1); }
+  if (curve.length < Lmin + 1) return null;
+  const top = Math.max(...curve.slice(Lmin - 1)), mins = [];
+  for (let L = Lmin; L < curve.length; L++) {
+    const v = curve[L - 1], prev = curve[L - 2], next = curve[L];
+    if (next !== undefined && v <= prev && v <= next && v < top * 0.72) mins.push({ L, v });
+  }
+  if (!mins.length) return null;
+  const deep = Math.min(...mins.map(m => m.v)), pick = mins.find(m => m.v <= deep * 1.1);
+  return { P: pick.L, depth: 1 - pick.v / top };
+}
+async function detectStates() {
+  if (!S.src) { status("Load a video first. Detect states works on the source footage.", "err"); return; }
+  if (loopSearch) { loopSearch.cancel = true; return; }
+  if (extracting) return;
+  stopSource();
+  const scope = $("#ldScope").value, lo = scope === "range" ? S.tIn : 0, hi = scope === "range" ? S.tOut : Math.max(0, S.src.dur - 0.02);
+  const span = hi - lo; if (span < 1) { status("The search range is too short to find states. Search the whole video or widen in and out.", "err"); return; }
+  const fps = S.sampleFps, r = span * fps <= 720 ? fps : Math.max(4, Math.floor(720 / span));
+  const btn = $("#stDetect"), label = btn.textContent, here = video.currentTime; loopSearch = { cancel: false };
+  btn.textContent = "Stop"; $("#extract").disabled = true; $("#loopDetect").disabled = true; $("#findLoop").disabled = true;
+  try {
+    const sm = await sampleForStates(lo, hi, r, (k, N) => { $("#prog").style.width = ((k + 1) / N * 100) + "%"; if (k % 12 === 0) status("Reading the clip for states… " + (k / r).toFixed(1) + " of " + span.toFixed(1) + " s"); }, () => loopSearch.cancel);
+    if (!sm) { status("State detection stopped."); return; }
+    status("Finding states and transitions…");
+    await new Promise(r => setTimeout(r, 0));
+    SD = analyzeStates(sm, lo, r);
+    Object.assign(SD, { lo, hi, r, sm });
+    renderStates();
+    const ns = SD.states.filter(s => !s.repeatOf).length, nt = SD.transitions.length;
+    status(ns ? "Found " + ns + " state" + (ns > 1 ? "s" : "") + " (" + SD.states.filter(s => !s.repeatOf).map(s => s.name).join(", ") + ") and " + nt + " transition" + (nt === 1 ? "" : "s") + ". Rename them in the Source tab, then Create animations." : "No distinct states found. Try More states in the Source tab, or use Loop detect.", ns ? "good" : "");
+  } catch (e) { status("State detection failed: " + (e && e.message || e), "err"); }
+  finally {
+    loopSearch = null; btn.textContent = label; $("#extract").disabled = false; $("#loopDetect").disabled = false; $("#findLoop").disabled = false;
+    setTimeout(() => $("#prog").style.width = "0", 600);
+    scrubTo(here);
+  }
+}
+function analyzeStates(sm, lo, r, forcedBounds) {
+  const { feats, per } = stateFeatures(sm), D = distMatrix(feats), N = D.length;
+  const sens = { fewer: 1.5, normal: 1, more: 0.65 }[$("#stSens").value] || 1, TU = window.__stTune || {};
+  const step = new Float32Array(N); for (let i = 0; i + 1 < N; i++) step[i] = D[i][i + 1]; step[N - 1] = step[N - 2] || 0;
+  // 1. boundaries: peaks of the novelty curve
+  const w = clamp(Math.round((TU.kw || 0.7) * r), 3, 30), nov = noveltyCurve(D, w);
+  const sorted = Array.from(nov).sort((a, b) => a - b), medN = sorted[sorted.length >> 1], mx = sorted[sorted.length - 1];
+  const thr = Math.max(medN * (TU.tm || 2.2), mx * (TU.tx || 0.22)) * sens, minSep = Math.max(2, Math.round((TU.sep || 0.4) * r));
+  const peaks = [];
+  for (let t = 1; t < N - 1; t++) {
+    let isMax = true; for (let k = Math.max(0, t - minSep); k <= Math.min(N - 1, t + minSep); k++) if (nov[k] > nov[t] || (nov[k] === nov[t] && k < t)) { isMax = false; break; }
+    if (isMax && nov[t] > thr) peaks.push(t);
+  }
+  const bounds = forcedBounds ? forcedBounds.slice() : [0].concat(peaks, [N]), segs = [];
+  for (let k = 0; k + 1 < bounds.length; k++) segs.push({ s: bounds[k], e: bounds[k + 1] });
+  // 2. per segment: period, loop, steady extent, measurements
+  const Lmin = Math.max(2, Math.round(0.25 * r)), minState = Math.max(3, Math.round(0.35 * r));
+  const states = [];
+  segs.forEach(sg => {
+    const n = sg.e - sg.s; if (n < minState) return;
+    // trim the edges that are still changing (part of a transition)
+    let s = sg.s, e = sg.e; const core = []; for (let i = sg.s; i < sg.e; i++) core.push(step[i]);
+    const ms = median(core), edgeMax = ms * 2.5 + 0.004;
+    while (e - s > minState && step[s] > edgeMax) s++;
+    while (e - s > minState && step[e - 2] > edgeMax) e--;
+    const pr = periodOf(D, s, e, Lmin, Math.round(1.5 * r));
+    let i0 = s, i1 = e - 1, kind = "once", match = 0;
+    if (pr) {
+      // the cleanest single cycle (period P, allowing ±1) inside the steady part
+      let best = Infinity;
+      for (let P = Math.max(Lmin, pr.P - 1); P <= pr.P + 1; P++) for (let i = s; i + P < e; i++) {
+        let mo = 0; for (let k = i; k < i + P; k++) mo += step[k]; mo /= P;
+        const q = D[i][i + P] / Math.max(mo, 0.002);
+        if (q < best) { best = q; i0 = i; i1 = i + P; }
+      }
+      kind = "loop"; match = Math.max(0, 100 - D[i0][i1] * 100);
+    } else {
+      // nearly static stretches loop trivially; otherwise it's a one-shot action
+      let mo = 0; for (let i = s; i < e - 1; i++) mo += step[i]; mo /= Math.max(1, e - 1 - s);
+      if (mo < 0.004 && e - s >= Lmin * 2) { i0 = s; i1 = Math.min(e - 1, s + Math.max(Lmin * 2, Math.round(0.6 * r))); kind = "loop"; match = Math.max(0, 100 - D[i0][i1] * 100); }
+    }
+    let mo = 0; for (let i = i0; i < i1; i++) mo += step[i]; mo /= Math.max(1, i1 - i0);
+    const cys = []; for (let i = s; i < e; i++) cys.push(per[i].cy);
+    const vy = Math.max(...cys) - Math.min(...cys);
+    states.push({ s, e, i0, i1, kind, match, motion: mo, vy, segS: sg.s, segE: sg.e });
+  });
+  // 3. group segments that show the same action: compare their steady frames, relative to how far apart segments
+  //    typically are (repeats of idle sit far closer to each other than to any other action)
+  const steadySet = st => { const a = []; for (let i = st.s + 1; i < Math.max(st.e - 1, st.s + 2); i++) a.push(i); return a; };
+  const nearMean = (A, B) => { let t = 0; for (const i of A) { let m = Infinity; for (const j of B) m = Math.min(m, D[i][j]); t += m; } return t / A.length; };
+  const pd = [];
+  for (let a = 0; a < states.length; a++) for (let b = a + 1; b < states.length; b++) { const A = steadySet(states[a]), B = steadySet(states[b]); pd.push({ a, b, d: (nearMean(A, B) + nearMean(B, A)) / 2 }); }
+  const allD = pd.map(x => x.d).sort((x, y) => x - y), gThr = allD.length > 2 ? Math.max(0.012, Math.min(0.03, 0.35 * allD[allD.length >> 1])) : 0.015;
+  states.forEach((st, k) => {
+    st.repeatOf = null;
+    for (let j = 0; j < k; j++) { if (states[j].repeatOf !== null) continue; const x = pd.find(q => q.a === j && q.b === k); if (x && x.d < gThr) { st.repeatOf = j; break; } }
+  });
+  // 4. names: idle = the action that keeps coming back (or the calmest), jump = most vertical travel,
+  //    run = the busiest loop; the rest are numbered
+  const uniq = states.filter(s => s.repeatOf === null), taken = new Set();
+  const takesOf = u => states.filter(s => s === u || states[s.repeatOf] === u);
+  const allMo = uniq.map(s => s.motion).sort((a, b) => a - b), moMed = allMo[allMo.length >> 1] || 0;
+  const calmish = uniq.filter(u => u.motion <= moMed * 0.8 + 0.003);
+  const idle = calmish.slice().sort((a, b) => takesOf(b).length - takesOf(a).length || a.motion - b.motion)[0];
+  if (idle) { idle.name = "idle"; taken.add(idle); }
+  const jumpy = uniq.filter(s => !taken.has(s)).map(u => ({ u, vy: Math.max(...takesOf(u).map(t => t.vy)) })).filter(x => x.vy > 0.12).sort((a, b) => b.vy - a.vy)[0];
+  if (jumpy) { jumpy.u.name = "jump"; taken.add(jumpy.u); }
+  const busy = uniq.filter(s => !taken.has(s) && s.kind === "loop").sort((a, b) => b.motion - a.motion)[0];
+  if (busy && busy.motion > moMed * 0.9 && busy.motion > 0.006) { busy.name = "run"; taken.add(busy); }
+  let an = 1; uniq.forEach(s => { if (!s.name) s.name = "action " + an++; });
+  uniq.forEach((s, k) => { s.color = STATE_COLORS[k % STATE_COLORS.length]; });
+  states.forEach(s => { if (s.repeatOf !== null) { const o = states[s.repeatOf]; s.name = o.name; s.color = o.color; } });
+  states.forEach(s => { s.name0 = s.name; });
+  // keep the best take of each action for creation; repeats are listed but off by default
+  uniq.forEach(u => {
+    const takes = states.filter(s => s === u || states[s.repeatOf] === u);
+    const best = takes.slice().sort((a, b) => (b.kind === "loop") - (a.kind === "loop") || b.match - a.match || (b.e - b.s) - (a.e - a.s))[0];
+    takes.forEach(t => { t.use = t === best; t.best = t === best; });
+  });
+  // 5. transitions: the gaps between the steady parts of consecutive states
+  const transitions = [];
+  for (let k = 0; k + 1 < states.length; k++) {
+    const a = states[k], b = states[k + 1];
+    const t0 = a.e - 1, t1 = b.s; if (t1 - t0 < 2) continue; // a one-frame gap is a cut, not a transition
+    transitions.push({ s: t0, e: t1, a, b, from: a.name, to: b.name, color: b.color, use: false });
+  }
+  const T = i => +(lo + i / r).toFixed(3);
+  states.forEach((s, k) => Object.assign(s, { id: "s" + k, t0: T(s.s), t1: T(s.e - 1), tIn: T(s.i0), tOut: T(s.i1), name0: s.name }));
+  transitions.forEach((t, k) => Object.assign(t, { id: "t" + k, t0: T(t.s), t1: T(t.e), name: t.from + "_to_" + t.to }));
+  return { states, transitions, N, bounds, debug: { nov: Array.from(nov), peaks, thr, w, D } };
+}
+// the marks under the trim bar, the chips under the source, and the list in the Source tab
+function renderStates() { renderStateMarks(); renderStateList(); }
+function renderStateMarks() {
+  const track = $("#stateTrack"), chips = $("#loopList");
+  if (!SD || !S.src) { track.hidden = true; track.textContent = ""; return; }
+  const d = S.src.dur || 1, pct = t => (t / d * 100) + "%", sp = (a, b) => ((b - a) / d * 100) + "%";
+  track.textContent = ""; track.hidden = false;
+  SD.transitions.forEach(t => {
+    const el = document.createElement("button"); el.type = "button"; el.className = "sttr"; el.style.left = pct(t.t0); el.style.width = sp(t.t0, t.t1);
+    el.title = "Transition " + t.from + " → " + t.to + " · " + t.t0.toFixed(2) + "–" + t.t1.toFixed(2) + " s"; el.setAttribute("aria-label", el.title); el.style.setProperty("--c", t.color);
+    el.addEventListener("click", () => selectState(t)); track.append(el);
+  });
+  SD.states.forEach(s => {
+    const band = document.createElement("div"); band.className = "stband"; band.style.left = pct(s.t0); band.style.width = sp(s.t0, s.t1); band.style.setProperty("--c", s.color); track.append(band);
+    const el = document.createElement("button"); el.type = "button"; el.className = "stloop" + (s.kind === "once" ? " once" : "");
+    el.style.left = pct(s.tIn); el.style.width = sp(s.tIn, Math.max(s.tOut, s.tIn + 0.04)); el.style.setProperty("--c", s.color);
+    el.textContent = s.name; el.title = s.name + (s.repeatOf !== null ? " (again)" : "") + " · " + (s.kind === "loop" ? "loop " : "one-shot ") + s.tIn.toFixed(2) + "–" + s.tOut.toFixed(2) + " s";
+    el.setAttribute("aria-label", el.title); el.addEventListener("click", () => selectState(s)); track.append(el);
+  });
+  // chips: states in time order, with the transitions between them
+  chips.textContent = ""; chips.hidden = false;
+  const items = SD.states.map(s => ({ t: s.tIn, s })).concat(SD.transitions.map(t => ({ t: t.t0 + 1e-4, tr: t }))).sort((a, b) => a.t - b.t);
+  items.forEach(it => {
+    const b = document.createElement("button"); b.type = "button";
+    if (it.s) {
+      const s = it.s, dot = document.createElement("i"); dot.className = "dot"; b.append(dot);
+      b.append(s.name + (s.repeatOf !== null ? " (again)" : "") + " · " + s.tIn.toFixed(2) + "–" + s.tOut.toFixed(2) + " s · " + frameCountFor(s.tIn, s.tOut) + " fr" + (s.kind === "loop" ? " · " + s.match.toFixed(0) + "%" : " · once"));
+      b.style.setProperty("--c", s.color); b.addEventListener("click", () => selectState(s));
+    } else {
+      const t = it.tr; b.className = "trchip"; b.textContent = t.from + " → " + t.to + " · " + t.t0.toFixed(2) + "–" + t.t1.toFixed(2) + " s";
+      b.style.setProperty("--c", t.color); b.addEventListener("click", () => selectState(t));
+    }
+    chips.append(b);
+  });
+}
+function relabel() {
+  if (!SD) return;
+  SD.transitions.forEach(t => {
+    t.from = t.a.name; t.to = t.b.name; if (!t.custom) t.name = fileSlug(t.from) + "_to_" + fileSlug(t.to);
+    if (t._nameEl && document.activeElement !== t._nameEl) t._nameEl.value = t.name;
+  });
+}
+function renderStateList() {
+  const list = $("#stList");
+  const has = !!(SD && S.src);
+  $("#stGroup").hidden = !has; $(".viewers").classList.toggle("has-states", has);
+  if (!has) return;
+  list.textContent = "";
+  $("#stCount").textContent = SD.states.filter(s => s.repeatOf === null).length + " · " + SD.transitions.length + " tr";
+  const row = (o, isTr) => {
+    const li = document.createElement("li"); li.className = "strow" + (isTr ? " tr" : ""); li.style.setProperty("--c", o.color);
+    const cb = document.createElement("input"); cb.type = "checkbox"; cb.checked = !!o.use; cb.setAttribute("aria-label", "Create an animation from " + o.name);
+    cb.addEventListener("change", () => { o.use = cb.checked; updateCreateBtn(); });
+    const sw = document.createElement("i"); sw.className = isTr ? "dot hatch" : "dot";
+    const nm = document.createElement("input"); nm.type = "text"; nm.value = o.name; nm.spellcheck = false; nm.setAttribute("aria-label", isTr ? "Transition name" : "State name");
+    o._nameEl = nm;
+    nm.addEventListener("input", () => {
+      const v = nm.value.trim(); if (!v) return;
+      if (isTr) { o.name = v; o.custom = true; }
+      else {
+        const g = o.repeatOf !== null ? SD.states[o.repeatOf] : o;
+        SD.states.forEach(x => { if (x === g || SD.states[x.repeatOf] === g) { x.name = v; if (x._nameEl && x._nameEl !== nm) x._nameEl.value = v; } });
+        relabel();
+      }
+      renderStateMarks();
+    });
+    const meta = document.createElement("span"); meta.className = "kv";
+    meta.textContent = (isTr ? "transition " : o.kind === "loop" ? "loop " : "once ") + o.tIn.toFixed(2) + "–" + o.tOut.toFixed(2) + " s · " + frameCountFor(o.tIn, o.tOut) + " fr" + (!isTr && o.repeatOf !== null ? " · again" : "");
+    li.append(cb, sw, nm, meta);
+    const acts = document.createElement("span"); acts.className = "acts";
+    if (animIndexFor(o) >= 0) { const an = document.createElement("span"); an.className = "anim"; an.textContent = "● anim"; an.title = "Has an animation in the set: selecting it shows that animation in the output"; acts.append(an); }
+    const k = SD.states.indexOf(o);
+    if (!isTr && k >= 0 && SD.states.length > 1) {
+      const mg = document.createElement("select"); mg.className = "merge";
+      mg.title = "Merge with another state, for an action made of several parts (hurt, then the arrow pose → hit). States in between are merged in too.";
+      mg.setAttribute("aria-label", "Merge " + o.name + " with another state");
+      const o0 = document.createElement("option"); o0.value = ""; o0.textContent = "Merge with…"; mg.append(o0);
+      SD.states.forEach((x, j) => {
+        if (j === k) return;
+        const op = document.createElement("option"); op.value = j;
+        const between = Math.abs(j - k) - 1;
+        op.textContent = (j < k ? "↑ " : "↓ ") + x.name + " " + x.tIn.toFixed(2) + " s" + (between > 0 ? " (+" + between + " between)" : "");
+        mg.append(op);
+      });
+      mg.addEventListener("click", e => e.stopPropagation());
+      mg.addEventListener("change", () => { if (mg.value !== "") mergeStates(k, +mg.value); });
+      acts.append(mg);
+    }
+    li.append(acts);
+    li.dataset.id = o.id; if (SD.sel === o.id) li.classList.add("sel");
+    li.addEventListener("click", e => { if (e.target.closest("input,button")) return; selectState(o); });
+    return li;
+  };
+  const items = SD.states.map(s => ({ t: s.tIn, o: s, tr: false })).concat(SD.transitions.map(t => { t.tIn = t.t0; t.tOut = t.t1; return { t: t.t0 + 1e-4, o: t, tr: true }; })).sort((a, b) => a.t - b.t);
+  items.forEach(it => list.append(row(it.o, it.tr)));
+  SD.order = items.map(it => it.o);
+  updateCreateBtn();
+}
+function mergeStates(k, j) {
+  if (!SD || !SD.sm) return;
+  if (j === undefined) j = k + 1;
+  const a = SD.states[Math.min(k, j)], b = SD.states[Math.max(k, j)], named = SD.states[k];
+  if (!a || !b || a === b) return;
+  const absorbed = Math.abs(j - k) + 1;
+  // drop every boundary between the two states' segments, keep the user's names
+  const keepNames = SD.states.map(s => ({ t0: s.t0, t1: s.t1, name: s.name, user: s.name !== s.name0 }));
+  const bounds = SD.bounds.filter(x => !(x > a.segS && x < b.segE));
+  const keep = { lo: SD.lo, hi: SD.hi, r: SD.r, sm: SD.sm };
+  SD = Object.assign(analyzeStates(keep.sm, keep.lo, keep.r, bounds), keep);
+  SD.states.forEach(s => {
+    let best = null, ov = 0;
+    keepNames.forEach(o => { const x = Math.min(s.t1, o.t1) - Math.max(s.t0, o.t0); if (x > ov) { ov = x; best = o; } });
+    if (best && best.user) s.name = best.name;
+  });
+  const m = SD.states.find(s => s.t0 <= a.t0 + 1e-6 && s.t1 >= b.t1 - 1e-6);
+  if (m) m.name = named.name;
+  relabel(); renderStates();
+  if (m) { SD.sel = m.id; renderStateList(); }
+  status("Merged " + absorbed + " states (“" + a.name + "” to “" + b.name + "”, " + a.t0.toFixed(2) + "–" + b.t1.toFixed(2) + " s) into “" + named.name + "”. Rename it if you like.", "good");
+}
+function frameCountFor(a, b) { return Math.max(1, Math.floor((b - a) * S.sampleFps + 1e-6)); }
+function updateCreateBtn() { const n = SD ? SD.states.filter(s => s.use).length + SD.transitions.filter(t => t.use).length : 0; const b = $("#stCreate"); b.textContent = "Create animations (" + n + ")"; b.disabled = !n; }
+function animIndexFor(o) { return o && o.animId ? A.list.findIndex(a => a.id === o.animId) : -1; }
+async function selectState(o) {
+  if (!SD || !o || extracting) return;
+  SD.sel = o.id;
+  document.querySelectorAll("#stList .strow").forEach(li => li.classList.toggle("sel", li.dataset.id === o.id));
+  const li = document.querySelector('#stList .strow[data-id="' + o.id + '"]'); if (li) li.scrollIntoView({ block: "nearest" });
+  const ai = animIndexFor(o); if (ai >= 0 && ai !== A.cur) switchAnim(ai);
+  applyStateRange(o);
+  const lbl = o.from ? o.from + " → " + o.to : "“" + o.name + "”", ai2 = animIndexFor(o);
+  status(lbl + ": source " + S.tIn.toFixed(2) + "–" + S.tOut.toFixed(2) + " s" + (ai2 >= 0 ? ", output shows the “" + A.list[ai2].name + "” animation." : ", no animation yet. Check it and Create animations, or Extract frames.") + " Alt+↑/↓ steps through states.");
+  if ($("#stAuto").checked) await startSource();
+}
+function stepState(d) {
+  if (!SD || !SD.order || !SD.order.length) return;
+  const i = SD.order.findIndex(o => o.id === SD.sel);
+  selectState(SD.order[i < 0 ? (d > 0 ? 0 : SD.order.length - 1) : (i + d + SD.order.length) % SD.order.length]);
+}
+function applyStateRange(o) {
+  stopSource();
+  S.tIn = o.tIn != null ? o.tIn : o.t0; S.tOut = o.tOut != null ? o.tOut : o.t1; syncTrim(); scrubTo(S.tIn);
+  status((o.from ? "Transition " + o.from + " → " + o.to : "“" + o.name + "”") + ": in and out set to " + S.tIn.toFixed(2) + "–" + S.tOut.toFixed(2) + " s. Press Play to preview, or Extract frames.");
+}
+async function createStateAnims() {
+  if (!SD || extracting) return;
+  const picks = SD.states.filter(s => s.use).map(s => ({ o: s, name: s.name, tIn: s.tIn, tOut: s.tOut, once: s.kind === "once" }))
+    .concat(SD.transitions.filter(t => t.use).map(t => ({ o: t, name: t.name, tIn: t.t0, tOut: t.t1, once: true })));
+  if (!picks.length) return;
+  const btn = $("#stCreate"), made = [];
+  btn.disabled = true;
+  try {
+    for (let k = 0; k < picks.length; k++) {
+      const p = picks[k];
+      if (k > 0 || S.frames.length) newAnim(p.name);
+      const a = curAnim(); a.name = uniqueAnimName(p.name, a); a.autoName = false; a.oneShot = p.once;
+      S.tIn = p.tIn; S.tOut = Math.max(p.tOut, p.tIn + 1 / S.sampleFps); syncTrim();
+      status("Creating “" + a.name + "” (" + (k + 1) + " of " + picks.length + ")…");
+      const ok = await extractRange(true); if (!ok) break;
+      made.push(a.name); p.o.animId = a.id;
+      // repeats of the same action point at the same animation, so they compare against it too
+      if (p.o.repeatOf === null && SD.states.includes(p.o)) SD.states.forEach(x => { if (SD.states[x.repeatOf] === p.o && !x.animId) x.animId = a.id; });
+    }
+    renderAnims(); syncOneShotUI(); renderStateList();
+    if (made.length) status("Created " + made.length + " animation" + (made.length > 1 ? "s" : "") + ": " + made.join(", ") + ". Click a state in the States column to compare it with its source.", "good");
+  } finally { btn.disabled = false; updateCreateBtn(); }
+}
+
+$("#stDetect").addEventListener("click", detectStates);
+$("#stPrev").addEventListener("click", () => stepState(-1));
+$("#stNext").addEventListener("click", () => stepState(1));
+document.addEventListener("keydown", e => {
+  if (!e.altKey || !SD || $("#stGroup").hidden || (typeof pv !== "undefined" && pv.open)) return;
+  if (e.key === "ArrowDown") { e.preventDefault(); stepState(1); } else if (e.key === "ArrowUp") { e.preventDefault(); stepState(-1); }
 });
+$("#stCreate").addEventListener("click", createStateAnims);
+$("#stSens").addEventListener("change", () => {
+  if (!SD || !SD.sm) return;
+  const keep = { lo: SD.lo, hi: SD.hi, r: SD.r, sm: SD.sm };
+  SD = Object.assign(analyzeStates(keep.sm, keep.lo, keep.r), keep); renderStates();
+  status("Found " + SD.states.filter(s => s.repeatOf === null).length + " states and " + SD.transitions.length + " transitions at this sensitivity.");
+});
+function syncOneShotUI() { const a = curAnim(), cb = $("#aOnce"); if (a && cb) cb.checked = !!a.oneShot; }
+$("#aOnce").addEventListener("change", e => { curAnim().oneShot = e.target.checked; markDirty(true); renderAnims(); });
 
 /* ---------- boot ---------- */
 function syncControls() {
@@ -2718,18 +3708,21 @@ function syncControls() {
   $("#zoom").value = S.play.zoom; $("#bg").value = S.play.bg; applyBg();
   $$(".seg [data-mode]").forEach(x => x.setAttribute("aria-pressed", x.dataset.mode === S.play.mode ? "true" : "false"));
   $("#eName").value = S.exp.name; $("#eScale").value = S.exp.scale; $("#ePPU").value = S.exp.ppu; $("#ePivot").value = S.exp.pivot; $("#eCols").value = S.exp.cols; $("#ePad").value = S.exp.pad; $("#eLoops").value = S.exp.loops;
-  updateKeyUI(); updateUndo(); fillPresets(); renderPalette(); syncGridUI();
+  $("#eTrim").checked = !!S.exp.trim; $("#eSame").checked = !!S.exp.same; $("#eSame").disabled = !S.exp.trim; $("#eMargin").value = S.exp.margin; $("#eWhich").value = S.exp.which;
+  updateKeyUI(); updateUndo(); fillPresets(); renderPalette(); syncGridUI(); syncStabUI();
 }
 loadPrefs();
 makeSample();
 S.play.fps = 12;
+A.list = [makeAnim({ name: "sample", isSample: true })]; A.cur = 0; stashAnim(A.list[0]);
 syncControls();
 buildThumbs(); prepDirty = true; runProcess(); drawSource(); updateEst();
 setConv(S.conv);
 let startTab = "pixels"; try { startTab = localStorage.getItem(LS + ":tab") || "pixels"; } catch (e) {}
 setTab($$("[data-tab]").some(b => b.dataset.tab === startTab) ? startTab : "pixels");
-initStore();
-window.__pb = { encodeGIF, lzw, S, buildProject, applyProject };
+initTransport(); renderVersions(); renderAnims(); updateProjectUI(); setTimeout(() => { P.ready = true; }, 0);
+window.__pb = { encodeGIF, lzw, S, P, A, packProject, readProject, applySetState, exportPlan, buildUnityZip, switchAnim, newAnim, analyzeStates, get SD() { return SD; } };
 requestAnimationFrame(tick);
 })();
 </script>
+

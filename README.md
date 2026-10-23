@@ -2,7 +2,7 @@
 
 **Turn video into clean, looping pixel art.**
 
-BitReel is a single-page browser tool that converts video footage into pixel-art animation loops. It handles live action, renders and AI-generated "pixel art style" video, and exports GIFs, video, PNG frames, sprite sheets and a ready-to-import Unity package.
+BitReel is a single-page browser tool that converts video footage into pixel-art animation loops. It handles live action, renders and AI-generated "pixel art style" video. It can build a whole character set (idle, run, jump…) in one project, and it exports GIFs, video, PNG frames, sprite sheets and a ready-to-import Unity package with one Animator Controller for the set.
 
 Everything runs locally in your browser. Your video never leaves your machine.
 
@@ -22,6 +22,7 @@ Everything runs locally in your browser. Your video never leaves your machine.
 - [Source tab](#source-tab)
 - [Pixels tab](#pixels-tab)
 - [Palette tab](#palette-tab)
+- [Animation tab and animation sets](#animation-tab-and-animation-sets)
 - [Paint tab and the paint editor](#paint-tab-and-the-paint-editor)
 - [Export tab](#export-tab)
 - [Project tab and .bitreel files](#project-tab-and-bitreel-files)
@@ -43,6 +44,7 @@ Everything runs locally in your browser. Your video never leaves your machine.
   - **Grid snap** detects the fake pixel grid in AI "pixel art style" video and recovers the art at its native resolution with crisp edges.
 - **Loop tools**
   - **Loop detect** finds the cleanest loop anywhere in the clip and sets in and out points.
+  - **Detect states** splits a clip with several actions (idle, run, jump, hit) into states and transitions, marks them on the trim bar and turns them into an animation set in one click.
   - **Find loop point** keeps your in point and finds the best matching out point.
   - **Seam check** measures how cleanly the last frame wraps into the first.
 - **Background keying** with an eyedropper, tolerance and edge choke. Fringe and blended edge colors are cleaned automatically in grid snap.
@@ -57,10 +59,13 @@ Everything runs locally in your browser. Your video never leaves your machine.
   - Zoom from ×1 to ×64, a pixel grid, onion skin and playback.
   - Undo and redo, and an option to paint all selected frames at once.
 - **Frame selection**: include or exclude frames, select ranges, thin to every 2nd or 3rd frame.
+- **Animation sets**: several animations in one project (idle, run, jump…) that share the palette and look, each with its own frames, trim, frame rate and edits.
+- **Stabilize in place**: locks the character horizontally and/or by the feet, so walk and run cycles play on the spot like game sprites.
+- **Trim to content**: crops every frame to the tightest box around the character, optionally with one shared frame size and anchor across the whole set.
 - **Its own project format, `.bitreel`**: one file on your disk with the frames, every setting, painted edits and all saved versions. Save with Ctrl/⌘ + S.
 - **Exports**
   - Animated GIF, MP4 or WebM, PNG frames, sprite sheet.
-  - A Unity package with an editor importer that slices the sheet and builds a looping AnimationClip automatically.
+  - A Unity package for the whole set: one sprite sheet and looping AnimationClip per animation, all as states of one Animator Controller, with the pivot at the character's feet.
 - **Up to 60 fps** sampling and playback.
 
 ---
@@ -103,25 +108,40 @@ The page opens with a procedural sample loop, so every tool can be tried before 
 5. Use **Palette from source** to build a palette from the clip, skipping the background.
 6. Clean up stray pixels in the paint editor, then export.
 
+### A character set for a game
+
+If one video holds every action (idle, then run, then jump, and so on), click **Detect states** under the trim bar and skip to step 4. See [Detect states](#detect-states).
+
+1. Load the video and key out the background. Stabilize and trim both need transparency.
+2. Set in and out on the first action, extract, and name the animation in the **Animation** tab (for example `idle`).
+3. Click **+ New animation** in the Animations bar. It keeps the loaded video, so you can set in and out on the next action and extract again (`run`). Loading another video also starts a new animation.
+4. For walk and run cycles, turn on **Stabilize** (lock horizontal, lock feet) so they play on the spot.
+5. Build the palette once. It's shared, so every animation matches.
+6. In **Export**, keep **Trim to content** and **Same size and anchor for all animations** on, set the pivot to **Feet (anchor)**, name the set (`hero`) and export the **Unity package** with **All animations**.
+
 ---
 
 ## Interface overview
 
 ```
-┌──────────────────────────────┬──────────────────────────────┐
-│ SOURCE                       │ OUTPUT                       │
-│ video, crop, grid overlay    │ pixel-art loop preview       │
-│ trim bar, Play, Loop detect  │ playback, seam check         │
-├──────────────────────────────┴──────────────────────────────┤
-│ Source · Pixels · Palette · Paint · Export · Project (tabs)  │
-├─────────────────────────────────────────────────────────────┤
-│ FRAMES: thumbnail strip with selection tools                │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────┬──────────────────────────┬────────────┐
+│ SOURCE                   │ OUTPUT                   │ STATES     │
+│ video, crop, grid        │ pixel-art loop preview   │ after      │
+│ trim bar, state marks    │ playback, seam check     │ Detect     │
+│ Play, Loop detect,       │                          │ states:    │
+│ Detect states            │                          │ rows, ↑ ↓  │
+├──────────────────────────┴──────────────────────────┴────────────┤
+│ Source · Pixels · Palette · Animation · Paint                    │
+│ Export · Project                                                 │
+├──────────────────────────────────────────────────────────────────┤
+│ ANIMATIONS: idle · run · jump · + New                            │
+│ FRAMES: thumbnail strip, selection tools                         │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ![The BitReel interface](interface.jpg)
 
-The **Source** and **Output** panels are always visible. Tools are grouped in tabs underneath. On narrow screens the panels stack.
+The **Source** and **Output** panels are always visible. After **Detect states**, a narrow **States** column joins them on the right. Tools are grouped in tabs underneath. On narrow screens the panels stack.
 
 The header shows the open project file (a dot means unsaved changes) and a status line that reports what each action did, along with any errors.
 
@@ -162,6 +182,41 @@ After **Loop detect**, up to five candidates appear under the trim bar, for exam
 
 Each candidate shows its start and end, the frame count at your sampling rate, and how closely the end matches the start.
 
+### Detect states
+
+Generated sprite videos often chain several actions in one clip: idle, a short transition, run, back to idle, jump, hit. **Detect states** finds them for you.
+
+1. Crop to the character and key out the background first. Detection only looks inside the crop, and the key helps it see the character's outline.
+2. Click **Detect states** next to **Loop detect**. It samples the clip at the sampling rate.
+3. Results show in three places:
+   - **The trim bar** gets a colored band per state, with its best loop outlined and labeled. Transitions are hatched.
+   - **Chips** under the trim bar list each state and transition, for example `run · 4.33–4.83 s · 6 fr · 100%`.
+   - **The States column**, a narrow panel to the right of the Output panel, lists every state and transition as a row you can rename, check or uncheck.
+4. Click **Create animations (N)** at the bottom of the States column. Each checked row becomes an animation in the set, extracted with your current crop, key and conversion settings.
+
+### Comparing states
+
+The States column is built for going back and forth between states:
+
+- **Click a row** (or a mark on the trim bar, or a chip) to select it. The source jumps to that range and loops it when **Play on select** is on. Once the state has an animation (marked `● anim`), the Output panel switches to that animation, so source and result play side by side. Repeats of an action show the same animation.
+- **↑ and ↓** at the top of the column, or **Alt+↑ / Alt+↓** anywhere on the page, step to the previous or next state or transition.
+- Under 1180 px wide, the column moves below the viewers. On phones it stacks with them.
+
+How states are labeled:
+
+| Label | Meaning |
+|---|---|
+| `loop` | The state repeats. Its best single cycle is picked and the match percentage shows how cleanly it wraps. |
+| `once` | The state doesn't repeat (a hit or a landing). The whole state is used and the animation is marked **Plays once**. |
+| `again` | The same action shown earlier in the clip. Repeats are listed but unchecked, so you get one `idle`, not three. |
+| `transition` | The frames between two states, named `from_to_to` (for example `run_to_idle`). Unchecked by default. Check them to export transition clips. |
+
+Names are guesses: the action that keeps coming back is `idle`, the one with the most vertical travel is `jump`, the busiest loop is `run`, and the rest are `action 1`, `action 2` and so on. Rename them in the list before creating. Transition names follow the new names.
+
+**Merge with…** joins a state with any other state you pick from its menu. Use it when one action was split in parts, for example a hit made of a hurt flinch followed by a pose. States in between are merged in too, and the menu shows how many (`+2 between`). The merged state keeps the name of the row you merged from.
+
+**States** in [Loop detect settings](#loop-detect-settings) sets how readily a change counts as a new state: **Fewer, bigger states**, **Normal** or **More, finer states**. Changing it re-runs detection on the cached samples without re-reading the video.
+
 ---
 
 ## Output panel
@@ -191,13 +246,15 @@ Compares the change between the last and first selected frames with the typical 
 
 ### Empty state
 
-When a new video is loaded, the previous output is cleared. The Output panel then shows **No frames yet**, with a button to the Source tab. Your settings are kept.
+When a new video is loaded, the Output panel is cleared and shows **No frames yet**, with a button to the Source tab. If the current animation already has frames, loading a video starts a **new animation** for it, and the earlier ones stay in the set. Your settings are kept.
 
 ---
 
 ## Frame strip
 
-A thumbnail of every extracted frame, with its index and source time.
+The top row is the **Animations bar**: one chip per animation in the project, with its frame count. Click a chip to switch, double-click to rename, or click **+ New animation**. See [Animation tab and animation sets](#animation-tab-and-animation-sets).
+
+Below it is a thumbnail of every extracted frame of the current animation, with its index and source time.
 
 - **Click** a frame to include or exclude it from the loop. Excluded frames are dimmed and struck through.
 - **Shift-click** applies the same state to the range since your last click.
@@ -246,6 +303,7 @@ The crop, the current Pixels adjustments and the key are all applied first. Back
 
 - **Length**: shortest and longest loop in seconds. Default 0.8 to 6 s.
 - **Search**: the whole video, or only between the current in and out.
+- **States**: how readily **Detect states** splits the clip. Fewer, bigger states; Normal; or More, finer states.
 
 ### Conversion
 
@@ -345,6 +403,60 @@ Colors are matched in the OKLab color space, so the nearest palette color is the
 
 ---
 
+## Animation tab and animation sets
+
+A project can hold several animations, for example `idle`, `run` and `jump` for one character.
+
+**Shared by every animation**, so a set looks consistent:
+- the palette and transparent swatch
+- the key
+- Pixels settings (size, tone, dither, flicker)
+- export settings
+
+**Kept per animation:**
+- frames and frame selection
+- source trim and crop
+- conversion mode and grid
+- frame rate and loop mode
+- painted edits and undo history
+- stabilization
+
+### This animation
+
+| Control | What it does |
+|---|---|
+| **Name** | The animation's name, used for its file names and as its state name in Unity. |
+| **New animation** | Starts an empty animation that keeps the loaded video and its trim, so you can extract another range. Same as **+ New animation** in the Animations bar. |
+| **Duplicate** | Copies the animation, frames and edits included, for example to try another stabilization. |
+| **Delete** | Removes the animation from the project, after a second click. The last one can't be deleted. |
+| **Plays once** | Marks a one-shot action (hit, death, landing). In Unity its clip doesn't loop. **Detect states** sets it for one-shot states and transitions. |
+
+Loading a video while the current animation has frames starts a new animation named after the file.
+
+### Stabilize
+
+Keeps the character on the spot, so a cycle shot moving across the frame plays in place, the way game sprites need.
+
+| Control | What it does |
+|---|---|
+| **Lock horizontal position** | Shifts each frame so the character's horizontal center of mass stays at the loop's median position. |
+| **Vertical: Lock feet to the ground line** | Shifts each frame so the lowest row of the character (ignoring single stray pixels) stays on one line. This also removes the bob of a run cycle. |
+| **Vertical: Lock center** | Keeps the vertical center of mass steady instead, which keeps the feet's up and down motion. |
+
+- The pill shows how far frames were moved, for example `on · up to 19 px across, 1 px up/down`.
+- Stabilization tracks the opaque pixels, so it needs transparency: **key out the background** or mark a transparent swatch first. Without it, the pill reads **needs transparency**.
+- Frames move by whole pixels, so the pixel art stays crisp.
+- Paint edits are applied on top of the stabilized frames. Changing stabilization afterwards moves the picture under existing edits.
+- Each frame's offset is written to the Unity manifest (`stabilizeOffset`), in case you want to drive root motion from code.
+
+### Set
+
+Lists every animation with its frame count and frame rate.
+- Click a name to switch to it.
+- Use ↑ and ↓ to reorder. The first animation becomes the **default state** of the Unity controller.
+
+---
+
 ## Paint tab and the paint editor
 
 Open the editor with **Open paint editor** or by double-clicking a frame in the strip. It opens full screen on the frame shown in the Output panel.
@@ -398,23 +510,35 @@ Open the editor with **Open paint editor** or by double-clicking a frame in the 
 
 | Setting | Applies to | Notes |
 |---|---|---|
-| **Name** | All | Used for file names. |
+| **Set name** | All | Names the export folder, the Unity controller and file names. Files are named `set_animation`, for example `hero_run_sheet.png`. |
 | **Scale** | GIF, video, PNG frames, sprite sheet | 1, 2, 4, 6 or 8×, nearest-neighbor. Unity exports are always 1:1. |
 | **Pixels / unit** | Unity | Default 16. |
-| **Pivot** | Unity | Bottom center, center or bottom left. |
+| **Pivot** | Unity | **Feet (anchor)** (default), bottom center, center or bottom left. |
 | **Sheet columns** | Sheets, Unity | 0 means automatic (√n). |
 | **Padding** | Sheets, Unity | 0, 1 or 2 px between frames. |
 | **Video loops** | Video | 1, 4, 8 or 16 repetitions. |
 
-All exports use the **selected** frames, in order, at the output **FPS**. Ping-pong mode also plays frames back in reverse in GIF, video and Unity exports.
+All exports use the **selected** frames, in order, at the animation's **FPS**. Ping-pong mode also plays frames back in reverse in GIF, video and Unity exports.
+
+### Sprite frame
+
+| Setting | What it does |
+|---|---|
+| **Trim to content** (default on) | Crops every frame to the tightest box around the opaque pixels across the whole loop, so sprites carry no empty margins. Needs transparency, otherwise the full frame is kept. |
+| **Same size and anchor for all animations** (default on) | Gives every animation in the set one shared frame size and places each one so its anchor lands on the same pixel. Switching from idle to run then doesn't make the sprite jump. |
+| **Margin** | 0, 1, 2 or 4 transparent pixels around the trimmed box. |
+
+The **anchor** is the character's horizontal center of mass, on the ground line (the lowest the feet reach in the loop). With the **Feet (anchor)** pivot, the Unity pivot sits exactly there. The readout under the heading shows the resulting frame size and pivot, for example `46 × 37 shared · pivot 0.52, 0.00`.
+
+Trimming applies to every export, so GIFs, videos and PNG frames are cropped the same way.
 
 ### Formats
 
 | Button | Output |
 |---|---|
-| **Unity package (.zip)** | Sprite sheet, manifest, single frames, palette and editor importer. See [Unity integration](#unity-integration). |
-| **Sprite sheet .png** | All frames in a grid at the chosen scale. |
-| **PNG frames .zip** | One PNG per frame at the chosen scale. |
+| **Unity package (.zip)** | **Include: All animations** (default) or **This animation**. One sprite sheet, manifest and frame folder per animation, the shared palette, and the editor importer. See [Unity integration](#unity-integration). |
+| **Sprite sheet .png** | The current animation's frames in a grid at the chosen scale. |
+| **PNG frames .zip** | One PNG per frame of the current animation at the chosen scale. |
 | **Animated .gif** | Exact palette with no re-quantization. Loops forever. Transparent pixels stay transparent. |
 | **Video** | MP4 (H.264) where the browser can record it, otherwise WebM. Recorded in real time. Transparent pixels become black. |
 
@@ -445,14 +569,15 @@ Opening, New and closing the tab warn you when there are unsaved changes. Openin
 
 ### What a project contains
 
-- the extracted frames
-- the crop and trim (in, out, sampling rate)
-- the conversion mode and grid settings
-- the key
-- Pixels and flicker settings
-- the palette and transparent swatch
-- the frame selection
-- painted edits
+- **every animation in the set**, each with:
+  - its extracted frames and frame selection
+  - its crop and trim (in, out, sampling rate)
+  - its conversion mode and grid settings
+  - its frame rate and loop mode
+  - its painted edits
+  - its stabilization
+- the shared key, Pixels and flicker settings
+- the shared palette and transparent swatch
 - export settings
 - every saved version
 
@@ -462,11 +587,11 @@ The **source video is not stored**, which keeps project files small. Load the vi
 
 A version is a named snapshot kept **inside the project file**.
 
-- **Save version** adds a snapshot of the current state. Name it or keep the automatic name. Press Enter to save.
+- **Save version** adds a snapshot of the whole set, every animation included. Name it or keep the automatic name. Press Enter to save.
 - Each version shows:
   - a thumbnail
   - the time
-  - the frame count and conversion mode
+  - the number of animations and frames
   - the number of colors and painted frames
 - **Load** restores that version. **Delete** removes it. Both ask for a second click.
 - Versions become permanent when you save the project.
@@ -482,41 +607,49 @@ Older `.zip` project files from earlier builds (Pixelbench and BitReel) still op
 
 ### Package contents
 
+For a set named `hero` with `idle` and `run`:
+
 ```
-name_unity.zip
-├── name/
-│   ├── name_sheet.png            sprite sheet, 1:1 pixels
-│   ├── name.pixelsheet.json      manifest
-│   ├── name_palette.png          palette, N×1
-│   ├── name.hex                  palette as hex, one color per line
+hero_unity.zip
+├── hero/
+│   ├── hero_idle_sheet.png          sprite sheet per animation, 1:1 pixels
+│   ├── hero_idle.pixelsheet.json    manifest per animation
+│   ├── hero_run_sheet.png
+│   ├── hero_run.pixelsheet.json
+│   ├── hero_palette.png             shared palette, N×1
+│   ├── hero.hex                     shared palette as hex, one color per line
 │   └── frames/
-│       ├── name_000.png
-│       └── …
+│       ├── idle/hero_idle_000.png …
+│       └── run/hero_run_000.png …
 ├── Editor/
-│   └── PixelSheetImporter.cs     editor importer (install once)
-└── README.md                     import notes
+│   └── PixelSheetImporter.cs        editor importer (install once)
+└── README.md                        import notes and a table of the animations
 ```
+
+When the set name and the animation name are the same, the animation's files use the set name alone.
 
 ### Importing
 
 1. **Install the importer once.** Copy `Editor/PixelSheetImporter.cs` to `Assets/Editor/PixelSheetImporter.cs`.
    - Skip this if it's already in the project. Two copies won't compile.
    - It needs the **2D Sprite** package (`com.unity.2d.sprite`), which ships with the 2D templates.
-2. **Copy the `name/` folder** anywhere under `Assets/`, for example `Assets/Art/Animations/name/`.
-3. The importer runs on its own when the `.pixelsheet.json` file is imported. It:
+2. **Copy the `hero/` folder** anywhere under `Assets/`, for example `Assets/Art/Characters/hero/`.
+3. The importer runs on its own for each `.pixelsheet.json`. For each animation it:
    - sets the sheet to Sprite (Multiple), Point filter, no compression, no mipmaps, clamp wrap, and the manifest's pixels per unit
-   - slices one sprite per frame, named `name_000`, `name_001`, …, with the manifest's pivot (it keeps sprite IDs stable on re-import)
-   - creates or updates `name.anim`, a looping clip on `SpriteRenderer.m_Sprite` at the manifest FPS, including ping-pong
-   - creates `name.controller` once, with the clip as its default state
+   - slices one sprite per frame, named `hero_run_000`, `hero_run_001`, …, with the manifest's pivot (it keeps sprite IDs stable on re-import)
+   - creates or updates `hero_run.anim`, a looping clip on `SpriteRenderer.m_Sprite` at the animation's FPS, including ping-pong
+   - adds or updates a state named `run` in **`hero.controller`**, creating the controller on the first animation. The first animation of the set is the default state.
+
+Exporting a single animation later (**Include: This animation**) into the same folder adds or updates just that state.
 
 ### Re-running the importer
 
 - From the menu: **Tools › BitReel › Import Selected Sheet**, with the JSON selected.
 - From code:
   ```csharp
-  PixelSheetImporter.Import("Assets/Art/Animations/name/name.pixelsheet.json");
+  PixelSheetImporter.Import("Assets/Art/Characters/hero/hero_run.pixelsheet.json");
   ```
-  The console logs `[BitReel] Imported name: N sprites at F fps -> path`.
+  The console logs `[BitReel] Imported hero_run: N sprites at F fps -> path`.
 
 ### Using it with Claude and the Unity MCP
 
@@ -524,14 +657,15 @@ The package is laid out so an assistant with Unity MCP access can import it unat
 
 1. Check whether a `PixelSheetImporter` class already exists. If not, create the script and wait for compilation.
 2. Copy the folder into `Assets/` and refresh the AssetDatabase.
-3. If no clip appears, call `PixelSheetImporter.Import(path)` through code execution and check the console for the `[BitReel] Imported` line.
-4. To place the animation in a scene, create a GameObject with a `SpriteRenderer` (sprite `name_000`) and an `Animator` that uses `name.controller`.
+3. If clips don't appear, call `PixelSheetImporter.Import(path)` for each JSON through code execution and check the console for the `[BitReel] Imported` lines.
+4. To place the character in a scene, create a GameObject with a `SpriteRenderer` (sprite `hero_idle_000`) and an `Animator` that uses `hero.controller`. Switch animations with `animator.Play("run")`, or add transitions between the states.
 
 ### Manual import (without the importer)
 
 1. Texture Type **Sprite (2D and UI)**, Sprite Mode **Multiple**, Filter **Point**, Compression **None**, mipmaps off.
-2. Slice by **Cell Size** using the manifest's `frameWidth × frameHeight`, offset 0, padding as in the manifest.
+2. Slice by **Cell Size** using the manifest's `frameWidth × frameHeight`, offset 0, padding as in the manifest, and set the pivot to the manifest's `pivotX`, `pivotY`.
 3. Build an AnimationClip at the manifest FPS from the sprites in order. For ping-pong, follow them with the same sprites in reverse, leaving out the first and last.
+4. Add each clip as a state of one Animator Controller.
 
 ---
 
@@ -544,6 +678,7 @@ The package is laid out so an assistant with Unity MCP access can import it unat
 | **Space** | Play or pause the output |
 | **← / →** | Previous or next output frame |
 | **P** | Play or stop the source loop (between in and out) |
+| **Alt + ↑ / ↓** | Previous or next detected state (after Detect states) |
 | **Ctrl/⌘ + S** | Save the project |
 | **Ctrl/⌘ + Shift + S** | Save the project as… |
 | **Ctrl/⌘ + O** | Open a project |
@@ -573,8 +708,10 @@ The package is laid out so an assistant with Unity MCP access can import it unat
 ```
 video ─▶ crop ─▶ sample frames ─▶ [Downscale | Grid snap] ─▶ adjust (brightness, contrast,
 saturation, gamma) ─▶ key mask ─▶ quantize to palette (OKLab) + dither ─▶ flicker reduction
-─▶ painted edits ─▶ preview / export
+─▶ stabilize ─▶ painted edits ─▶ preview ─▶ (export) trim and shared frame layout
 ```
+
+- **Animations.** The pipeline runs on the current animation. At export, other animations are run through the same shared settings, so the whole set matches.
 
 - **Work frames.** Downscale mode stores frames at up to 400 px on the long side. Grid snap stores them at their native size.
 - **Live updates.** Changing a setting re-runs only the stages after it, so updates feel immediate.
@@ -617,6 +754,29 @@ Each output pixel is the area average of its block of source pixels. Keyed pixel
 3. Stretches with almost no motion are skipped, because they loop trivially.
 4. The top five distinct candidates are snapped to the frame grid, and the end is re-checked at the full sampling rate.
 
+### State detection
+
+1. The crop is sampled at the sampling rate (up to about 720 samples). The background is the key color, or the median of the border pixels, and the character's union bounding box is found across all samples.
+2. Each sample becomes a 32 px-wide feature thumbnail of that box, and every pair of samples gets a distance, forming a self-similarity matrix.
+3. A checkerboard kernel slides along the matrix diagonal (Foote novelty). Peaks above the threshold, at least 0.4 s apart, become state boundaries.
+4. In each state, settling frames at the edges are trimmed. The period is the deepest dip of the mean lag distance, preferring the shortest lag that is nearly as deep, so a half stride isn't picked. The best single cycle is the start that wraps most cleanly relative to its motion. States without a clear period are one-shot.
+5. States are compared by the nearest-frame distance between their steady frames. Pairs much closer than typical (below a third of the median pairwise distance) are repeats of the same action.
+6. Gaps of two samples or more between states are transitions.
+
+### Stabilize
+
+1. Each frame's opaque pixels are measured: center of mass, bounding box, and the **feet line**, the lowest row with at least 2 opaque pixels (or 1% of the width), so a stray speck doesn't count.
+2. The target is the median of those values over the selected frames.
+3. Each frame is shifted by whole pixels toward the target, and the uncovered area becomes transparent.
+4. It runs after flicker reduction and before painted edits, so what you paint is what you see.
+
+### Trim and shared frame
+
+1. For each animation, the opaque bounding boxes of the selected frames are merged, and the **anchor** is computed: the median horizontal center of mass, rounded to a pixel boundary, on the lowest feet line in the loop.
+2. **Trim only:** each animation's frame is its merged box plus the margin.
+3. **Same size and anchor:** every box is expressed relative to its own anchor, the extents are merged across the set, and each animation is placed so its anchor falls on the same pixel of one shared frame.
+4. The Unity pivot is the anchor inside the frame, normalized with a bottom-left origin: `pivotX = anchorX / width`, `pivotY = (height − anchorY) / height`.
+
 ### Seam metric
 
 The share of pixels whose palette index differs between the last and first selected frames, compared with the median frame-to-frame change.
@@ -651,28 +811,35 @@ A built-in GIF89a encoder writes the exact palette (padded to a power of two), w
 ```json
 {
   "format": "bitreel.pixelsheet",
-  "version": 1,
-  "name": "runner",
-  "image": "runner_sheet.png",
-  "sheetWidth": 455, "sheetHeight": 400,
-  "frameWidth": 91, "frameHeight": 100,
+  "version": 2,
+  "name": "punk_run",
+  "stateName": "run",
+  "controller": "punk",
+  "isDefaultState": true,
+  "image": "punk_run_sheet.png",
+  "sheetWidth": 465, "sheetHeight": 396,
+  "frameWidth": 93, "frameHeight": 99,
   "columns": 5, "rows": 4, "padding": 0,
   "frameCount": 18,
   "fps": 12,
   "loopMode": "loop",
   "pixelsPerUnit": 16,
-  "pivotX": 0.5, "pivotY": 0,
+  "pivotX": 0.51613, "pivotY": 0.0101,
+  "anchor": { "x": 48, "y": 98 },
+  "trimmed": true,
+  "sharedFrame": true,
   "filterMode": "Point",
   "compression": "None",
   "createAnimator": true,
   "transparentIndex": -1,
   "palette": ["#1a1c2c", "…"],
   "key": { "color": "#ff2dfd", "tolerance": 22, "choke": 0 },
+  "stabilize": { "horizontal": true, "vertical": "feet" },
   "paintedFrames": [3, 7],
   "coordinateOrigin": "top-left",
   "frames": [
-    { "index": 0, "x": 0, "y": 0, "w": 91, "h": 100, "time": 0,
-      "sourceFrame": 0, "sourceTime": 2.67 }
+    { "index": 0, "x": 0, "y": 0, "w": 93, "h": 99, "time": 0,
+      "sourceFrame": 0, "sourceTime": 2.25, "stabilizeOffset": { "x": 1, "y": 0 } }
   ],
   "source": { "file": "112.mp4", "crop": { "x": 351, "y": 0, "w": 658, "h": 720 },
               "in": 2.67, "out": 4.17, "sampleFps": 12 },
@@ -684,7 +851,11 @@ A built-in GIF89a encoder writes the exact palette (padded to a power of two), w
 ```
 
 - Frame rects use a **top-left** origin. The importer converts them to Unity's bottom-left origin.
-- `loopMode` is `loop` or `pingpong`.
+- `name` is the sprite and clip name, `stateName` the animation's state in `controller`. `isDefaultState` marks the set's first animation.
+- `anchor` is the anchor pixel inside the frame (top-left origin). `pivotX` and `pivotY` are already normalized for Unity.
+- `stabilizeOffset` appears on frames that stabilization moved. It's in pixels, positive to the right and down. `stabilize` is `null` when it's off.
+- Version 1 manifests (no `controller` or `stateName`) still import, as a controller of their own.
+- `loopMode` is `loop`, `pingpong` or `once`. The importer turns off loop time for `once`.
 - `key` is `null` when no key is active.
 - `conversion.mode` is `downscale` or `grid-snap`.
 
@@ -695,8 +866,8 @@ A `.bitreel` file is a ZIP container with this layout:
 | Entry | Contents |
 |---|---|
 | `mimetype` | The text `application/x-bitreel`. Always the first entry and stored uncompressed, so tools can identify the file. |
-| `project.json` | Project metadata, the current state and every saved version. |
-| `frames/<id>.png` or `.webp` | Frame atlases: all extracted frames of one extraction packed in a grid. Grid-snap and small sets are lossless PNG, large downscale sets are WebP at quality 0.95. |
+| `project.json` | Project metadata, the current set state and every saved version. |
+| `frames/<id>.png` or `.webp` | Frame atlases: all extracted frames of one animation packed in a grid. Grid-snap and small sets are lossless PNG, large downscale sets are WebP at quality 0.95. |
 | `thumbs/current.png`, `thumbs/<versionId>.png` | Thumbnails. |
 
 `project.json`:
@@ -704,12 +875,12 @@ A `.bitreel` file is a ZIP container with this layout:
 ```json
 {
   "format": "bitreel",
-  "formatVersion": 1,
+  "formatVersion": 2,
   "app": "BitReel",
   "name": "runner",
   "created": "2026-10-22T14:02:11.000Z",
   "modified": "2026-10-22T14:20:45.000Z",
-  "current": { "thumb": "thumbs/current.png", "state": { "…": "a state, see below" } },
+  "current": { "thumb": "thumbs/current.png", "state": { "…": "a set state, see below" } },
   "versions": [
     { "id": "vmvjmjou2", "name": "gameboy palette", "createdAt": "2026-10-22T14:15:03.000Z",
       "thumb": "thumbs/vmvjmjou2.png", "state": { "…": "a state" } }
@@ -717,19 +888,39 @@ A `.bitreel` file is a ZIP container with this layout:
 }
 ```
 
-A **state** holds:
+A **set state** holds:
 
-| Fields | Contents |
+```json
+{
+  "app": "bitreel", "v": 2,
+  "shared": { "out": {}, "pal": ["#1a1c2c", "…"], "presetName": "Custom", "trans": -1,
+              "key": { "on": true, "rgb": [255, 45, 253], "tol": 22, "choke": 0 }, "exp": {} },
+  "animations": [ { "…": "an animation, see below" } ],
+  "current": 0
+}
+```
+
+| `shared` field | Contents |
 |---|---|
-| `atlasId`, `atlasType`, `cols` | Which atlas in `frames/` holds this state's frames, and its grid columns. |
-| `frameCount`, `workW`, `workH`, `times`, `on` | Frame count and size, source time of each frame, and the selection. |
 | `out` | Pixels, dither and flicker settings, including `native`. |
 | `pal`, `presetName`, `trans` | Palette as hex, preset name, transparent swatch index (`-1` for none). |
 | `key` | `on`, `rgb`, `tol`, `choke`. |
+| `exp` | Export settings: set name, scale, PPU, pivot, sheet columns, padding, trim, same size, margin, which animations. |
+
+Each **animation** holds:
+
+| Fields | Contents |
+|---|---|
+| `id`, `name` | Stable id and display name. |
+| `atlasId`, `atlasType`, `cols` | Which atlas in `frames/` holds its frames, and its grid columns. `null` for an animation with no frames yet. |
+| `frameCount`, `workW`, `workH`, `times`, `on` | Frame count and size, source time of each frame, and the selection. |
 | `conv`, `native`, `grid` | Conversion mode, whether frames are grid-snapped, and the grid (`w`, `h`, `x`, `y`, `sq`, `track`, …). |
-| `play`, `exp` | Output FPS and loop mode, and export settings. |
+| `play` | Frame rate and loop mode. |
 | `source` | Source file name, crop, in and out, sampling rate. |
+| `stab` | Stabilization: `x` (true or false) and `y` (`off`, `feet` or `center`). |
 | `edits` | Painted edits, keyed by output size (`"91x100"`) and frame index. Each is a flat `[pixelIndex, value, …]` list, where `value` is `0xRRGGBB` for a color or `-2` for transparent. |
+
+Format 1 projects, where the state held a single animation at the top level, still open as a set of one.
 
 Atlas ids are a hash of the frame data plus the size, for example `81aa797f-320x180x24`, so identical extractions are stored once.
 
@@ -796,4 +987,4 @@ Created by Luc Leclerc, ATV Studio, Montreal.
 
 Grid-snap reconstruction was written from scratch. [pixel-bench](https://github.com/Retro-Diffusion/pixel-bench) by Retro Diffusion, an open benchmark for pixel-art reconstruction, informed the testing approach.
 
-License: see `LICENSE`.
+Released under the [MIT License](LICENSE.md): free to use, modify and distribute, including in commercial projects. Sprites, GIFs, videos and Unity packages you make with BitReel are yours.
