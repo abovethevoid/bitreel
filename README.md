@@ -328,6 +328,22 @@ The crop, the current Pixels adjustments and the key are all applied first. Back
 
 When a video loads, BitReel samples three frames. If it finds a clear grid between 3 and 48 px, it switches to Grid snap. Otherwise it uses Downscale. The status line says which one it chose. The mode is remembered between sessions.
 
+### Game tiles
+
+Use this to make a character come out at the right size for your game's tile grid, for example 2 tiles tall on 32 px tiles.
+
+1. Turn on **Fit to game tiles** and pick the **Tile** size: 8, 16, 24, 32, 48, 64 or 128 px.
+2. Tile lines appear over the source in cyan. In Grid snap, the pixel grid fades under them so the tiles read first.
+3. **Pixel size** sets how many source pixels make one game pixel. That is how you resize the video against the tiles: bigger means a smaller character.
+   - **Match grid** (Grid snap) uses the art's own pixels, one game pixel per detected cell.
+   - **Fit height to N tiles** measures the character in the current frame (everything not keyed out, shown as a dashed yellow box) and scales it to exactly N tiles tall. It also frames it: feet on the bottom tile line, centered sideways.
+4. Drag inside the crop to move the video under the tile grid. Resizing the crop snaps it to whole tiles. In Grid snap the pixel grid stays locked to the video while you move.
+5. The info line shows the frame in tiles and pixels, the scale, and the character's size in tiles for the current frame.
+
+When you extract, the output is exactly the frame's size in game pixels (whole tiles, like 64 × 64 for 2 × 2 tiles of 32). In Grid snap at a different scale than the art's own pixels, frames are snapped at the native grid first, then resized by picking pixels, so edges stay crisp. The output width control is locked while an animation has a tile fit.
+
+Turning tiles on also sets Unity **Pixels / unit** to the tile size, so one tile is one Unity unit. With **Trim to content** on, the exported frame grows to whole tiles, centered on the anchor sideways, with the feet on the bottom edge.
+
 ### Frames
 
 - **Sample**: 6, 8, 10, 12, 15, 24, 25, 30, 48, 50 or 60 fps.
@@ -335,6 +351,8 @@ When a video loads, BitReel samples three frames. If it finds a clear grid betwe
 - **Extract frames · downscale / grid snap**: the label always shows which mode will run.
 
 Extraction samples frames at `in + k / fps` and stops before the out point. The output FPS is set to the sampling rate.
+
+**Skip blended in-between frames** (on by default): frame-rate converters and some AI video exports add in-between frames that are a cross-fade of two real frames. Pixelated, they show up as ghosts and double outlines on moving arms and legs. BitReel checks each new video once with a short probe. If it finds blends, every extraction maps the decoded frames in the range, and any sample that lands on a blended frame uses the nearest real frame instead. The status line says how many were replaced. Videos without blends skip the check after the probe.
 
 ---
 
@@ -780,6 +798,13 @@ Each output pixel is the area average of its block of source pixels. Keyed pixel
 2. **Trim only:** each animation's frame is its merged box plus the margin.
 3. **Same size and anchor:** every box is expressed relative to its own anchor, the extents are merged across the set, and each animation is placed so its anchor falls on the same pixel of one shared frame.
 4. The Unity pivot is the anchor inside the frame, normalized with a bottom-left origin: `pivotX = anchorX / width`, `pivotY = (height − anchorY) / height`.
+
+### Blended frame detection
+
+1. Every decoded frame in the range (plus a small margin) is read as a 48 px-wide thumbnail by stepping 1/80 s at a time. Repeated pictures are merged, so each entry is one decoded frame.
+2. For each frame, take the pixels that change strongly between its two neighbors. In a cross-fade, those pixels sit part-way between the neighbors' values (18 to 82% of the way). In a real frame of motion, they sit at one end or somewhere else entirely.
+3. A frame is blended when more than half of its changing pixels sit in between.
+4. During extraction, the picture on screen after each seek is matched to its entry by content, not by time, so frame-boundary rounding can't pick the wrong one. Blended entries are replaced by the nearest real one.
 
 ### Seam metric
 
