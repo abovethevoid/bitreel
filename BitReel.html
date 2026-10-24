@@ -110,6 +110,8 @@ header.top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom
 .strow.tr{border-style:dashed}
 .arow{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:6px;align-items:center;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg)}
 .arow.cur{border-color:var(--accent)}
+.tilebox{display:grid;gap:8px}
+.tilebox .row{gap:6px}
 .esel{display:grid;gap:6px;margin:2px 0 8px}
 .esel .row{gap:6px}.esel .row .kv{margin-right:auto}
 .esellist{list-style:none;margin:0;padding:0;display:grid;gap:3px;max-height:220px;overflow:auto}
@@ -437,6 +439,28 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
           </div>
         </div>
       </div>
+      <div class="group" id="tileGroup">
+        <h3>Game tiles <span class="kv" id="tileHead"></span></h3>
+        <label class="row chk" for="tOn"><input type="checkbox" id="tOn"> Fit to game tiles</label>
+        <div class="tilebox" id="tileBox" hidden>
+          <div class="row">
+            <label class="lb" for="tSize">Tile</label>
+            <select id="tSize"><option>8</option><option>16</option><option>24</option><option selected>32</option><option>48</option><option>64</option><option>128</option></select>
+            <span class="kv">× same px</span>
+            <button class="btn sm on" id="tShow" type="button" aria-pressed="true">Show tiles</button>
+          </div>
+          <div class="slider"><label class="lb" for="tPx">Pixel size</label><input type="range" id="tPx" min="1" max="48" step="0.05" value="4"><output id="tPxv">4</output></div>
+          <div class="row">
+            <button class="btn sm" id="tMatch" type="button" title="One game pixel per detected grid cell (the art's own resolution)">Match grid</button>
+            <span class="kv">Fit height to</span>
+            <input type="number" id="tFitN" min="0.25" max="16" step="0.25" value="2" aria-label="Character height in tiles" style="width:64px">
+            <span class="kv">tiles</span>
+            <button class="btn sm" id="tFit" type="button" title="Scale so the character (everything not keyed out, in this frame) is exactly this many tiles tall">Fit</button>
+          </div>
+          <p class="note" id="tileInfo"></p>
+        </div>
+        <p class="note" id="tileNote">Set the size of your game's tiles, then scale and move the video so the character sits on the tile grid. One game pixel is one output pixel.</p>
+      </div>
       <div class="group">
         <h3>Frames</h3>
         <div class="row sp">
@@ -447,6 +471,7 @@ details.more summary{cursor:pointer;font-size:12.5px;color:var(--muted)}
           </div>
           <span class="kv" id="estRead">—</span>
         </div>
+        <label class="row chk" for="sUnblend" title="AI exports and frame-rate conversions often add in-between frames that are a cross-fade of two real frames. Those show up as ghosts. When on, BitReel finds them and uses the nearest real frame instead."><input type="checkbox" id="sUnblend" checked> Skip blended in-between frames</label>
         <button class="btn pri" id="extract" disabled>Extract frames</button>
         <div class="progress" aria-hidden="true"><b id="prog"></b></div>
       </div>
@@ -908,6 +933,7 @@ const S = {
   play: { fps: 12, mode: "loop", playing: true, pos: 0, zoom: "fit", onion: false, bg: "chk" },
   exp: { name: "sample_loop", scale: 4, ppu: 16, pivot: "anchor", cols: 0, pad: 0, loops: 4, trim: true, same: true, margin: 0, which: "all", nameAuto: true },
   stab: { x: false, y: "off" }, shifts: [], stabInfo: {},
+  tiles: { on: false, size: 32, px: 4 }, tileOut: null,   // game tiles: tile size in game pixels, source px per game pixel
   lastClick: -1
 };
 const A = { list: [], cur: 0 }; // the animations of the project (see "animation sets")
@@ -916,7 +942,7 @@ const A = { list: [], cur: 0 }; // the animations of the project (see "animation
 const LS = "bitreel:v1", LS_OLD = "pixelbench:v1";
 function savePrefs() {
   try { localStorage.setItem(LS, JSON.stringify({ out: S.out, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
-    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode, zoom: S.play.zoom, bg: S.play.bg }, exp: { ...S.exp, name: undefined, nameAuto: undefined }, key: { tol: S.key.tol, choke: S.key.choke }, conv: S.conv, grid: { sq: S.grid.sq, track: S.grid.track, show: S.grid.show } })); } catch (e) {}
+    play: { fps: S.play.fps, mode: S.play.mode === "seam" ? "loop" : S.play.mode, zoom: S.play.zoom, bg: S.play.bg }, exp: { ...S.exp, name: undefined, nameAuto: undefined }, key: { tol: S.key.tol, choke: S.key.choke }, conv: S.conv, grid: { sq: S.grid.sq, track: S.grid.track, show: S.grid.show }, tiles: { ...S.tiles } })); } catch (e) {}
 }
 function loadPrefs() {
   try {
@@ -928,6 +954,7 @@ function loadPrefs() {
     if (p.key) { S.key.tol = clamp(+p.key.tol || 22, 1, 100); S.key.choke = clamp(+p.key.choke || 0, 0, 3); }
     if (p.conv === "grid" || p.conv === "downscale") S.conv = p.conv;
     if (p.grid) { S.grid.sq = !!p.grid.sq; S.grid.track = p.grid.track !== false; S.grid.show = p.grid.show !== false; }
+    if (p.tiles) Object.assign(S.tiles, p.tiles);
     if (S.pal.length > MAX_PAL) S.pal = S.pal.slice(0, MAX_PAL);
   } catch (e) {}
 }
@@ -1039,20 +1066,22 @@ const BAYER = { bayer2: bayer(2), bayer4: bayer(4), bayer8: bayer(8) };
 const maxOutW = () => Math.max(16, Math.floor((S.workW || 16) / 16) * 16);
 const snap16 = v => clamp(Math.round(v / 16) * 16, 16, maxOutW());
 function outDims() {
+  if (S.tileOut) return S.tileOut.slice();
   if (S.native && S.out.native) return [S.workW, S.workH];
   const w = snap16(S.out.w);
   const h = Math.max(1, Math.round(w * S.workH / S.workW));
   return [w, h];
 }
-function prepFrame(src, sw, sh, dw, dh) {
+function prepFrame(src, sw, sh, dw, dh, nearest) {
   const out = new Float32Array(dw * dh * 3), mask = new Uint8Array(dw * dh), kc = !!keyCache;
   const sx = sw / dw, sy = sh / dh, o = S.out;
   const cf = (259 * (o.con * 2.55 + 255)) / (255 * (259 - o.con * 2.55));
   const bri = o.bri * 1.28, sat = 1 + o.sat / 100, ig = 1 / o.gam;
   for (let oy = 0; oy < dh; oy++) {
-    const y0 = Math.floor(oy * sy), y1 = Math.max(y0 + 1, Math.min(sh, Math.floor((oy + 1) * sy)));
+    // grid-snapped frames are already clean pixel art: resize them by picking pixels, never by averaging
+    const y0 = nearest ? Math.min(sh - 1, Math.floor((oy + 0.5) * sy)) : Math.floor(oy * sy), y1 = nearest ? y0 + 1 : Math.max(y0 + 1, Math.min(sh, Math.floor((oy + 1) * sy)));
     for (let ox = 0; ox < dw; ox++) {
-      const x0 = Math.floor(ox * sx), x1 = Math.max(x0 + 1, Math.min(sw, Math.floor((ox + 1) * sx)));
+      const x0 = nearest ? Math.min(sw - 1, Math.floor((ox + 0.5) * sx)) : Math.floor(ox * sx), x1 = nearest ? x0 + 1 : Math.max(x0 + 1, Math.min(sw, Math.floor((ox + 1) * sx)));
       let r = 0, g = 0, b = 0, n = 0, kn = 0;
       for (let y = y0; y < y1; y++) {
         let i = (y * sw + x0) * 4;
@@ -1182,7 +1211,7 @@ function computeCore() {
   if (prepDirty || w !== S.outW || h !== S.outH) {
     S.outW = w; S.outH = h;
     rebuildKey();
-    S.prep = S.frames.map(f => prepFrame(f.data, S.workW, S.workH, w, h));
+    S.prep = S.frames.map(f => prepFrame(f.data, S.workW, S.workH, w, h, S.native));
     prepDirty = false;
   }
   rebuildQuant();
@@ -1648,11 +1677,14 @@ function drawSource() {
     ctx.lineWidth = 1; ctx.beginPath();
     for (let x = c.x + g.x; x <= c.x + c.w; x += g.w) { const X = Math.round(ox + x * s) + 0.5; ctx.moveTo(X, cy); ctx.lineTo(X, cy + ch); }
     for (let y = c.y + g.y; y <= c.y + c.h; y += g.h) { const Y = Math.round(oy + y * s) + 0.5; ctx.moveTo(cx, Y); ctx.lineTo(cx + cw, Y); }
-    ctx.strokeStyle = "rgba(0,0,0,.35)"; ctx.stroke(); ctx.translate(1, 1); ctx.strokeStyle = "rgba(255,255,255,.35)"; ctx.stroke(); ctx.restore();
+    const ga = S.tiles.on && S.tiles.show !== false ? 0.18 : 0.35; // fainter under the tile lines, so the tiles read first
+    ctx.strokeStyle = "rgba(0,0,0," + ga + ")"; ctx.stroke(); ctx.translate(1, 1); ctx.strokeStyle = "rgba(255,255,255," + ga + ")"; ctx.stroke(); ctx.restore();
   }
+  if (S.tiles.on && S.tiles.show !== false) drawTiles(ctx, s, ox, oy, cx, cy, cw, ch);
   const ac = accentColor(); ctx.strokeStyle = ac; ctx.lineWidth = 2; ctx.strokeRect(cx, cy, cw, ch);
   ctx.fillStyle = ac; for (const [hx, hy] of [[cx, cy], [cx + cw, cy], [cx, cy + ch], [cx + cw, cy + ch]]) ctx.fillRect(hx - 5, hy - 5, 10, 10);
   $("#cropRead").textContent = c.w + " × " + c.h + " @ " + c.x + "," + c.y;
+  if (S.tiles.on && !srcPlaying) updateTileInfo();
 }
 new ResizeObserver(() => { drawSource(); sizeOut(); }).observe($("#srcStage"));
 new ResizeObserver(() => sizeOut()).observe($("#outStage"));
@@ -1685,11 +1717,16 @@ srcCv.addEventListener("pointerdown", e => {
 srcCv.addEventListener("pointermove", e => {
   if (!drag) return;
   const p = toSrc(e);
-  if (drag.mode === "move") { const c = drag.c0; S.crop = { ...c, x: Math.round(clamp(c.x + p.x - drag.start.x, 0, S.src.w - c.w)), y: Math.round(clamp(c.y + p.y - drag.start.y, 0, S.src.h - c.h)) }; }
-  else S.crop = rectFrom(drag.anchor, p);
+  if (drag.mode === "move") {
+    const c = drag.c0, nx = Math.round(clamp(c.x + p.x - drag.start.x, 0, S.src.w - c.w)), ny = Math.round(clamp(c.y + p.y - drag.start.y, 0, S.src.h - c.h));
+    // the pixel grid belongs to the video, not the crop: shift its offset so it stays on the same source pixels
+    if (S.grid.set) { const g = S.grid; if (drag.g0 === undefined) drag.g0 = { x: g.x, y: g.y }; g.x = (((drag.g0.x - (nx - c.x)) % g.w) + g.w) % g.w; g.y = (((drag.g0.y - (ny - c.y)) % g.h) + g.h) % g.h; syncGridUI(); }
+    S.crop = { ...c, x: nx, y: ny };
+  }
+  else { S.crop = rectFrom(drag.anchor, p); if (S.tiles.on) snapCropToTiles(drag.anchor); }
   drawSource(); updateEst();
 });
-const endDrag = () => { drag = null; };
+const endDrag = () => { if (drag && S.tiles.on && drag.mode !== "move") { snapCropToTiles(); drawSource(); updateEst(); } drag = null; updateTileInfo(); };
 srcCv.addEventListener("pointerup", endDrag); srcCv.addEventListener("pointercancel", endDrag);
 $("#aspect").addEventListener("change", e => {
   S.aspect = e.target.value; if (!S.src) return;
@@ -1700,6 +1737,107 @@ $("#aspect").addEventListener("change", e => {
   drawSource(); updateEst();
 });
 $("#cropReset").addEventListener("click", () => { if (!S.src) return; S.aspect = "free"; $("#aspect").value = "free"; S.crop = { x: 0, y: 0, w: S.src.w, h: S.src.h }; drawSource(); updateEst(); });
+
+/* game tiles */
+const tileSrc = () => S.tiles.size * S.tiles.px;                     // one tile, in source pixels
+// where the tile lattice starts: on a pixel-grid line in grid snap, so tiles never split a game pixel
+function tileOrigin() {
+  const c = S.crop, g = S.grid, onGrid = S.conv === "grid" && g.set && Math.abs(S.tiles.px - g.w) < 0.02;
+  return onGrid ? [c.x + g.x, c.y + g.y] : [c.x, c.y];
+}
+function tileDims() {
+  const c = S.crop, [x0, y0] = tileOrigin(), T = tileSrc();
+  const nx = Math.max(1, Math.round((c.x + c.w - x0) / T)), ny = Math.max(1, Math.round((c.y + c.h - y0) / T));
+  return [nx * S.tiles.size, ny * S.tiles.size];
+}
+// whole tiles only; keeps the bottom-center of the crop (the feet) where it was
+function snapCropToTiles(anchor) {
+  if (!S.src || !S.tiles.on) return;
+  const c = S.crop, T = tileSrc(), [x0, y0] = tileOrigin(), lx = x0 - c.x, ly = y0 - c.y;
+  const maxNx = Math.max(1, Math.floor((S.src.w - lx) / T)), maxNy = Math.max(1, Math.floor((S.src.h - ly) / T));
+  const nx = clamp(Math.round((c.w - lx) / T), 1, maxNx), ny = clamp(Math.round((c.h - ly) / T), 1, maxNy);
+  const w = Math.min(S.src.w, Math.ceil(lx + nx * T)), h = Math.min(S.src.h, Math.ceil(ly + ny * T));
+  let x, y;
+  if (anchor) { x = anchor.x > c.x + c.w / 2 ? anchor.x - w : anchor.x; y = anchor.y > c.y + c.h / 2 ? anchor.y - h : anchor.y; }
+  else { x = c.x + c.w / 2 - w / 2; y = c.y + c.h - h; }
+  S.crop = { x: Math.round(clamp(x, 0, S.src.w - w)), y: Math.round(clamp(y, 0, S.src.h - h)), w, h };
+}
+// the character in the current source frame: everything inside the crop that isn't keyed out
+let tileProbe = { cv: document.createElement("canvas"), key: "", box: null };
+function characterBox() {
+  if (!S.src || !S.key.on || !S.key.rgb) return null;
+  // the whole frame, so a crop that cuts the character off can't shrink the measurement
+  const c = { x: 0, y: 0, w: S.src.w, h: S.src.h }, k = Math.min(1, 360 / Math.max(c.w, c.h)), w = Math.max(1, Math.round(c.w * k)), h = Math.max(1, Math.round(c.h * k));
+  const id = [video.currentTime.toFixed(3), S.key.rgb.join(), S.key.tol].join("|");
+  if (id === tileProbe.key) return tileProbe.box;
+  rebuildKey();
+  const cv = tileProbe.cv; cv.width = w; cv.height = h; const ctx = cv.getContext("2d", { willReadFrequently: true });
+  ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, w, h); const d = ctx.getImageData(0, 0, w, h).data;
+  let x0 = w, y0 = h, x1 = -1, y1 = -1;
+  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) { const i = (y * w + x) * 4; if (!isKeyed(d[i], d[i + 1], d[i + 2])) { if (x < x0) x0 = x; if (x > x1) x1 = x; if (y < y0) y0 = y; if (y > y1) y1 = y; } }
+  tileProbe.key = id;
+  tileProbe.box = x1 < 0 ? null : { x: c.x + x0 / k, y: c.y + y0 / k, w: (x1 - x0 + 1) / k, h: (y1 - y0 + 1) / k };
+  return tileProbe.box;
+}
+function drawTiles(ctx, s, ox, oy, cx, cy, cw, ch) {
+  const c = S.crop, T = tileSrc(), [x0, y0] = tileOrigin();
+  ctx.save(); ctx.beginPath(); ctx.rect(cx, cy, cw, ch); ctx.clip();
+  ctx.beginPath();
+  for (let x = x0; x <= c.x + c.w + 0.5; x += T) { const X = Math.round(ox + x * s) + 0.5; ctx.moveTo(X, cy); ctx.lineTo(X, cy + ch); }
+  for (let y = y0; y <= c.y + c.h + 0.5; y += T) { const Y = Math.round(oy + y * s) + 0.5; ctx.moveTo(cx, Y); ctx.lineTo(cx + cw, Y); }
+  ctx.lineWidth = 4; ctx.strokeStyle = "rgba(0,0,0,.5)"; ctx.stroke();
+  ctx.lineWidth = 2; ctx.strokeStyle = "#22d3ee"; ctx.stroke();
+  const b = characterBox();
+  ctx.restore(); ctx.save();
+  if (b) { ctx.setLineDash([5, 4]); ctx.lineWidth = 1.5; ctx.strokeStyle = "#ffd23f"; ctx.strokeRect(ox + b.x * s, oy + b.y * s, b.w * s, b.h * s); ctx.setLineDash([]); }
+  ctx.restore();
+}
+function updateTileInfo() {
+  const on = S.tiles.on, T = S.tiles.size, px = S.tiles.px;
+  $("#tileBox").hidden = !on; $("#tOn").checked = on;
+  $("#tSize").value = T; $("#tPx").value = px; $("#tPxv").textContent = px.toFixed(2);
+  $("#tShow").classList.toggle("on", S.tiles.show !== false); $("#tShow").setAttribute("aria-pressed", S.tiles.show !== false ? "true" : "false");
+  $("#tMatch").disabled = !(S.conv === "grid" && S.grid.set);
+  if (!on || !S.src) { $("#tileHead").textContent = on ? "load a video" : ""; $("#tileInfo").textContent = ""; return; }
+  const [w, h] = tileDims(), b = characterBox(), g = S.grid;
+  $("#tileHead").textContent = w / T + " × " + h / T + " tiles";
+  let t = "Frame " + w / T + " × " + h / T + " tiles (" + w + " × " + h + " px). One game pixel = " + px.toFixed(2) + " source px";
+  if (S.conv === "grid" && g.set) t += " (" + Math.round(g.w / px * 100) + "% of the art's own pixels)";
+  t += ". ";
+  t += b ? "Character ≈ " + (b.w / px / T).toFixed(2) + " × " + (b.h / px / T).toFixed(2) + " tiles (" + Math.round(b.w / px) + " × " + Math.round(b.h / px) + " px) in this frame." : S.key.on ? "No character found in this frame." : "Key out the background to measure the character.";
+  $("#tileInfo").textContent = t;
+}
+function setTilePx(v, keep) {
+  S.tiles.px = clamp(+v || 1, 1, 48);
+  snapCropToTiles(); drawSource(); updateEst(); updateTileInfo(); savePrefs(); markDirty(true);
+}
+$("#tOn").addEventListener("change", e => {
+  S.tiles.on = e.target.checked;
+  if (S.tiles.on) {
+    // start from the art's own pixels in grid snap, or from the current output scale
+    if (S.conv === "grid" && S.grid.set) S.tiles.px = S.grid.w;
+    else if (S.src) S.tiles.px = clamp(S.crop.w / snap16(S.out.w || 128), 1, 48);
+    S.exp.ppu = S.tiles.size; $("#ePPU").value = S.exp.ppu;
+    snapCropToTiles();
+    status("Game tiles on: " + S.tiles.size + " px tiles, and Unity pixels per unit set to " + S.tiles.size + " so one tile is one unit. Scale with Pixel size, drag the crop to move the character on the grid, then extract.", "good");
+  }
+  drawSource(); updateEst(); updateTileInfo(); savePrefs(); markDirty(true);
+});
+$("#tSize").addEventListener("change", e => { S.tiles.size = +e.target.value; S.exp.ppu = S.tiles.size; $("#ePPU").value = S.exp.ppu; setTilePx(S.tiles.px); });
+$("#tPx").addEventListener("input", e => setTilePx(e.target.value));
+$("#tShow").addEventListener("click", () => { S.tiles.show = S.tiles.show === false; drawSource(); updateTileInfo(); savePrefs(); });
+$("#tMatch").addEventListener("click", () => { if (S.grid.set) setTilePx(S.grid.w); });
+$("#tFit").addEventListener("click", () => {
+  const b = characterBox(), n = clamp(+$("#tFitN").value || 2, 0.25, 16);
+  if (!b) { status(S.key.on ? "No character found in this frame. Move to a frame where it's visible." : "Key out the background first, so BitReel can measure the character.", "err"); return; }
+  S.tiles.px = clamp(b.h / (n * S.tiles.size), 1, 48);
+  // frame the character: feet on the bottom tile line, centered, at least as many tiles as before
+  const T = tileSrc(), c = S.crop, nx = Math.max(Math.ceil(b.w / T - 0.02), Math.round(c.w / T)), ny = Math.max(Math.ceil(b.h / T - 0.02), Math.round(c.h / T));
+  const w = Math.min(S.src.w, Math.ceil(nx * T)), hh = Math.min(S.src.h, Math.ceil(ny * T));
+  S.crop = { x: Math.round(clamp(b.x + b.w / 2 - w / 2, 0, S.src.w - w)), y: Math.round(clamp(b.y + b.h - hh, 0, S.src.h - hh)), w, h: hh };
+  setTilePx(S.tiles.px);
+  status("Scaled so the character is " + n + " tiles (" + Math.round(n * S.tiles.size) + " px) tall in this frame.", "good");
+});
 
 /* trim */
 function syncTrim() {
@@ -1713,6 +1851,7 @@ function syncTrim() {
 function updateEst() {
   if (!S.src) { $("#estRead").textContent = "load a video"; return; }
   const n = Math.max(1, Math.floor((S.tOut - S.tIn) * S.sampleFps + 1e-6));
+  if (S.tiles.on) { const [tw, th] = tileDims(); $("#estRead").textContent = Math.min(n, MAX_FRAMES) + " frames · " + tw + " × " + th + " px · " + tw / S.tiles.size + " × " + th / S.tiles.size + " tiles"; if (S.conv === "grid") syncGridUI(); return; }
   if (S.conv === "grid") { const [gc, gr] = gridDims(); $("#estRead").textContent = Math.min(n, MAX_FRAMES) + " frames" + (n > MAX_FRAMES ? " (capped)" : "") + (S.grid.set ? " · " + gc + " × " + gr + " native" : " · grid not set"); syncGridUI(); return; }
   const k = Math.min(1, WORK_MAX / Math.max(S.crop.w, S.crop.h));
   $("#estRead").textContent = Math.min(n, MAX_FRAMES) + " frames" + (n > MAX_FRAMES ? " (capped)" : "") + " · max " + Math.round(S.crop.w * k) + " px wide";
@@ -1732,6 +1871,49 @@ $("#sFps").addEventListener("change", e => { S.sampleFps = +e.target.value; upda
 
 /* extraction */
 let extracting = false;
+// Blended frames: frame-rate converters (and some AI exports) make in-between frames that are a cross-fade of two
+// real frames, which look like ghosts or double outlines once pixelated. Walk every decoded frame in the range,
+// flag the ones that are a mix of their neighbors, and map each sample time to the nearest real frame.
+async function cleanFrameMap(t0, t1, onProg) {
+  const c = S.crop, tw = 48, th = Math.max(8, Math.round(48 * c.h / c.w));
+  const cv = document.createElement("canvas"); cv.width = tw; cv.height = th;
+  const ctx = cv.getContext("2d", { willReadFrequently: true });
+  const grab = () => { ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, tw, th); const d = ctx.getImageData(0, 0, tw, th).data, f = new Float32Array(tw * th * 3); for (let i = 0, j = 0; i < d.length; i += 4) { f[j++] = d[i]; f[j++] = d[i + 1]; f[j++] = d[i + 2]; } return f; };
+  const md = (a, b) => { let s = 0; for (let i = 0; i < a.length; i++) s += Math.abs(a[i] - b[i]); return s / a.length; };
+  const step = 1 / 80, lo = Math.max(0, t0 - 0.08), hi = Math.min(S.src.dur - 0.001, t1 + 0.08), U = [];
+  for (let t = lo, k = 0; t <= hi + 1e-9; t += step, k++) {
+    await seek(t); const f = grab(), last = U[U.length - 1];
+    if (last && md(f, last.f) < 0.35) last.end = t; else U.push({ start: t, end: t, f });
+    if (onProg && k % 8 === 0) onProg((t - lo) / (hi - lo));
+  }
+  // a cross-fade puts every changing pixel part-way between its two neighbors; a real frame of motion puts
+  // changing pixels at one end (or somewhere else entirely). Count how many changing pixels sit in between.
+  U.forEach((u, i) => {
+    u.blend = false; if (i === 0 || i === U.length - 1) return;
+    const a = U[i - 1].f, b = U[i].f, n = U[i + 1].f;
+    let m = 0, inside = 0;
+    for (let j = 0; j < b.length; j += 3) {
+      const dn = (n[j] - a[j]) + (n[j + 1] - a[j + 1]) + (n[j + 2] - a[j + 2]);
+      if (Math.abs(dn) <= 60) continue;
+      const t = ((b[j] - a[j]) + (b[j + 1] - a[j + 1]) + (b[j + 2] - a[j + 2])) / dn;
+      m++; if (t > 0.18 && t < 0.82) inside++;
+    }
+    u.blend = m >= 15 && inside / m > 0.5;
+  });
+  const real = U.filter(u => !u.blend);
+  // which decoded frame is on screen right now (by its picture, not its time, so frame-boundary rounding can't fool it)
+  const which = () => { const f = grab(); let bi = 0, bd = Infinity; U.forEach((u, i) => { const d = md(f, u.f); if (d < bd) { bd = d; bi = i; } }); return bi; };
+  // seek to t; if that shows a blended frame, move to the nearest real one (seeking to the time it was seen at)
+  const pick = async t => {
+    await seek(t);
+    const i = which(); if (!U[i].blend || !real.length) return { t, blended: false };
+    let best = null, bd = Infinity;
+    U.forEach((u, j) => { if (!u.blend && Math.abs(j - i) < bd) { bd = Math.abs(j - i); best = u; } });
+    await seek(best.start);
+    return { t: best.start, blended: true };
+  };
+  return { pick, total: U.length, blended: U.length - real.length };
+}
 async function extractRange(quiet) {
   if (!S.src || extracting) return false;
   extracting = true; $("#extract").disabled = true;
@@ -1742,14 +1924,31 @@ async function extractRange(quiet) {
     const [gc, gr] = gridDims();
     if (gc < 4 || gr < 4 || gc > 640 || gr > 640) { status("That grid gives " + gc + " × " + gr + " pixels. Check the cell size.", "err"); extracting = false; $("#extract").disabled = false; return false; }
   }
-  const k = Math.min(1, WORK_MAX / Math.max(c.w, c.h));
+  const tdims = S.tiles.on ? tileDims() : null;
+  const k = Math.min(1, Math.max(WORK_MAX, tdims ? 2 * Math.max(tdims[0], tdims[1]) : 0) / Math.max(c.w, c.h));
   const [W, H] = grid ? gridDims() : [Math.max(8, Math.round(c.w * k)), Math.max(8, Math.round(c.h * k))];
   const cv = document.createElement("canvas"); cv.width = grid ? c.w : W; cv.height = grid ? c.h : H;
   const ctx = cv.getContext("2d", { willReadFrequently: true }); ctx.imageSmoothingQuality = "high";
   const frames = [];
+  let cmap = null, swapped = 0;
   try {
+    if (S.out.unblend !== false && S.src.blends !== false) {
+      // blends come from how the whole file was made, so a short probe tells whether this video has any
+      if (S.src.blends === undefined) {
+        if (!quiet) status("Checking this video for blended in-between frames…");
+        const p0 = Math.max(0, Math.min(S.tIn, S.src.dur - 0.6)), probe = await cleanFrameMap(p0, Math.min(S.src.dur, p0 + 0.5));
+        S.src.blends = probe.blended > 0;
+      }
+      if (S.src.blends) {
+        if (!quiet) status("This video has blended in-between frames. Mapping the real ones…");
+        cmap = await cleanFrameMap(S.tIn, S.tIn + (n - 1) / fps, f => { $("#prog").style.width = (f * 30) + "%"; });
+        if (!cmap.blended) cmap = null;
+      }
+    }
     for (let i = 0; i < n; i++) {
-      const t = S.tIn + i / fps; await seek(t);
+      const t = S.tIn + i / fps; let tt = t;
+      if (cmap) { const pk = await cmap.pick(t); if (pk.blended) { tt = pk.t; swapped++; } }
+      else await seek(tt);
       if (grid) {
         ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, c.w, c.h);
         const out = new Uint8ClampedArray(W * H * 4); snapFrame(ctx.getImageData(0, 0, c.w, c.h).data, c.w, c.h, W, H, S.grid, out);
@@ -1758,7 +1957,7 @@ async function extractRange(quiet) {
         ctx.drawImage(video, c.x, c.y, c.w, c.h, 0, 0, W, H);
         frames.push({ data: ctx.getImageData(0, 0, W, H).data, t: t, on: true });
       }
-      $("#prog").style.width = ((i + 1) / n * 100) + "%";
+      $("#prog").style.width = ((cmap ? 30 : 0) + (i + 1) / n * (cmap ? 70 : 100)) + "%";
       if (i % 4 === 0) status("Extracting frame " + (i + 1) + " of " + n + "…");
     }
   } catch (err) {
@@ -1768,16 +1967,18 @@ async function extractRange(quiet) {
   S.frames = frames; S.workW = W; S.workH = H; S.play.pos = 0; S.lastClick = -1;
   S.edits = {}; S.undo = []; S.redo = []; updateUndo();
   S.play.fps = fps; $("#pFps").value = fps;
-  S.native = grid; S.out.native = true;
+  S.native = grid; S.out.native = true; S.tileOut = tdims;
   if (grid && S.out.dith !== "none") { S.out.dith = "none"; $("#dith").value = "none"; }
   configWidth();
   buildThumbs(); prepDirty = true; runProcess();
   extracting = false; $("#extract").disabled = false;
   setTimeout(() => $("#prog").style.width = "0", 600);
-  if (!quiet) { status(n + " frames extracted" + (grid ? " at the native " + W + " × " + H + " grid (dither set to None)" : "") + ". Tune pixels and palette, then check the loop.", "good"); scrubTo(S.tIn); }
+  S.lastSwapped = swapped;
+  if (!quiet) { status(n + " frames extracted" + (tdims ? " at " + tdims[0] + " × " + tdims[1] + " px (" + tdims[0] / S.tiles.size + " × " + tdims[1] / S.tiles.size + " tiles of " + S.tiles.size + ")" : grid ? " at the native " + W + " × " + H + " grid" : "") + (grid ? " (dither set to None)" : "") + (swapped ? ". " + swapped + " landed on blended in-between frames and were replaced by the nearest real frame" : "") + ". Tune pixels and palette, then check the loop.", "good"); scrubTo(S.tIn); }
   return true;
 }
 $("#extract").addEventListener("click", () => extractRange(false));
+$("#sUnblend").addEventListener("change", e => { S.out.unblend = e.target.checked; savePrefs(); });
 
 function configWidth() {
   const r = $("#oW"); r.max = maxOutW();
@@ -1785,7 +1986,9 @@ function configWidth() {
   r.value = S.out.w; $("#oWv").textContent = S.out.w;
   $("#nativeRow").hidden = !S.native; $("#oNative").checked = S.out.native;
   $("#nativeLabel").textContent = "Native grid resolution (" + S.workW + " × " + S.workH + ")";
-  r.disabled = S.native && S.out.native;
+  r.disabled = (S.native && S.out.native) || !!S.tileOut;
+  if (S.tileOut) { $("#nativeRow").hidden = false; $("#oNative").disabled = true; $("#nativeLabel").textContent = "Tile fit (" + S.tileOut[0] + " × " + S.tileOut[1] + " px). Turn off Fit to game tiles and extract again to change"; }
+  else $("#oNative").disabled = false;
 }
 $("#oNative").addEventListener("change", e => { S.out.native = e.target.checked; configWidth(); schedule(true); });
 
@@ -2052,7 +2255,18 @@ function animInfo(a) {
 }
 function infoFor(a) { return a === curAnim() ? animInfo(a) : withAnim(a, () => animInfo(a)); }
 // Cell size, where the cell sits in each animation's frame (ox, oy) and the anchor inside the cell (ax, ay).
-function layoutsFor(infos) {
+function layoutsFor(infos) { return tileRound(layoutsRaw(infos)); }
+// with game tiles on, a trimmed frame grows to whole tiles: centered on the anchor sideways, extra room added on top
+function tileRound(lays) {
+  if (!S.tiles.on || !S.exp.trim) return lays;
+  const T = S.tiles.size;
+  return lays.map(L => {
+    const W = Math.max(T, Math.ceil(L.cw / T) * T), H = Math.max(T, Math.ceil(L.ch / T) * T);
+    const left = Math.floor((W - L.cw) / 2), top = H - L.ch;
+    return { cw: W, ch: H, ox: L.ox - left, oy: L.oy - top, ax: L.ax + left, ay: L.ay + top };
+  });
+}
+function layoutsRaw(infos) {
   const mg = S.exp.margin | 0;
   if (!S.exp.trim) return infos.map(i => ({ cw: i.w, ch: i.h, ox: 0, oy: 0, ax: i.A.x, ay: i.A.y }));
   if (S.exp.same) {
@@ -2908,7 +3122,7 @@ function animState(a, atlasId) {
     frameCount: a.frames.length, workW: a.workW, workH: a.workH,
     times: a.frames.map(f => +f.t.toFixed(4)), on: a.frames.map(f => f.on ? 1 : 0),
     native: a.native, conv: a.conv, grid: { ...a.grid }, play: { fps: a.fps, mode: a.mode === "seam" ? "loop" : a.mode },
-    source: a.source ? JSON.parse(JSON.stringify(a.source)) : null, stab: { ...a.stab }, oneShot: !!a.oneShot, exportOn: a.exportOn !== false, edits: encEdits(a.edits) };
+    source: a.source ? JSON.parse(JSON.stringify(a.source)) : null, stab: { ...a.stab }, oneShot: !!a.oneShot, exportOn: a.exportOn !== false, tileOut: a.tileOut || null, edits: encEdits(a.edits) };
 }
 async function setState() {
   stashAnim(curAnim());
@@ -2916,7 +3130,7 @@ async function setState() {
   for (const a of A.list) animations.push(animState(a, a.frames.length ? await atlasFor(a) : null));
   return { app: "bitreel", v: 2,
     shared: { out: { ...S.out }, pal: S.pal.map(rgb2hex), presetName: S.presetName, trans: S.trans,
-      key: { on: S.key.on, rgb: S.key.rgb, tol: S.key.tol, choke: S.key.choke }, exp: { ...S.exp } },
+      key: { on: S.key.on, rgb: S.key.rgb, tol: S.key.tol, choke: S.key.choke }, exp: { ...S.exp }, tiles: { ...S.tiles } },
     animations, current: A.cur };
 }
 // format 1 (and the older .zip projects) held a single animation at the top level
@@ -2952,7 +3166,7 @@ async function applySetState(st) {
       list.push(makeAnim({ id: as.id || newAnimId(), name: as.name || "anim " + (list.length + 1), frames, workW: as.workW || 0, workH: as.workH || 0,
         native: !!as.native, conv: as.conv || "downscale", grid: Object.assign(defaultGrid(), as.grid || {}), edits: decEdits(as.edits), undo: [], redo: [],
         fps: (as.play && as.play.fps) || 12, mode: (as.play && as.play.mode) || "loop", source: as.source || null,
-        stab: Object.assign({ x: false, y: "off" }, as.stab || {}), oneShot: !!as.oneShot, exportOn: as.exportOn !== false }));
+        stab: Object.assign({ x: false, y: "off" }, as.stab || {}), oneShot: !!as.oneShot, exportOn: as.exportOn !== false, tileOut: Array.isArray(as.tileOut) ? as.tileOut : null }));
     }
     if (!list.length) list.push(makeAnim({ name: "anim 1" }));
     const sh = st.shared || {};
@@ -2961,6 +3175,7 @@ async function applySetState(st) {
     S.presetName = sh.presetName || "Custom"; S.trans = Number.isInteger(sh.trans) && sh.trans < S.pal.length ? sh.trans : -1; S.selSw = 0;
     Object.assign(S.key, sh.key || {});
     if (sh.exp) Object.assign(S.exp, sh.exp);
+    if (sh.tiles) Object.assign(S.tiles, sh.tiles);
     S.exp.nameAuto = false;
     if (pv.open) setPaint(false);
     stopSource();
@@ -3187,7 +3402,7 @@ function hasFrames(a) { return a === curAnim() ? S.frames.length > 0 : !!(a && a
 function makeAnim(o) {
   return Object.assign({ id: newAnimId(), name: "anim " + (A.list.length + 1), frames: [], workW: 0, workH: 0, native: false,
     conv: S.conv, grid: { ...S.grid }, edits: {}, undo: [], redo: [], fps: S.sampleFps || 12, mode: "loop", lastClick: -1, pos: 0,
-    stab: { x: false, y: "off" }, source: null, isSample: false, oneShot: false, exportOn: true }, o || {});
+    stab: { x: false, y: "off" }, source: null, isSample: false, oneShot: false, exportOn: true, tileOut: null }, o || {});
 }
 function uniqueAnimName(n, except) {
   n = (n || "anim").toString().trim().slice(0, 40) || "anim";
@@ -3203,14 +3418,14 @@ function stashAnim(a) {
   if (!a) return;
   a.frames = S.frames; a.workW = S.workW; a.workH = S.workH; a.native = S.native; a.conv = S.conv; a.grid = S.grid;
   a.edits = S.edits; a.undo = S.undo; a.redo = S.redo; a.fps = S.play.fps; a.mode = S.play.mode;
-  a.lastClick = S.lastClick; a.pos = S.play.pos; a.stab = S.stab;
+  a.lastClick = S.lastClick; a.pos = S.play.pos; a.stab = S.stab; a.tileOut = S.tileOut;
   // the trim belongs to the video it was set on: only record it when this animation came from the loaded video
   if (S.src && (!a.source || !a.source.file || a.source.file === S.src.name)) a.source = liveSource(a);
 }
 function applyAnimFields(a) {
   S.frames = a.frames; S.workW = a.workW; S.workH = a.workH; S.native = a.native; S.conv = a.conv; S.grid = a.grid;
   S.edits = a.edits; S.undo = a.undo; S.redo = a.redo; S.play.fps = a.fps; S.play.mode = a.mode;
-  S.lastClick = a.lastClick; S.play.pos = a.pos || 0; S.stab = a.stab;
+  S.lastClick = a.lastClick; S.play.pos = a.pos || 0; S.stab = a.stab; S.tileOut = a.tileOut || null;
   const s = a.source;
   if (S.src && s && s.file === S.src.name && s.crop) { S.crop = { ...s.crop }; S.tIn = s.tIn; S.tOut = s.tOut; S.sampleFps = s.sampleFps || S.sampleFps; }
 }
@@ -3270,7 +3485,7 @@ function dupAnim() {
   stashAnim(curAnim()); const s = curAnim();
   const edits = {}; for (const k in s.edits) { edits[k] = {}; for (const fi in s.edits[k]) edits[k][fi] = s.edits[k][fi].slice(); }
   const a = makeAnim({ name: uniqueAnimName(s.name + " copy"), frames: s.frames.map(f => ({ data: f.data, t: f.t, on: f.on })), workW: s.workW, workH: s.workH,
-    native: s.native, conv: s.conv, grid: { ...s.grid }, edits, fps: s.fps, mode: s.mode, stab: { ...s.stab }, oneShot: !!s.oneShot, exportOn: s.exportOn !== false, source: s.source ? JSON.parse(JSON.stringify(s.source)) : null });
+    native: s.native, conv: s.conv, grid: { ...s.grid }, edits, fps: s.fps, mode: s.mode, stab: { ...s.stab }, oneShot: !!s.oneShot, exportOn: s.exportOn !== false, tileOut: s.tileOut ? s.tileOut.slice() : null, source: s.source ? JSON.parse(JSON.stringify(s.source)) : null });
   A.list.splice(A.cur + 1, 0, a); A.cur += 1;
   applyAnimFields(a); refreshAnimUI(); markDirty(true);
   status("Duplicated as “" + a.name + "”.", "good");
@@ -3767,7 +3982,8 @@ function syncControls() {
   configWidth();
   setBri(S.out.bri); setCon(S.out.con); setSat(S.out.sat); setGam(Math.round(S.out.gam * 100));
   $("#dith").value = S.out.dith; $("#dAmt").value = Math.round(S.out.amt * 100);
-  setStab(S.out.stab); setSmooth(S.out.smooth); $("#fPops").checked = !!S.out.pops;
+  updateTileInfo();
+  setStab(S.out.stab); setSmooth(S.out.smooth); $("#fPops").checked = !!S.out.pops; $("#sUnblend").checked = S.out.unblend !== false;
   $("#pFps").value = S.play.fps;
   $("#zoom").value = S.play.zoom; $("#bg").value = S.play.bg; applyBg();
   $$(".seg [data-mode]").forEach(x => x.setAttribute("aria-pressed", x.dataset.mode === S.play.mode ? "true" : "false"));
